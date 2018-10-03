@@ -1,22 +1,45 @@
-#### What does this PR do?
-#### Who is reviewing it? 
-<!--(please choose AT LEAST two reviewers that need to approve the PR before it can get merged)-->
-#### How should this be tested?
-<!--(List steps with links to updated documentation)-->
-#### Any background context you want to provide?
-#### What are the relevant tickets?
-[](https://codice.atlassian.net/browse/)
-#### Screenshots
-<!--(if appropriate)-->
-#### Checklist:
-- [ ] Documentation Updated
-- [ ] Update / Add Unit Tests
-- [ ] Update / Add Integration Tests
+### Requirements
+* Filling out the template is required. Any pull request that does not
+include enough information to be reviewed in a timely manner may be
+closed at the maintainers' discretion.
+* All new code requires tests to ensure against regressions
 
-#### Notes on Review Process
-Please see [Notes on Review Process](https://codice.atlassian.net/wiki/spaces/DDF/pages/71946981/Pull+Request+Guidelines) for further guidance on requirements for merging and abbreviated reviews. 
+### Description of the Change
+<!--
+We must be able to understand the design of your change from this
+description. If we can't get a good idea of what the code will be doing
+from the description here, the pull request may be closed at the
+maintainers' discretion. Keep in mind that the maintainer reviewing this
+PR may not be familiar with or have worked with the code here recently,
+so please walk us through the concepts.
+-->
 
-#### Review Comment Legend:
-- ✏️ (Pencil) This comment is a nitpick or style suggestion, no action required for approval. This comment should provide a suggestion either as an in line code snippet or a gist. 
-- ❓ (Question Mark) This comment is to gain a clearer understanding of design or code choices, clarification is required but action may not be necessary for approval.
-- ❗ (Exclamation Mark) This comment is critical and requires clarification or action before approval.
+### Alternate Designs
+<!--
+Explain what other alternates were considered and why the proposed
+version was selected
+-->
+
+### Benefits
+<!--
+What benefits will be realized by the code change?
+-->
+
+### Possible Drawbacks
+<!--
+What are the possible side-effects or negative impacts of the code change?
+-->
+
+### Verification Process
+<!--
+What process did you follow to verify that your change has the desired effects?
+- How did you verify that all new functionality works as expected?
+- How did you verify that all changed functionality works as expected?
+- How did you verify that the change has not introduced any regressions?
+-->
+
+### Applicable Issues
+<!--
+Enter applicable Issues here
+-->
+Fixes: #___
