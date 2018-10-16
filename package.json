@@ -1,0 +1,21 @@
+{
+  "name": "atlas-workspace",
+  "description": "Atlas's workspace package",
+  "author": "Connexta LLC",
+  "private": true,
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:connexta/atlas.git"
+  },
+  "workspaces": [
+    "packages/*"
+  ],
+  "devDependencies": {
+    "@types/react": "16.4.16",
+    "@types/react-dom": "16.0.9"
+  },
+  "peerDependencies": {
+    "react": "16.5.2",
+    "react-dom": "16.5.2"
+  }
+}
