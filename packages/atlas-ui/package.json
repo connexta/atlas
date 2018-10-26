@@ -1,16 +1,16 @@
 {
-  "name": "atlas-ui",
+  "name": "@connexta/atlas-ui",
   "description": "Library of UI Components",
   "author": "Connexta LLC",
-  "private": true,
-  "version": "1.0.0",
+  "version": "0.0.3",
   "repository": {
     "type": "git",
     "url": "git@github.com:connexta/atlas.git"
   },
   "scripts": {
-    "prebuild": "rimraf dist",
-    "build": "tsc"
+    "prebuild": "rimraf precompiled",
+    "build": "tsc",
+    "publish:npm": "yarn build && yarn publish --access public"
   },
   "dependencies": {
     "polished": "1.9.3",
