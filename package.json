@@ -1,0 +1,19 @@
+{
+  "name": "@connexta/atlas",
+  "description": "Atlas",
+  "author": "Connexta LLC",
+  "version": "0.0.1",
+  "private": false,
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:connexta/atlas.git"
+  },
+  "devDependencies": {
+    "@types/react": "16.4.16",
+    "@types/react-dom": "16.0.9"
+  },
+  "peerDependencies": {
+    "react": "16.5.2",
+    "react-dom": "16.5.2"
+  }
+}
