@@ -2,12 +2,12 @@
   "name": "@connexta/atlas",
   "description": "Atlas",
   "author": "Connexta LLC",
-  "version": "0.0.14",
+  "version": "0.0.15",
   "private": false,
   "scripts": {
-    "prebuild": "rimraf dist && cpx package.json dist",
+    "prebuild": "rimraf dist",
     "build": "tsc",
-    "publish:npm": "yarn build && yarn publish --prefix dist"
+    "publish:npm": "yarn build && cd dist && yarn publish --prefix .."
   },
   "repository": {
     "type": "git",
