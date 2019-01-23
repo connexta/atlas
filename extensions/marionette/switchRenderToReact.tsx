@@ -1,4 +1,4 @@
-const Marionette = require('marionette')
+const Marionette = require('backbone.marionette')
 import { render } from 'react-dom'
 import * as React from 'react'
 const Parser = require('html-react-parser')

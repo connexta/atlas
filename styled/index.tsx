@@ -1,7 +1,7 @@
 export {
   default,
   css,
-  createGlobalStyle,
+  injectGlobal,
   keyframes,
   ThemeProvider,
   withTheme,
