@@ -95,7 +95,7 @@ export default class MarionetteRegionContainer extends React.Component<
     return (
       <RegionContainer
         className={`marionette-region-container ${className ? className : ''}`}
-        ref={this.regionRef as any}
+        innerRef={this.regionRef as any}
         style={style as any}
         {...otherProps as JSX.IntrinsicAttributes}
       />

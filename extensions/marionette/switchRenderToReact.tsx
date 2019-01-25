@@ -30,11 +30,18 @@ const patchMarionetteOneRender = () => {
     this.triggerMethod('before:render', this)
     this.triggerMethod('item:before:render', this)
 
-    var data = this.serializeData()
+    let data = this.serializeData()
     data = this.mixinTemplateHelpers(data)
 
-    var template = this.getTemplate()
-    var html = Marionette.Renderer.render(template, data, this)
+    const template = this.getTemplate()
+    let html = ''
+    if (template === undefined) {
+      console.warn(
+        'Template is missing for view.  Defaulting to a blank template.'
+      )
+    } else {
+      html = Marionette.Renderer.render(template, data, this)
+    }
 
     this.attachElContent(html)
     this.bindUIElements()

@@ -1,4 +1,4 @@
-const Marionette = require('marionette')
+const Marionette = require('backbone.marionette')
 
 const addOnFirstRender = () => {
   const render = Marionette.ItemView.prototype.render
