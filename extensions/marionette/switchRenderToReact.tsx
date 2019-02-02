@@ -20,6 +20,16 @@ type Parameters = {
 }
 
 /**
+ * Override default renderer for Marionette
+ */
+const overrideMarionetteRenderer = () => {
+  Marionette.Renderer.render = function(template: any, data: any, view: any) {
+    data._view = view
+    return template.call(view, data)
+  }
+}
+
+/**
  * Updates the call to Marionette.Renderer.render to pass in a third parameter
  * This is done for us in Marionette 2 and above
  */
@@ -115,6 +125,8 @@ const patchRemove = () => {
 }
 
 const switchRenderToReact = ({ aggressive = false, Provider }: Parameters) => {
+  overrideMarionetteRenderer()
+
   patchAttachElContent({ aggressive, Provider })
 
   patchRemove()
