@@ -3,6 +3,8 @@
     "jsx": "react",
     "allowJs": false,
     "sourceMap": true,
+    "forceConsistentCasingInFileNames": true,
+    "noImplicitReturns": true,
     "noImplicitAny": true,
     "noImplicitThis": true,
     "noUnusedLocals": true,
@@ -11,7 +13,10 @@
     "module": "commonjs",
     "target": "es2015",
     "declaration": true,
-    "outDir": "./dist"
+    "outDir": "./dist",
+    "allowSyntheticDefaultImports": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true
   },
   "include": ["**/*.ts", "**/*.tsx"],
   "exclude": ["node_modules", "dist"]
