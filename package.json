@@ -10,7 +10,8 @@
     "build": "tsc",
     "publish:npm": "yarn build && npm publish dist",
     "storybook": "start-storybook -p 9001 -c .storybook",
-    "storybook:build": "build-storybook -c .storybook -o dist/.storybook"
+    "storybook:build": "build-storybook -c .storybook -o dist/.storybook",
+    "start": "yarn storybook"
   },
   "sideEffects": false,
   "repository": {
@@ -26,6 +27,7 @@
     "@storybook/react": "4.1.12",
     "@types/backbone": "1.3.45",
     "@types/backbone.marionette": "3.3.7",
+    "@types/d3": "5.7.1",
     "@types/lodash.throttle": "4.1.5",
     "@types/react": "16.7.17",
     "@types/react-dom": "16.0.11",
@@ -39,6 +41,8 @@
     "backbone": "1.3.3",
     "backbone.marionette": "2.4.7",
     "cpx": "1.5.0",
+    "d3": "5.9.1",
+    "density-clustering": "1.3.0",
     "husky": "1.3.1",
     "lodash.throttle": "4.1.1",
     "prettier": "1.16.4",
@@ -61,6 +65,7 @@
   "peerDependencies": {
     "backbone": ">= 1 < 2",
     "backbone.marionette": ">= 1 < 3",
+    "d3": ">= 5 < 6",
     "react": ">= 16.3 < 17",
     "react-dom": ">= 16.3 < 17"
   },
@@ -68,5 +73,6 @@
     "hooks": {
       "pre-commit": "pretty-quick --staged"
     }
-  }
+  },
+  "typings": "./@types/density-clustering/index.d.ts"
 }
