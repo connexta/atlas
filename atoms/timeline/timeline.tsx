@@ -272,7 +272,12 @@ class Timeline extends React.Component<Props, {}> {
     draw(this.props.value, this.d3Ref.current)
   }
   render() {
-    return <div ref={this.d3Ref as any} />
+    return (
+      <div>
+        {/* <div>Hello world </div> */}
+        <div ref={this.d3Ref as any} />
+      </div>
+    )
   }
 }
 
