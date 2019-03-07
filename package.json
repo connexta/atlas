@@ -72,5 +72,6 @@
     "hooks": {
       "pre-commit": "pretty-quick --staged"
     }
-  }
+  },
+  "typings": "./@types/density-clustering/index.d.ts"
 }

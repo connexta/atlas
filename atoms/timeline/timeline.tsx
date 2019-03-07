@@ -1,7 +1,18 @@
 import * as React from 'react'
 import * as d3 from 'd3'
-// const clustering = require('density-clustering')
-import * as clustering from 'density-clustering'
+const clustering = require('density-clustering')
+// import * as clustering from 'density-clustering'
+
+type result = number[][]
+
+type DBSCAN = {
+  new (): DBSCAN
+  run: (dataset: number[][], radius: any, amount: any) => result
+}
+
+type clustering = {
+  DBSCAN: DBSCAN
+}
 
 type Point = {
   icon?: any
@@ -45,6 +56,7 @@ const createClusterPoint = (pointsOfCluster: number[][]) => {
 }
 
 const draw = (data: Point[], parentRef: any) => {
+  console.log('timeline points passed: ' + JSON.stringify(data))
   d3.selectAll('.timeline').remove()
 
   var svg = d3
@@ -91,18 +103,20 @@ const draw = (data: Point[], parentRef: any) => {
     .data(data)
     .enter()
     .append('circle')
-    .attr('fill', 'black')
+    .attr('fill', 'gray')
     .attr('cx', d => {
       if (isNaN(x(d.date))) {
+        console.log('ERROR: cx point calculated as NaN')
         console.log('date:' + d.date)
-        console.log('metacard: ' + JSON.stringify(d))
+        // console.log('metacard: ' + JSON.stringify(d))
       }
       return margin.left + x(d.date)
     })
     .attr('cy', d => {
       if (isNaN(y(d.date))) {
+        console.log('ERROR: cy point calculated as NaN')
         console.log('date:' + d.date)
-        console.log('metacard: ' + JSON.stringify(d))
+        // console.log('metacard: ' + JSON.stringify(d))
       }
       return margin.top + y(Y_VALUE)
     })
@@ -242,12 +256,12 @@ const draw = (data: Point[], parentRef: any) => {
 
   var scale = () => {
     var scaling = width / (x(X_AXIS_MIN) - x(X_AXIS_MAX))
-    console.log('returning scaling: ' + scaling)
+    // console.log('returning scaling: ' + scaling)
     return scaling
   }
 
   var translateX = () => {
-    console.log('returning translatX: ' + -x(X_AXIS_MIN))
+    // console.log('returning translatX: ' + -x(X_AXIS_MIN))
     return -x(X_AXIS_MIN)
   }
 
