@@ -11,7 +11,7 @@
     "publish:npm": "yarn build && npm publish dist",
     "storybook": "start-storybook -p 9001 -c .storybook",
     "storybook:build": "build-storybook -c .storybook -o dist/.storybook",
-    "start": "yarn storybook:build"
+    "start": "yarn storybook"
   },
   "sideEffects": false,
   "repository": {

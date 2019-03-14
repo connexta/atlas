@@ -386,6 +386,14 @@ const draw = (
     .extent([[0, 0], [width, height]])
     .on('zoom', zoomed)
 
+  d3.select('#zoom_out').on('click', function() {
+    zoom.scaleBy(svg.transition().duration(500), 2)
+  })
+
+  d3.select('#zoom_in').on('click', function() {
+    zoom.scaleBy(svg.transition().duration(500), 0.2)
+  })
+
   svg
     .call(zoom)
     .transition()
@@ -441,27 +449,22 @@ class Timeline extends React.Component<Props, {}> {
   render() {
     return (
       <div>
-        <Button
-          id="zoom_out"
-          emphasis="medium"
-          // onClick={() => alert('zooming in')}
-        >
-          +
-        </Button>
-        <Button
-          id="zoom_in"
-          emphasis="medium"
-          // onClick={() => alert('zooming out')}
-        >
-          -
-        </Button>
-        <Button
-          id="zoom_reset"
-          emphasis="medium"
-          // onClick={() => alert('resetting view')}
-        >
-          reset
-        </Button>
+        <div style={{ float: 'right', paddingRight: '10px' }}>
+          <Button
+            id="zoom_out"
+            emphasis="medium"
+            // onClick={() => alert('zooming in')}
+          >
+            +
+          </Button>
+          <Button
+            id="zoom_in"
+            emphasis="medium"
+            // onClick={() => alert('zooming out')}
+          >
+            -
+          </Button>
+        </div>
         <div ref={this.d3Ref as any} style={{ flexDirection: 'column' }} />
       </div>
     )
