@@ -1,5 +1,7 @@
 import * as React from 'react'
 import * as d3 from 'd3'
+import Button from '../button'
+
 const clustering = require('density-clustering')
 // import * as clustering from 'density-clustering'
 
@@ -102,13 +104,17 @@ const draw = (
   d3.selectAll('.tooltip').remove()
 
   var svg = d3
-      .select(parentRef)
-      .append('svg')
-      .attr('class', 'timeline')
-      .attr('width', 960)
-      .attr('height', SVG_HEIGHT),
-    margin = { top: 20, right: 20, bottom: 30, left: 40 },
-    width = 960 - margin.left - margin.right,
+    .select(parentRef)
+    .append('svg')
+    .attr('class', 'timeline')
+    .attr('height', SVG_HEIGHT)
+    .style('width', '100%')
+
+  // @ts-ignore
+  var svgWidth = svg.node().getBoundingClientRect().width
+
+  var margin = { top: 20, right: 20, bottom: 30, left: 40 },
+    width = svgWidth - margin.left - margin.right,
     height = SVG_HEIGHT - margin.top - margin.bottom
 
   // setup clipping region
@@ -321,6 +327,33 @@ const draw = (
       })
   }
 
+  var g = svg
+    .append('g')
+    .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')')
+
+  x.domain([X_AXIS_MIN, X_AXIS_MAX])
+  y.domain([0, Y_VALUE])
+
+  g.append('g')
+    .attr('class', 'axis axis--x')
+    .attr('transform', 'translate(0,' + height + ')')
+    .call(xAxis)
+
+  g.append('g')
+    .attr('class', 'axis axis--y')
+    .call(yAxis)
+
+  var scale = () => {
+    var scaling = width / (x(X_AXIS_MIN) - x(X_AXIS_MAX))
+    // console.log('returning scaling: ' + scaling)
+    return scaling
+  }
+
+  var translateX = () => {
+    // console.log('returning translatX: ' + -x(X_AXIS_MIN))
+    return -x(X_AXIS_MIN)
+  }
+
   var zoomed = () => {
     let t = d3.zoomTransform(svg.node() as any)
     var newXScale = t.rescaleX(x)
@@ -353,33 +386,6 @@ const draw = (
     .extent([[0, 0], [width, height]])
     .on('zoom', zoomed)
 
-  var g = svg
-    .append('g')
-    .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')')
-
-  x.domain([X_AXIS_MIN, X_AXIS_MAX])
-  y.domain([0, Y_VALUE])
-
-  g.append('g')
-    .attr('class', 'axis axis--x')
-    .attr('transform', 'translate(0,' + height + ')')
-    .call(xAxis)
-
-  g.append('g')
-    .attr('class', 'axis axis--y')
-    .call(yAxis)
-
-  var scale = () => {
-    var scaling = width / (x(X_AXIS_MIN) - x(X_AXIS_MAX))
-    // console.log('returning scaling: ' + scaling)
-    return scaling
-  }
-
-  var translateX = () => {
-    // console.log('returning translatX: ' + -x(X_AXIS_MIN))
-    return -x(X_AXIS_MIN)
-  }
-
   svg
     .call(zoom)
     .transition()
@@ -394,7 +400,21 @@ const draw = (
 
 class Timeline extends React.Component<Props, {}> {
   d3Ref = React.createRef()
+
+  onResize() {
+    draw(
+      this.props.value,
+      this.d3Ref.current,
+      this.props.onHover,
+      this.props.onHoverCluster,
+      this.props.onClick,
+      this.props.onClickCluster
+    )
+  }
+
   componentDidMount() {
+    window.addEventListener('resize', this.onResize.bind(this))
+
     draw(
       this.props.value,
       this.d3Ref.current,
@@ -404,7 +424,10 @@ class Timeline extends React.Component<Props, {}> {
       this.props.onClickCluster
     )
   }
+
   componentDidUpdate() {
+    window.removeEventListener('resize', this.onResize.bind(this))
+
     draw(
       this.props.value,
       this.d3Ref.current,
@@ -414,10 +437,31 @@ class Timeline extends React.Component<Props, {}> {
       this.props.onClickCluster
     )
   }
+
   render() {
     return (
       <div>
-        {/* <div>Hello world </div> */}
+        <Button
+          id="zoom_out"
+          emphasis="medium"
+          // onClick={() => alert('zooming in')}
+        >
+          +
+        </Button>
+        <Button
+          id="zoom_in"
+          emphasis="medium"
+          // onClick={() => alert('zooming out')}
+        >
+          -
+        </Button>
+        <Button
+          id="zoom_reset"
+          emphasis="medium"
+          // onClick={() => alert('resetting view')}
+        >
+          reset
+        </Button>
         <div ref={this.d3Ref as any} style={{ flexDirection: 'column' }} />
       </div>
     )
