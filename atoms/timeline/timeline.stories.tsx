@@ -14,10 +14,10 @@ function uuidv4() {
   })
 }
 
-const createSampleData = (sampleSize: number) => {
+const createRandomData = (start: Date, sampleSize: number) => {
   let samples = []
   for (let i = 0; i < sampleSize; i++) {
-    const date = randomDate(new Date(1990, 0, 1), new Date())
+    const date = randomDate(start, new Date())
     const id = uuidv4()
     samples.push({
       date,
@@ -27,6 +27,23 @@ const createSampleData = (sampleSize: number) => {
       },
     })
   }
+
+  return samples
+}
+
+const createDuplicateData = (date: Date, sampleSize: number) => {
+  let samples = []
+  for (let i = 0; i < sampleSize; i++) {
+    const id = uuidv4()
+    samples.push({
+      date,
+      data: {
+        id,
+        title: 'title - ' + id,
+      },
+    })
+  }
+
   return samples
 }
 
@@ -70,7 +87,10 @@ const onClickCluster = (points: Point[]) => {
 storiesOf('Timeline', module)
   .addDecorator(withKnobs)
   .add('playground', () => {
-    const samples = createSampleData(100)
+    const samples = createRandomData(new Date(1990, 0, 1), 100).concat(
+      createDuplicateData(new Date(1980, 0, 1), 20)
+    )
+
     return (
       <Timeline
         value={samples}
