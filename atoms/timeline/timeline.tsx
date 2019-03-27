@@ -356,6 +356,14 @@ const draw = (
 
   var zoomed = () => {
     let t = d3.zoomTransform(svg.node() as any)
+
+    // TODO - No idea why k ends up being -1, this is a hacky fix :(
+    //0 means nothing will display, -1 inverts
+    if (t.k === -1) {
+      // @ts-ignore
+      t.k = 1
+    }
+
     var newXScale = t.rescaleX(x)
     var newYScale = t.rescaleY(y)
     g.select('.axis--x').call(xAxis.scale(newXScale))
