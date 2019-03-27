@@ -132,9 +132,13 @@ const draw = (
     .attr('width', width)
     .attr('height', height)
 
-  var points_g = svg
+  var g = svg
     .append('g')
     .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')')
+
+  var points_g = g
+    .append('g')
+    // .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')')
     .attr('clip-path', 'url(#clip)')
     .classed('points_g', true)
 
@@ -165,7 +169,7 @@ const draw = (
         console.log('date:' + d.date)
         // console.log('metacard: ' + JSON.stringify(d))
       }
-      return margin.left + x(d.date)
+      return x(d.date) //+ margin.left
     })
     .attr('cy', d => {
       if (isNaN(y(d.date))) {
@@ -176,6 +180,7 @@ const draw = (
       return margin.top + y(Y_VALUE)
     })
     .attr('r', RADIUS)
+    .attr('transform', 'translate(' + -margin.left + ',0)')
     .on('click', onClick)
     .on('mouseover', (d, i, eles) => {
       debugger
@@ -269,6 +274,7 @@ const draw = (
       .attr('cx', c => c.cx + 'px')
       .attr('cy', c => c.cy + 'px')
       .attr('r', c => c.radius)
+      .attr('transform', 'translate(' + -margin.left + ',0)')
       .on('click', (clusterInfo: ClusterPoint) => {
         onClickCluster(clusterInfo.points)
       })
@@ -300,6 +306,7 @@ const draw = (
       .attr('x', (c: any) => c.cx + 'px')
       .attr('y', (c: any) => c.cy + 'px')
       .attr('font-size', 20)
+      .attr('transform', 'translate(' + -margin.left + ',0)')
       .text(c => c.points.length)
       .on('click', (clusterInfo: ClusterPoint) => {
         onClickCluster(clusterInfo.points)
@@ -327,10 +334,6 @@ const draw = (
       })
   }
 
-  var g = svg
-    .append('g')
-    .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')')
-
   x.domain([X_AXIS_MIN, X_AXIS_MAX])
   y.domain([0, Y_VALUE])
 
@@ -341,6 +344,7 @@ const draw = (
 
   g.append('g')
     .attr('class', 'axis axis--y')
+    .attr('display', 'none')
     .call(yAxis)
 
   var scale = () => {
