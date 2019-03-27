@@ -50,16 +50,29 @@ const RADIUS = 7
 const CLUSTER_RADIUS = RADIUS * 2
 const CLUSTER_NEIGHBOR_RADIUS = CLUSTER_RADIUS
 const POINTS_TO_FORM_CLUSTER = 2
-const X_AXIS_MAX = (() => {
-  var now = new Date()
-  return new Date(now.setFullYear(now.getFullYear() + 2))
-})()
+// const X_AXIS_MAX = (() => {
+//   var now = new Date()
+//   return new Date(now.setFullYear(now.getFullYear() + 2))
+// })()
 
-const X_AXIS_MIN = new Date('1/1/1950')
+// const X_AXIS_MIN = new Date('1/1/1950')
 const Y_VALUE = 0
-const ZOOM_MIN = 1
-const ZOOM_MAX = (X_AXIS_MAX.getTime() - X_AXIS_MIN.getTime()) / (1000 * 60)
+// const ZOOM_MAX = (X_AXIS_MAX.getTime() - X_AXIS_MIN.getTime()) / (1000 * 60)
 const SVG_HEIGHT = 300
+
+function xAxisScale(points: Point[]) {
+  var dates = points.map(p => p.date)
+  var minDate = new Date(Math.min.apply(null, dates))
+  var maxDate = new Date(Math.max.apply(null, dates))
+  var offset = scaleOffset(minDate, maxDate)
+  minDate.setTime(minDate.getTime() - offset)
+  maxDate.setTime(maxDate.getTime() + offset)
+  return [minDate, maxDate]
+}
+
+function scaleOffset(min: Date, max: Date) {
+  return (max.getTime() - min.getTime()) * 0.05
+}
 
 const createClusterPoint = (d3Points: D3Point[]): ClusterPoint => {
   // var averageCx =
@@ -333,6 +346,12 @@ const draw = (
           .style('opacity', 0)
       })
   }
+
+  var X_AXIS_SCALE = xAxisScale(data)
+  var X_AXIS_MIN = X_AXIS_SCALE[0]
+  var X_AXIS_MAX = X_AXIS_SCALE[1]
+  var ZOOM_MIN = 1
+  var ZOOM_MAX = (X_AXIS_MAX.getTime() - X_AXIS_MIN.getTime()) / (1000 * 60)
 
   x.domain([X_AXIS_MIN, X_AXIS_MAX])
   y.domain([0, Y_VALUE])
