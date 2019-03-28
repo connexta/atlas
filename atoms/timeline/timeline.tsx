@@ -74,10 +74,26 @@ function scaleOffset(min: Date, max: Date) {
   return (max.getTime() - min.getTime()) * 0.05
 }
 
+function hideTooltip() {
+  d3.select('.tooltip')
+    .html('')
+    .transition()
+    .duration(500)
+    .style('opacity', 0)
+}
+
+function displayToolTip(toDisplay: string) {
+  var toolTip = d3.select('.tooltip')
+  toolTip
+    .transition()
+    .duration(200)
+    .style('opacity', 0.9)
+    .style('display', 'inline')
+  toolTip.html(toDisplay)
+  toolTip.style('left', d3.event.pageX + 'px')
+  toolTip.style('top', d3.event.pageY + 50 + 'px')
+}
 const createClusterPoint = (d3Points: D3Point[]): ClusterPoint => {
-  // var averageCx =
-  //   d3Points.reduce((acc, point) => acc + Number(point.coordinates[0]), 0) /
-  //   d3Points.length
   var pointCxs: number[] = d3Points.map(p => p.coordinates[0])
   var maxCx = Math.max(...pointCxs)
   var minCx = Math.min(...pointCxs)
@@ -101,14 +117,15 @@ const objToTooltip = (data: any) => {
   }, '')
 }
 
-const objsToTooltip = (data: any, maxDisplay = 5) => {
+const objsToTooltip = (data: any) => {
+  debugger
   let header = '<div>Results: ' + data.length + '</div>'
 
   let body = data.reduce(
     (prev: string, ele: any) => prev + objToTooltip(ele),
     ''
   )
-  return '<div>' + header + body + '</div>'
+  return '<div>' + body + '</div>'
 }
 
 const draw = (
@@ -167,6 +184,8 @@ const draw = (
     .select(parentRef)
     .append('div')
     .attr('class', 'tooltip')
+    .style('position', 'absolute')
+    .style('pointer-events', 'none')
     .style('opacity', 0)
 
   var points = points_g
@@ -195,26 +214,13 @@ const draw = (
     .attr('r', RADIUS)
     .attr('transform', 'translate(' + -margin.left + ',0)')
     .on('click', onClick)
-    .on('mouseover', (d, i, eles) => {
-      debugger
-
-      var data = onHover(d)
-
-      toolTip
-        .transition()
-        .duration(200)
-        .style('opacity', 0.9)
-      // toolTip.html('date: ' + d.date + 'value: ' + Y_VALUE)
-      toolTip.html(objToTooltip(data))
-      toolTip.style('left', d3.select(eles[i]).attr('cx') + 'px')
-      toolTip.style('top', d3.select(eles[i]).attr('cy') + 'px')
+    .on('mouseover', d => {
+      var point = onHover(d)
+      displayToolTip(objToTooltip(point))
     })
-  // .on('mouseout', _d => {
-  //   toolTip
-  //     .transition()
-  //     .duration(500)
-  //     .style('opacity', 0)
-  // })
+    .on('mouseout', _d => {
+      hideTooltip()
+    })
 
   // setup clustering
   var updateClusters = (
@@ -293,20 +299,10 @@ const draw = (
       })
       .on('mouseover', (clusterPoint, i, eles) => {
         var data = onHoverCluster(clusterPoint.points)
-
-        toolTip
-          .transition()
-          .duration(200)
-          .style('opacity', 0.9)
-        toolTip.html(objsToTooltip(data))
-        toolTip.style('left', d3.select(eles[i]).attr('cx') + 'px')
-        toolTip.style('top', d3.select(eles[i]).attr('cy') + 'px')
+        displayToolTip(objsToTooltip(data))
       })
       .on('mouseout', _d => {
-        toolTip
-          .transition()
-          .duration(500)
-          .style('opacity', 0)
+        hideTooltip()
       })
 
     points_g
@@ -324,26 +320,12 @@ const draw = (
       .on('click', (clusterInfo: ClusterPoint) => {
         onClickCluster(clusterInfo.points)
       })
-      .on('mouseover', (
-        clusterPoint
-        // i,
-        // eles
-      ) => {
+      .on('mouseover', (clusterPoint, i, eles) => {
         var data = onHoverCluster(clusterPoint.points)
-
-        toolTip
-          .transition()
-          .duration(200)
-          .style('opacity', 0.9)
-        toolTip.html(objsToTooltip(data))
-        // toolTip.style('left', d3.select(eles[i]).attr('cx') + 'px')
-        // toolTip.style('top', d3.select(eles[i]).attr('cy') + 'px')
+        displayToolTip(objsToTooltip(data))
       })
       .on('mouseout', _d => {
-        toolTip
-          .transition()
-          .duration(500)
-          .style('opacity', 0)
+        hideTooltip()
       })
   }
 

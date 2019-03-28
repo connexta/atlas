@@ -69,7 +69,7 @@ const onHoverCluster = (points: Point[]) => {
   })
 
   if (points.length > 5) {
-    var obj = { 'hidden results': '... ' + (points.length - 5) }
+    var obj = { 'hidden results': points.length - 5 }
     data.push(obj)
   }
 
