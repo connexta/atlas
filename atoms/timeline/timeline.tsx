@@ -1,6 +1,7 @@
 import * as React from 'react'
 import * as d3 from 'd3'
 import Button from '../button'
+import { renderToStaticMarkup } from 'react-dom/server'
 
 const clustering = require('density-clustering')
 
@@ -16,7 +17,6 @@ type clustering = {
 }
 
 type Point = {
-  icon?: any
   date: Date
   data?: any
 }
@@ -34,13 +34,14 @@ type ClusterPoint = {
   points: Point[]
 }
 
+type OnClick = (point: Point[]) => void
+type OnHover = (points: Point[]) => any
+
 type Props = {
   children?: any
   value: Point[]
-  onHover: (point: Point) => any
-  onHoverCluster: (points: Point[]) => any
-  onClick: (point: Point) => void
-  onClickCluster: (points: Point[]) => void
+  onClick: OnClick
+  onHover: OnHover
 }
 
 const dbscan = new clustering.DBSCAN()
@@ -51,21 +52,18 @@ const POINTS_TO_FORM_CLUSTER = 2
 const Y_VALUE = 0
 const SVG_HEIGHT = 300
 
-function xAxisScale(points: Point[]) {
-  var dates = points.map(p => p.date)
-  var minDate = new Date(Math.min.apply(null, dates))
-  var maxDate = new Date(Math.max.apply(null, dates))
-  var offset = scaleOffset(minDate, maxDate)
-  minDate.setTime(minDate.getTime() - offset)
-  maxDate.setTime(maxDate.getTime() + offset)
-  return [minDate, maxDate]
+const xAxisScale = (points: Point[]) => {
+  const dates = points.map(p => p.date.getTime())
+  const min = Math.min(...dates)
+  const max = Math.max(...dates)
+  const offset = (max - min) * 0.05
+  return {
+    min: new Date(min - offset),
+    max: new Date(max + offset),
+  }
 }
 
-function scaleOffset(min: Date, max: Date) {
-  return (max.getTime() - min.getTime()) * 0.05
-}
-
-function hideTooltip() {
+const hideTooltip = () => {
   d3.select('.tooltip')
     .html('')
     .transition()
@@ -73,56 +71,43 @@ function hideTooltip() {
     .style('opacity', 0)
 }
 
-function displayToolTip(toDisplay: string) {
-  var toolTip = d3.select('.tooltip')
+const displayToolTip = (toDisplay: JSX.Element | string) => {
+  const html = React.isValidElement(toDisplay)
+    ? renderToStaticMarkup(toDisplay)
+    : (toDisplay as string)
+
+  const toolTip = d3.select('.tooltip')
+
   toolTip
     .transition()
     .duration(200)
     .style('opacity', 0.9)
     .style('display', 'inline')
-  toolTip.html(toDisplay)
+
+  toolTip.html(html)
   toolTip.style('left', d3.event.pageX + 'px')
   toolTip.style('top', d3.event.pageY + 50 + 'px')
 }
+
 const createClusterPoint = (d3Points: D3Point[]): ClusterPoint => {
-  var pointCxs: number[] = d3Points.map(p => p.coordinates[0])
-  var maxCx = Math.max(...pointCxs)
-  var minCx = Math.min(...pointCxs)
-  var clusterRadius = (maxCx - minCx + 2 * POINT_RADIUS) / 2
-  var clusterCx = minCx - POINT_RADIUS + clusterRadius
+  const pointCxs: number[] = d3Points.map(p => p.coordinates[0])
+  const max = Math.max(...pointCxs)
+  const min = Math.min(...pointCxs)
+  const radius = (max - min + 2 * POINT_RADIUS) / 2
+  const cx = min - POINT_RADIUS + radius
 
   // All points are on the y axis, no need to take average
-  var cy = d3Points[0].coordinates[1]
+  const cy = d3Points[0].coordinates[1]
+  const points = d3Points.map(d3point => d3point.point)
 
-  return {
-    cx: clusterCx,
-    cy: cy,
-    radius: clusterRadius,
-    points: d3Points.map(d3point => d3point.point),
-  }
-}
-
-const objToTooltip = (data: any) => {
-  return Object.keys(data).reduce((prev, key) => {
-    return `${prev}<div>${key}: ${data[key]}</div>`
-  }, '')
-}
-
-const objsToTooltip = (data: any) => {
-  var body = data.reduce(
-    (prev: string, ele: any) => prev + objToTooltip(ele),
-    ''
-  )
-  return '<div>' + body + '</div>'
+  return { cx, cy, radius, points }
 }
 
 const draw = (
   data: Point[],
   parentRef: any,
-  onHover: (point: Point) => any,
-  onHoverCluster: (points: Point[]) => any,
-  onClick: (point: Point) => void,
-  onClickCluster: (points: Point[]) => void
+  onHover: OnHover,
+  onClick: OnClick
 ) => {
   d3.selectAll('.timeline').remove()
   d3.selectAll('.tooltip').remove()
@@ -134,13 +119,16 @@ const draw = (
     .attr('height', SVG_HEIGHT)
     .style('width', '100%')
 
-  //TODO - getBoundingClientRect can return undefined sometimes. see if there's a better way to do this
-  // @ts-ignore
-  var timelineWidth = timelineContainer.node().getBoundingClientRect().width
+  const timelineNode = timelineContainer.node()
 
-  var margin = { top: 20, right: 20, bottom: 30, left: 40 },
-    width = timelineWidth - margin.left - margin.right,
-    height = SVG_HEIGHT - margin.top - margin.bottom
+  if (timelineNode === null) {
+    return
+  }
+
+  const margin = { top: 20, right: 20, bottom: 30, left: 40 }
+  const width =
+    timelineNode.getBoundingClientRect().width - margin.left - margin.right
+  const height = SVG_HEIGHT - margin.top - margin.bottom
 
   // setup containers
   timelineContainer
@@ -151,25 +139,25 @@ const draw = (
     .attr('width', width)
     .attr('height', height)
 
-  var content = timelineContainer
+  const content = timelineContainer
     .append('g')
     .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')')
 
-  var pointsContainer = content
+  const pointsContainer = content
     .append('g')
     .attr('clip-path', 'url(#clip)')
     .classed('points_g', true)
 
   // setup axises
-  var x = d3.scaleTime().range([0, width]),
+  const x = d3.scaleTime().range([0, width]),
     y = d3.scaleLinear().range([height, 0])
 
-  var xAxis = d3.axisBottom(x)
-  var yAxis = d3.axisLeft(y)
+  const xAxis = d3.axisBottom(x)
+  const yAxis = d3.axisLeft(y)
 
-  var xAxisRange = xAxisScale(data)
-  var xAxisMin = xAxisRange[0]
-  var xAxisMax = xAxisRange[1]
+  const range = xAxisScale(data)
+  const xAxisMin = range.min
+  const xAxisMax = range.max
 
   x.domain([xAxisMin, xAxisMax])
   y.domain([0, Y_VALUE])
@@ -210,14 +198,9 @@ const draw = (
     })
     .attr('r', POINT_RADIUS)
     .attr('transform', 'translate(' + -margin.left + ',0)')
-    .on('click', onClick)
-    .on('mouseover', d => {
-      var point = onHover(d)
-      displayToolTip(objToTooltip(point))
-    })
-    .on('mouseout', _d => {
-      hideTooltip()
-    })
+    .on('click', (p: Point) => onClick([p]))
+    .on('mouseover', p => displayToolTip(onHover([p])))
+    .on('mouseout', hideTooltip)
 
   d3.select(parentRef)
     .append('div')
@@ -227,17 +210,15 @@ const draw = (
     .style('opacity', 0)
 
   // setup clustering
-  var updateClusters = (
+  const updateClusters = (
     d3Selections: d3.Selection<SVGCircleElement, Point, SVGGElement, {}>
   ) => {
     d3.selectAll('.cluster').remove()
     d3.selectAll('.cluster-text').remove()
 
-    var newClusterPoints = []
-
-    var d3Points: D3Point[] = []
+    const d3Points: D3Point[] = []
     d3Selections.each((point, index, groups) => {
-      var svgElement = groups[index]
+      const svgElement = groups[index]
       const cx = svgElement.getAttribute('cx') || '0'
       const cy = svgElement.getAttribute('cy') || '0'
 
@@ -253,17 +234,14 @@ const draw = (
       d3Points.map(c => c.coordinates),
       CLUSTER_NEIGHBOR_RADIUS,
       POINTS_TO_FORM_CLUSTER
-    )
+    ) as number[][]
 
-    for (var i = 0; i < clusters.length; i++) {
-      var cluster: number[] = clusters[i]
-      if (cluster.length > 1) {
-        var pointsWithinCluster = cluster.map(i => d3Points[i])
-        newClusterPoints.push(createClusterPoint(pointsWithinCluster))
-      }
-    }
+    const newClusterPoints = clusters
+      .filter(cluster => cluster.length > 1)
+      .map(cluster => cluster.map(i => d3Points[i]))
+      .map(createClusterPoint)
 
-    var clusters: any = pointsContainer
+    pointsContainer
       .selectAll('clust')
       .data(newClusterPoints)
       .enter()
@@ -275,16 +253,9 @@ const draw = (
       .attr('cy', c => c.cy + 'px')
       .attr('r', c => c.radius)
       .attr('transform', 'translate(' + -margin.left + ',0)')
-      .on('click', (clusterInfo: ClusterPoint) => {
-        onClickCluster(clusterInfo.points)
-      })
-      .on('mouseover', (clusterPoint, i, eles) => {
-        var data = onHoverCluster(clusterPoint.points)
-        displayToolTip(objsToTooltip(data))
-      })
-      .on('mouseout', _d => {
-        hideTooltip()
-      })
+      .on('click', cluster => onClick(cluster.points))
+      .on('mouseover', cluster => displayToolTip(onHover(cluster.points)))
+      .on('mouseout', hideTooltip)
 
     pointsContainer
       .selectAll('clust')
@@ -293,21 +264,14 @@ const draw = (
       .append('text')
       .attr('fill', 'red')
       .attr('class', 'cluster-text')
-      .attr('x', (c: any) => c.cx + 'px')
-      .attr('y', (c: any) => c.cy + 'px')
+      .attr('x', c => c.cx + 'px')
+      .attr('y', c => c.cy + 'px')
       .attr('font-size', 20)
       .attr('transform', 'translate(' + -margin.left + ',0)')
       .text(c => c.points.length)
-      .on('click', (clusterInfo: ClusterPoint) => {
-        onClickCluster(clusterInfo.points)
-      })
-      .on('mouseover', (clusterPoint, i, eles) => {
-        var data = onHoverCluster(clusterPoint.points)
-        displayToolTip(objsToTooltip(data))
-      })
-      .on('mouseout', _d => {
-        hideTooltip()
-      })
+      .on('click', cluster => onClick(cluster.points))
+      .on('mouseover', cluster => displayToolTip(onHover(cluster.points)))
+      .on('mouseout', hideTooltip)
   }
 
   //setup zoom
@@ -324,21 +288,21 @@ const draw = (
       t.k = 1
     }
 
-    var newXScale = t.rescaleX(x)
-    var newYScale = t.rescaleY(y)
+    const newXScale = t.rescaleX(x)
+    const newYScale = t.rescaleY(y)
     content.select('.axis--x').call(xAxis.scale(newXScale))
     content.select('.axis--y').call(yAxis.scale(newYScale))
 
     points
       .attr('cx', d => {
-        var cx = newXScale(d.date)
+        const cx = newXScale(d.date)
         if (isNaN(cx)) {
           throw 'cx of point calculated as NaN when rescaling axises'
         }
         return margin.left + cx
       })
       .attr('cy', d => {
-        var cy = newYScale(Y_VALUE)
+        const cy = newYScale(Y_VALUE)
         if (isNaN(cy)) {
           throw 'cy of point calculated as NaN when rescaling axises'
         }
@@ -349,18 +313,18 @@ const draw = (
     updateClusters(points)
   }
 
-  var zoom = d3
+  const zoom = d3
     .zoom()
     .scaleExtent([zoomMin, zoomMax])
     .translateExtent([[0, 0], [width, height]])
     .extent([[0, 0], [width, height]])
     .on('zoom', zoomed)
 
-  d3.select('#zoom_out').on('click', function() {
+  d3.select('#zoom_out').on('click', () => {
     zoom.scaleBy(timelineContainer.transition().duration(500), 2)
   })
 
-  d3.select('#zoom_in').on('click', function() {
+  d3.select('#zoom_in').on('click', () => {
     zoom.scaleBy(timelineContainer.transition().duration(500), 0.2)
   })
 
@@ -376,45 +340,48 @@ const draw = (
     )
 
   updateClusters(points)
+
+  return {
+    zoomIn() {
+      zoom.scaleBy(timelineContainer.transition().duration(500), 2)
+    },
+    zoomOut() {
+      zoom.scaleBy(timelineContainer.transition().duration(500), 0.2)
+    },
+  }
 }
 
 class Timeline extends React.Component<Props, {}> {
   d3Ref = React.createRef()
-
+  view: any = null
   onResize() {
-    draw(
+    this.view = draw(
       this.props.value,
       this.d3Ref.current,
       this.props.onHover,
-      this.props.onHoverCluster,
-      this.props.onClick,
-      this.props.onClickCluster
+      this.props.onClick
     )
   }
 
   componentDidMount() {
     window.addEventListener('resize', this.onResize.bind(this))
 
-    draw(
+    this.view = draw(
       this.props.value,
       this.d3Ref.current,
       this.props.onHover,
-      this.props.onHoverCluster,
-      this.props.onClick,
-      this.props.onClickCluster
+      this.props.onClick
     )
   }
 
   componentDidUpdate() {
     window.removeEventListener('resize', this.onResize.bind(this))
 
-    draw(
+    this.view = draw(
       this.props.value,
       this.d3Ref.current,
       this.props.onHover,
-      this.props.onHoverCluster,
-      this.props.onClick,
-      this.props.onClickCluster
+      this.props.onClick
     )
   }
 
@@ -422,10 +389,10 @@ class Timeline extends React.Component<Props, {}> {
     return (
       <div>
         <div style={{ float: 'right', paddingRight: '10px' }}>
-          <Button id="zoom_out" emphasis="medium">
+          <Button onClick={() => this.view.zoomIn()} emphasis="medium">
             +
           </Button>
-          <Button id="zoom_in" emphasis="medium">
+          <Button onClick={() => this.view.zoomOut()} emphasis="medium">
             -
           </Button>
         </div>

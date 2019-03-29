@@ -53,35 +53,12 @@ type Point = {
   data?: any
 }
 
-const onHover = (point: Point) => {
-  return {
-    id: point.data.id,
-    title: point.data.title || '[NO TITLE]',
-    date: point.date,
-  }
+const onHover = (points: Point[]) => {
+  return <pre>{JSON.stringify(points, null, 2)}</pre>
 }
 
-const onHoverCluster = (points: Point[]) => {
-  var data: any[] = points.slice(0, 5).map(ele => {
-    return {
-      title: ele.data.title,
-    }
-  })
-
-  if (points.length > 5) {
-    var obj = { 'hidden results': points.length - 5 }
-    data.push(obj)
-  }
-
-  return data
-}
-
-const onClick = (point: Point) => {
-  alert('SINGLE CIRCLE CLICK: \n' + JSON.stringify(point))
-}
-
-const onClickCluster = (points: Point[]) => {
-  alert('CLUSTER CLICK: \n' + JSON.stringify(points))
+const onClick = (points: Point[]) => {
+  alert('ON CLICK: \n' + JSON.stringify(points))
 }
 
 storiesOf('Timeline', module)
@@ -92,13 +69,7 @@ storiesOf('Timeline', module)
     )
 
     return (
-      <Timeline
-        value={samples}
-        onHover={onHover}
-        onHoverCluster={onHoverCluster}
-        onClick={onClick}
-        onClickCluster={onClickCluster}
-      >
+      <Timeline value={samples} onHover={onHover} onClick={onClick}>
         Playground
       </Timeline>
     )
