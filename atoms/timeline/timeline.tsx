@@ -2,6 +2,7 @@ import * as React from 'react'
 import * as d3 from 'd3'
 import Button from '../button'
 import { renderToStaticMarkup } from 'react-dom/server'
+import styled from '../../styled'
 
 const clustering = require('density-clustering')
 
@@ -38,6 +39,8 @@ type OnClick = (point: Point[]) => void
 type OnHover = (points: Point[]) => any
 
 type Props = {
+  className?: string
+  style?: {}
   children?: any
   value: Point[]
   onClick: OnClick
@@ -71,22 +74,28 @@ const hideTooltip = () => {
     .style('opacity', 0)
 }
 
-const displayToolTip = (toDisplay: JSX.Element | string) => {
-  const html = React.isValidElement(toDisplay)
-    ? renderToStaticMarkup(toDisplay)
-    : (toDisplay as string)
+const displayTooltip = (format: (value: any) => JSX.Element | string) => {
+  return function(value: any) {
+    // @ts-ignore
+    const [x, y] = d3.mouse(this)
 
-  const toolTip = d3.select('.tooltip')
+    const toDisplay = format(value)
+    const html = React.isValidElement(toDisplay)
+      ? renderToStaticMarkup(toDisplay)
+      : (toDisplay as string)
 
-  toolTip
-    .transition()
-    .duration(200)
-    .style('opacity', 0.9)
-    .style('display', 'inline')
+    const toolTip = d3.select('.tooltip')
 
-  toolTip.html(html)
-  toolTip.style('left', d3.event.pageX + 'px')
-  toolTip.style('top', d3.event.pageY + 50 + 'px')
+    toolTip
+      .transition()
+      .duration(200)
+      .style('opacity', 0.9)
+      .style('display', 'inline')
+
+    toolTip.html(html)
+    toolTip.style('left', x + 'px')
+    toolTip.style('top', y + 50 + 'px')
+  }
 }
 
 const createClusterPoint = (d3Points: D3Point[]): ClusterPoint => {
@@ -199,7 +208,7 @@ const draw = (
     .attr('r', POINT_RADIUS)
     .attr('transform', 'translate(' + -margin.left + ',0)')
     .on('click', (p: Point) => onClick([p]))
-    .on('mouseover', p => displayToolTip(onHover([p])))
+    .on('mousemove', displayTooltip(p => onHover([p])))
     .on('mouseout', hideTooltip)
 
   d3.select(parentRef)
@@ -215,6 +224,7 @@ const draw = (
   ) => {
     d3.selectAll('.cluster').remove()
     d3.selectAll('.cluster-text').remove()
+    d3.selectAll('.cluster-background').remove()
 
     const d3Points: D3Point[] = []
     d3Selections.each((point, index, groups) => {
@@ -254,7 +264,42 @@ const draw = (
       .attr('r', c => c.radius)
       .attr('transform', 'translate(' + -margin.left + ',0)')
       .on('click', cluster => onClick(cluster.points))
-      .on('mouseover', cluster => displayToolTip(onHover(cluster.points)))
+      .on('mousemove', displayTooltip(cluster => onHover(cluster.points)))
+      .on('mouseout', hideTooltip)
+
+    pointsContainer
+      .selectAll('clust')
+      .data(newClusterPoints)
+      .enter()
+      .append('rect')
+      .attr('fill', 'black')
+      .attr('class', 'cluster-background')
+      .attr(
+        'x',
+        c => c.cx - 5 - (c.points.length.toString().length / 2) * 10 + 'px'
+      )
+      .attr('y', c => 30 + c.cy - 16 + 'px')
+      .attr('width', c => c.points.length.toString().length * 10 + 10)
+      .attr('height', c => 20)
+      .attr('transform', 'translate(' + -margin.left + ',0)')
+      .on('click', cluster => onClick(cluster.points))
+      .on('mousemove', displayTooltip(cluster => onHover(cluster.points)))
+      .on('mouseout', hideTooltip)
+
+    pointsContainer
+      .selectAll('clust')
+      .data(newClusterPoints)
+      .enter()
+      .append('rect')
+      .attr('fill', 'black')
+      .attr('class', 'cluster-background')
+      .attr('x', c => c.cx - 1 + 'px')
+      .attr('y', c => 15 + c.cy - 16 + 'px')
+      .attr('width', 2)
+      .attr('height', 15)
+      .attr('transform', 'translate(' + -margin.left + ',0)')
+      .on('click', cluster => onClick(cluster.points))
+      .on('mousemove', displayTooltip(cluster => onHover(cluster.points)))
       .on('mouseout', hideTooltip)
 
     pointsContainer
@@ -262,15 +307,18 @@ const draw = (
       .data(newClusterPoints)
       .enter()
       .append('text')
-      .attr('fill', 'red')
+      .attr('fill', 'white')
       .attr('class', 'cluster-text')
-      .attr('x', c => c.cx + 'px')
-      .attr('y', c => c.cy + 'px')
+      .attr(
+        'x',
+        c => c.cx - (c.points.length.toString().length * 10) / 2 + 'px'
+      )
+      .attr('y', c => 30 + c.cy + 'px')
       .attr('font-size', 20)
       .attr('transform', 'translate(' + -margin.left + ',0)')
       .text(c => c.points.length)
       .on('click', cluster => onClick(cluster.points))
-      .on('mouseover', cluster => displayToolTip(onHover(cluster.points)))
+      .on('mousemove', displayTooltip(cluster => onHover(cluster.points)))
       .on('mouseout', hideTooltip)
   }
 
@@ -308,7 +356,6 @@ const draw = (
         }
         return cy
       })
-      .attr('r', POINT_RADIUS)
 
     updateClusters(points)
   }
@@ -319,14 +366,6 @@ const draw = (
     .translateExtent([[0, 0], [width, height]])
     .extent([[0, 0], [width, height]])
     .on('zoom', zoomed)
-
-  d3.select('#zoom_out').on('click', () => {
-    zoom.scaleBy(timelineContainer.transition().duration(500), 2)
-  })
-
-  d3.select('#zoom_in').on('click', () => {
-    zoom.scaleBy(timelineContainer.transition().duration(500), 0.2)
-  })
 
   timelineContainer
     .call(zoom)
@@ -351,10 +390,24 @@ const draw = (
   }
 }
 
+const Root = styled.div`
+  position: relative;
+`
+
+const ZoomArea = styled.div`
+  position: absolute;
+  top: 10px;
+  right: 10px;
+
+  button + button {
+    margin-left: 10px;
+  }
+`
+
 class Timeline extends React.Component<Props, {}> {
   d3Ref = React.createRef()
   view: any = null
-  onResize() {
+  draw = () => {
     this.view = draw(
       this.props.value,
       this.d3Ref.current,
@@ -362,42 +415,31 @@ class Timeline extends React.Component<Props, {}> {
       this.props.onClick
     )
   }
-
   componentDidMount() {
-    window.addEventListener('resize', this.onResize.bind(this))
+    window.addEventListener('resize', this.draw)
 
-    this.view = draw(
-      this.props.value,
-      this.d3Ref.current,
-      this.props.onHover,
-      this.props.onClick
-    )
+    this.draw()
   }
 
   componentDidUpdate() {
-    window.removeEventListener('resize', this.onResize.bind(this))
-
-    this.view = draw(
-      this.props.value,
-      this.d3Ref.current,
-      this.props.onHover,
-      this.props.onClick
-    )
+    this.draw()
   }
-
+  componentWillUnmount() {
+    window.removeEventListener('resize', this.draw)
+  }
   render() {
     return (
-      <div>
-        <div style={{ float: 'right', paddingRight: '10px' }}>
+      <Root style={this.props.style} className={this.props.className}>
+        <ZoomArea>
           <Button onClick={() => this.view.zoomIn()} emphasis="medium">
             +
           </Button>
           <Button onClick={() => this.view.zoomOut()} emphasis="medium">
             -
           </Button>
-        </div>
+        </ZoomArea>
         <div ref={this.d3Ref as any} style={{ flexDirection: 'column' }} />
-      </div>
+      </Root>
     )
   }
 }

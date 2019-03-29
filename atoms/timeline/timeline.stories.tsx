@@ -69,7 +69,14 @@ storiesOf('Timeline', module)
     )
 
     return (
-      <Timeline value={samples} onHover={onHover} onClick={onClick}>
+      <Timeline
+        value={samples}
+        onHover={onHover}
+        onClick={onClick}
+        style={{
+          border: '1px solid grey',
+        }}
+      >
         Playground
       </Timeline>
     )
