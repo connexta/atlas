@@ -118,15 +118,15 @@ const draw = (
   onHover: OnHover,
   onClick: OnClick
 ) => {
-  d3.selectAll('.timeline').remove()
-  d3.selectAll('.tooltip').remove()
+  //d3.selectAll('.timeline').remove()
+  //d3.selectAll('.tooltip').remove()
 
-  var timelineContainer = d3
-    .select(parentRef)
-    .append('svg')
-    .attr('class', 'timeline')
-    .attr('height', SVG_HEIGHT)
-    .style('width', '100%')
+  var timelineContainer = d3.select('.timeline') as d3.Selection<
+    SVGSVGElement,
+    {},
+    HTMLElement,
+    any
+  >
 
   const timelineNode = timelineContainer.node()
 
@@ -138,15 +138,6 @@ const draw = (
   const width =
     timelineNode.getBoundingClientRect().width - margin.left - margin.right
   const height = SVG_HEIGHT - margin.top - margin.bottom
-
-  // setup containers
-  timelineContainer
-    .append('defs')
-    .append('clipPath')
-    .attr('id', 'clip')
-    .append('rect')
-    .attr('width', width)
-    .attr('height', height)
 
   const content = timelineContainer
     .append('g')
@@ -167,21 +158,6 @@ const draw = (
   const range = xAxisScale(data)
   const xAxisMin = range.min
   const xAxisMax = range.max
-
-  x.domain([xAxisMin, xAxisMax])
-  y.domain([0, Y_VALUE])
-
-  content
-    .append('g')
-    .attr('class', 'axis axis--x')
-    .attr('transform', 'translate(0,' + height + ')')
-    .call(xAxis)
-
-  content
-    .append('g')
-    .attr('class', 'axis axis--y')
-    .attr('display', 'none')
-    .call(yAxis)
 
   // setup data points
   var points = pointsContainer
@@ -210,13 +186,6 @@ const draw = (
     .on('click', (p: Point) => onClick([p]))
     .on('mousemove', displayTooltip(p => onHover([p])))
     .on('mouseout', hideTooltip)
-
-  d3.select(parentRef)
-    .append('div')
-    .attr('class', 'tooltip')
-    .style('position', 'absolute')
-    .style('pointer-events', 'none')
-    .style('opacity', 0)
 
   // setup clustering
   const updateClusters = (
@@ -404,20 +373,150 @@ const ZoomArea = styled.div`
   }
 `
 
-class Timeline extends React.Component<Props, {}> {
+type State = {
+  width: number
+  height: number
+  points: any[]
+}
+
+const Circles = ({ points, onClick, margin }: any) => {
+  //.on('mousemove', displayTooltip(p => onHover([p])))
+  //.on('mouseout', hideTooltip)
+  console.log(points)
+  return (
+    <>
+      {points.map((point: any) => {
+        return (
+          <circle
+            fill="gray"
+            opacity="0.25"
+            cx={point.cx}
+            cy={point.cy}
+            r={POINT_RADIUS}
+            transform={'translate(' + -margin.left + ',0)'}
+            //onClick={() => onClick([point])}
+          />
+        )
+      })}
+    </>
+  )
+}
+
+class Timeline extends React.Component<Props, State> {
   d3Ref = React.createRef()
   view: any = null
+  constructor(props: Props) {
+    super(props)
+    this.state = {
+      width: 0,
+      height: 0,
+      points: [],
+    }
+  }
   draw = () => {
-    this.view = draw(
+    /*this.view = draw(
       this.props.value,
       this.d3Ref.current,
       this.props.onHover,
       this.props.onClick
-    )
+    )*/
+  }
+  onZoom = () => {
+    /*const timelineContainer = d3.select('.timeline')
+    let t = d3.zoomTransform(timelineContainer.node() as any)
+
+    // TODO - No idea why k ends up being -1, this is a hacky fix :(
+    //0 means nothing will display, -1 inverts
+    if (t.k === -1) {
+      // @ts-ignore
+      t.k = 1
+    }
+
+    // @ts-ignore
+    const newXScale = t.rescaleX(this.x)
+    // @ts-ignore
+    const newYScale = t.rescaleY(this.y)
+    // @ts-ignore
+    const xAxis = d3.axisBottom(newXScale)
+    // @ts-ignore
+    const yAxis = d3.axisLeft(newYScale)
+
+    d3.select('.axis--x').call(xAxis.scale(newXScale))
+    d3.select('.axis--y').call(yAxis.scale(newYScale))*/
+    /*points
+      .attr('cx', d => {
+        const cx = newXScale(d.date)
+        if (isNaN(cx)) {
+          throw 'cx of point calculated as NaN when rescaling axises'
+        }
+        return margin.left + cx
+      })
+      .attr('cy', d => {
+        const cy = newYScale(Y_VALUE)
+        if (isNaN(cy)) {
+          throw 'cy of point calculated as NaN when rescaling axises'
+        }
+        return cy
+      })*/
   }
   componentDidMount() {
     window.addEventListener('resize', this.draw)
+    if (this.d3Ref.current !== null) {
+      const { width, height } = (this.d3Ref
+        .current as any).getBoundingClientRect()
+      this.setState({ width, height })
 
+      const x = d3.scaleTime().range([0, width])
+      const y = d3.scaleLinear().range([height, 0])
+
+      // @ts-ignore
+      this.x = x
+      // @ts-ignore
+      this.y = y
+
+      // setup axises
+      const range = xAxisScale(this.props.value)
+      const xAxisMin = range.min
+      const xAxisMax = range.max
+
+      x.domain([xAxisMin, xAxisMax])
+      y.domain([0, Y_VALUE])
+
+      const xAxis = d3.axisBottom(x)
+      const yAxis = d3.axisLeft(y)
+
+      d3.select('.axis--x').call(xAxis)
+      d3.select('.axis--y').call(yAxis)
+
+      const points = this.props.value.map(point => {
+        const cx = x(point.date)
+        const cy = y(Y_VALUE)
+        return { cx, cy }
+      })
+
+      this.setState({ points })
+
+      var zoomMin = 1
+      var zoomMax = (xAxisMax.getTime() - xAxisMin.getTime()) / (1000 * 60)
+
+      // const zoom = d3
+      //   .zoom()
+      //   .scaleExtent([zoomMin, zoomMax])
+      //   .translateExtent([[0, 0], [width, height]])
+      //   .extent([[0, 0], [width, height]])
+      //   .on('zoom', this.onZoom)
+
+      // d3.select('.timeline')
+      //   .call(zoom)
+      //   .transition()
+      //   .duration(1500)
+      //   .call(
+      //     zoom.transform as any,
+      //     d3.zoomIdentity
+      //       .scale(width / (x(xAxisMin) - x(xAxisMax)))
+      //       .translate(-x(xAxisMin), 0)
+      //   )
+    }
     this.draw()
   }
 
@@ -428,6 +527,10 @@ class Timeline extends React.Component<Props, {}> {
     window.removeEventListener('resize', this.draw)
   }
   render() {
+    const margin = { top: 20, right: 20, bottom: 30, left: 40 }
+    const width = this.state.width - margin.left - margin.right
+    const height = SVG_HEIGHT - margin.top - margin.bottom
+
     return (
       <Root style={this.props.style} className={this.props.className}>
         <ZoomArea>
@@ -438,7 +541,34 @@ class Timeline extends React.Component<Props, {}> {
             -
           </Button>
         </ZoomArea>
-        <div ref={this.d3Ref as any} style={{ flexDirection: 'column' }} />
+        <div style={{ flexDirection: 'column' }}>
+          <div
+            className="tooltip"
+            style={{ position: 'absolute', pointerEvent: 'none', opacity: 0 }}
+          />
+          <svg
+            ref={this.d3Ref as any}
+            className="timeline"
+            height={SVG_HEIGHT}
+            style={{ width: '100%' }}
+          >
+            <defs>
+              <clipPath id="clip">
+                <rect width={width} height={height} />
+              </clipPath>
+            </defs>
+            <g transform={'translate(' + margin.left + ',' + margin.top + ')'}>
+              <g clipPath="url(#clip)" className="points_g">
+                <Circles points={this.state.points} margin={margin} />
+              </g>
+              <g
+                className="axis axis--x"
+                transform={'translate(0,' + height + ')'}
+              />
+              <g className="axis axis--y" display="none" />
+            </g>
+          </svg>
+        </div>
       </Root>
     )
   }
