@@ -53,7 +53,7 @@ type Point = {
   data?: any
 }
 
-const onHover = (points: Point[]) => {
+const Tooltip = (points: Point[]) => {
   return <pre>{JSON.stringify(points, null, 2)}</pre>
 }
 
@@ -64,18 +64,18 @@ const onClick = (points: Point[]) => {
 storiesOf('Timeline', module)
   .addDecorator(withKnobs)
   .add('playground', () => {
-    const samples = createRandomData(new Date(1990, 0, 1), 100).concat(
+    const samples = createRandomData(new Date(1990, 0, 1), 1000).concat(
       createDuplicateData(new Date(1980, 0, 1), 20)
     )
 
     return (
       <Timeline
         value={samples}
-        onHover={onHover}
         onClick={onClick}
         style={{
           border: '1px solid grey',
         }}
+        Tooltip={Tooltip}
       >
         Playground
       </Timeline>
