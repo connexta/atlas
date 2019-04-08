@@ -16,8 +16,10 @@ type clustering = {
   DBSCAN: DBSCAN
 }
 
-type Point = {
+export type Point = {
+  id: string
   date: Date
+  selected: boolean
   data?: any
 }
 
@@ -26,6 +28,7 @@ type ClusterPoint = {
   cy: number
   radius: number
   points: Point[]
+  selected: boolean
 }
 
 type OnClick = (point: Point[]) => void
@@ -36,6 +39,8 @@ type Props = {
   style?: {}
   children?: any
   value: Point[]
+
+  //expected to set `selected` onClick
   onClick?: OnClick
   onHover?: OnHover
   Tooltip?: any // React.Component | (points: Point[]) => JSX.Element
@@ -74,27 +79,60 @@ const ZoomArea = styled.div`
   }
 `
 
-type State = {
-  width: number
-  height: number
-  points: any[]
+const circleProps = (points: Point[]) => {
+  var stroke = ''
+  var strokeWidth = ''
+  var strokeOpacity = ''
+
+  if (points.every(p => p.selected)) {
+    stroke = 'black'
+    strokeWidth = '3px'
+    strokeOpacity = '100%'
+  }
+  const clusterProps = points.every(p => p.selected)
+    ? {
+        stroke: 'black',
+        strokeWidth: '3px',
+        strokeOpacity: '100%',
+      }
+    : {}
+
+  return {
+    stroke,
+    strokeWidth,
+    strokeOpacity,
+  }
 }
 
-const Circles = React.memo(({ points, onClick, onHover, margin }: any) => {
-  const createClusterPoint = (points: any[]): ClusterPoint => {
-    const pointCxs: number[] = points.map(p => p.cx)
-    const max = Math.max(...pointCxs)
-    const min = Math.min(...pointCxs)
-    const radius = (max - min + 2 * POINT_RADIUS) / 2
-    const cx = min - POINT_RADIUS + radius
+const createClusterPoint = (points: any[]): ClusterPoint => {
+  const pointCxs: number[] = points.map(p => p.cx)
+  const max = Math.max(...pointCxs)
+  const min = Math.min(...pointCxs)
+  const radius = (max - min + 2 * POINT_RADIUS) / 2
+  const cx = min - POINT_RADIUS + radius
 
-    // All points are on the y axis, no need to take average
-    const cy = points[0].cy
-    return { cx, cy, radius, points: points.map(p => p.point) }
+  // All points are on the y axis, no need to take average
+  const cy = points[0].cy
+  debugger
+  return {
+    cx,
+    cy,
+    radius,
+    points: points.map(p => p.point),
+    selected: points.every(p => p.point.selected),
   }
+}
 
-  // //results are clusters of indices relating to array of coordiantes passed in
-  var clusters = dbscan.run(
+const isPointInCluster = (clusters: ClusterPoint[], point: Point): boolean => {
+  return clusters.some(cluster => {
+    return cluster.points.map(p => p.id).indexOf(point.id) > -1
+  })
+}
+
+// const Circles = React.memo(({ points, onClick, onHover, margin }: any) => {
+const Circles = ({ points, onClick, onHover, margin }: any) => {
+  // results are clusters of indices relating to array of coordiantes passed in
+  const clusters = dbscan.run(
     points.map((p: any) => [p.cx, p.cy]),
     CLUSTER_NEIGHBOR_RADIUS,
     POINTS_TO_FORM_CLUSTER
@@ -103,14 +141,18 @@ const Circles = React.memo(({ points, onClick, onHover, margin }: any) => {
   const newClusterPoints = clusters
     .filter(cluster => cluster.length > 1)
     .map(cluster => cluster.map(i => points[i]))
-    .map(createClusterPoint)
+    .map(points => createClusterPoint(points))
 
   const handleHover = (points: Point[]) => (e: any) => {
     onHover({ x: e.pageX, y: e.pageY, points })
   }
+  const transform = 'translate(' + -margin.left + ',0)'
+  const pointIdsInCluster: string[] = []
+
   return (
     <>
       {newClusterPoints.map((cluster: ClusterPoint, i: number) => {
+        pointIdsInCluster.push(...cluster.points.map(p => p.id))
         const rectX =
           cluster.cx -
           5 -
@@ -123,79 +165,94 @@ const Circles = React.memo(({ points, onClick, onHover, margin }: any) => {
         const textX =
           cluster.cx - (cluster.points.length.toString().length * 10) / 2 + 'px'
         const textY = 30 + cluster.cy + 'px'
+
+        const selectedClusterProps = cluster.selected
+          ? {
+              stroke: 'black',
+              strokeWidth: '3px',
+              strokeOpacity: '100%',
+            }
+          : {}
+
+        const props = {
+          transform,
+          onMouseMove: handleHover(cluster.points),
+          onMouseOut: () => onHover([]),
+          onClick: () => onClick(cluster.points),
+        }
+
         return (
           <React.Fragment key={i}>
             <circle
-              className="cluster"
               fill="grey"
-              opacity="0.25"
+              fillOpacity="0.25"
               cx={cluster.cx}
               cy={cluster.cy}
               r={cluster.radius}
-              transform={'translate(' + -margin.left + ',0)'}
-              onClick={() => onClick(cluster.points)}
-              onMouseMove={handleHover(cluster.points)}
-              onMouseOut={() => onHover([])}
+              {...props}
+              {...selectedClusterProps}
             />
             <rect
-              className="cluster-background"
               fill="black"
               x={rectX}
               y={rectY}
               width={rectWidth}
               height={rectHeight}
-              transform={'translate(' + -margin.left + ',0)'}
-              onMouseMove={handleHover(cluster.points)}
-              onMouseOut={() => onHover([])}
-              onClick={() => onClick(cluster.points)}
+              {...props}
             />
             <rect
-              className="cluster-background"
               fill="black"
               x={cluster.cx - 1 + 'px'}
               y={15 + cluster.cy - 16 + 'px'}
               width={2}
               height={15}
-              transform={'translate(' + -margin.left + ',0)'}
-              onMouseMove={handleHover(cluster.points)}
-              onMouseOut={() => onHover([])}
-              onClick={() => onClick(cluster.points)}
+              {...props}
             />
-            <text
-              fill="white"
-              className="cluster-text"
-              x={textX}
-              y={textY}
-              fontSize="20"
-              transform={'translate(' + -margin.left + ',0)'}
-              onMouseMove={handleHover(cluster.points)}
-              onMouseOut={() => onHover([])}
-              onClick={() => onClick(cluster.points)}
-            >
+            <text fill="white" x={textX} y={textY} fontSize="20" {...props}>
               {cluster.points.length}
             </text>
           </React.Fragment>
         )
       })}
       {points.map((point: any, i: number) => {
+        var selectedClusters = newClusterPoints.filter(
+          cluster => cluster.selected
+        )
+        var selectedCircleProps = {}
+
+        if (
+          point.point.selected &&
+          !isPointInCluster(selectedClusters, point.point)
+        ) {
+          selectedCircleProps = {
+            stroke: 'black',
+            strokeWidth: '3px',
+            strokeOpacity: '100%',
+          }
+        }
+
         return (
           <circle
             key={i}
             fill="gray"
-            opacity="0.25"
+            fillOpacity="0.25"
             cx={point.cx}
             cy={point.cy}
             r={POINT_RADIUS}
-            transform={'translate(' + -margin.left + ',0)'}
+            transform={transform}
             onMouseMove={handleHover([point.point])}
             onMouseOut={() => onHover([])}
-            onClick={() => onClick([point.point])}
+            onClick={() => {
+              console.log(JSON.stringify(point.point))
+              onClick([point.point])
+            }}
+            {...selectedCircleProps}
           />
         )
       })}
     </>
   )
-})
+}
 
 const margin = { top: 20, right: 20, bottom: 30, left: 40 }
 
@@ -287,13 +344,13 @@ class Timeline extends React.Component<Props, any> {
     const points = this.props.value.map(point => {
       const cx = x(point.date)
       const cy = y(Y_VALUE)
-      return { cx, cy }
+      return { cx, cy, point }
     })
 
     this.setState({ points })
 
-    var zoomMin = 1
-    var zoomMax = (xAxisMax.getTime() - xAxisMin.getTime()) / (1000 * 60)
+    const zoomMin = 1
+    const zoomMax = (xAxisMax.getTime() - xAxisMin.getTime()) / (1000 * 60)
 
     const zoom = d3
       .zoom()
@@ -316,7 +373,7 @@ class Timeline extends React.Component<Props, any> {
 
     // TODO: try and use onZoom here instead
     this.zoomOut = () => {
-      zoom.scaleBy(timelineContainer.transition().duration(500), 0.2)
+      zoom.scaleBy(timelineContainer.transition().duration(500), 0.5)
     }
 
     d3.select('.timeline')
@@ -348,11 +405,8 @@ class Timeline extends React.Component<Props, any> {
   render() {
     const width = this.state.width - margin.left - margin.right
     const height = SVG_HEIGHT - margin.top - margin.bottom
-
     const { Tooltip = () => null } = this.props
 
-    const toggle = this.state.resizeToggle
-    console.log(toggle)
     return (
       <Root style={this.props.style} className={this.props.className}>
         <ZoomArea>
@@ -368,7 +422,7 @@ class Timeline extends React.Component<Props, any> {
             <div
               className="tooltip"
               style={{
-                opacity: 0.9,
+                fillOpacity: 0.9,
                 position: 'fixed',
                 left: (this as any).state.tooltip.x,
                 top: (this as any).state.tooltip.y + 50,
@@ -385,12 +439,12 @@ class Timeline extends React.Component<Props, any> {
             style={{ width: '100%' }}
           >
             <defs>
-              <clipPath id="clip">
+              <clipPath className="clip">
                 <rect width={width} height={height} />
               </clipPath>
             </defs>
             <g transform={'translate(' + margin.left + ',' + margin.top + ')'}>
-              <g clipPath="url(#clip)" className="points_g">
+              <g clipPath="url(.clip)">
                 <Circles
                   points={this.state.points}
                   margin={margin}
@@ -399,10 +453,10 @@ class Timeline extends React.Component<Props, any> {
                 />
               </g>
               <g
-                className="axis axis--x"
+                className="axis--x"
                 transform={'translate(0,' + height + ')'}
               />
-              <g className="axis axis--y" display="none" />
+              <g className="axis--y" display="none" />
             </g>
           </svg>
         </div>
@@ -411,4 +465,5 @@ class Timeline extends React.Component<Props, any> {
   }
 }
 
+// circle color, cluster color, cluster label background + text, axis
 export default Timeline

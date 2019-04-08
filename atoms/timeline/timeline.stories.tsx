@@ -1,6 +1,7 @@
 import * as React from 'react'
 import { storiesOf } from '@storybook/react'
 import { withKnobs } from '@storybook/addon-knobs'
+import { Point } from './timeline'
 import Timeline from './timeline'
 
 const randomDate = (start: Date, end: Date) =>
@@ -14,7 +15,7 @@ function uuidv4() {
   })
 }
 
-const createRandomData = (start: Date, sampleSize: number) => {
+const createRandomData = (start: Date, sampleSize: number): Point[] => {
   let samples = []
   for (let i = 0; i < sampleSize; i++) {
     const date = randomDate(start, new Date())
@@ -25,13 +26,15 @@ const createRandomData = (start: Date, sampleSize: number) => {
         id,
         title: 'title - ' + id,
       },
+      selected: false,
+      id: id,
     })
   }
 
   return samples
 }
 
-const createDuplicateData = (date: Date, sampleSize: number) => {
+const createDuplicateData = (date: Date, sampleSize: number): Point[] => {
   let samples = []
   for (let i = 0; i < sampleSize; i++) {
     const id = uuidv4()
@@ -41,43 +44,62 @@ const createDuplicateData = (date: Date, sampleSize: number) => {
         id,
         title: 'title - ' + id,
       },
+      selected: false,
+      id: id,
     })
   }
 
   return samples
 }
 
-type Point = {
-  icon?: any
-  date: Date
-  data?: any
+type State = {
+  points: Point[]
 }
 
-const Tooltip = (points: Point[]) => {
-  return <pre>{JSON.stringify(points, null, 2)}</pre>
-}
-
-const onClick = (points: Point[]) => {
-  alert('ON CLICK: \n' + JSON.stringify(points))
-}
-
-storiesOf('Timeline', module)
-  .addDecorator(withKnobs)
-  .add('playground', () => {
-    const samples = createRandomData(new Date(1990, 0, 1), 1000).concat(
+class TimelineExample extends React.Component<any, State> {
+  constructor(props: any) {
+    super(props)
+    const points = createRandomData(new Date(1990, 0, 1), 100).concat(
       createDuplicateData(new Date(1980, 0, 1), 20)
     )
 
+    this.state = {
+      points,
+    }
+  }
+
+  Tooltip = (points: Point[]) => {
+    return <pre>{JSON.stringify(points, null, 2)}</pre>
+  }
+
+  onClick = (toMatch: Point[]) => {
+    var newPoints = this.state.points.map(p => {
+      if (toMatch.some(match => match.id === p.id)) {
+        p.selected = !p.selected
+      }
+
+      return p
+    })
+
+    this.setState({ points: newPoints })
+    alert('ON CLICK: \n' + JSON.stringify(toMatch))
+  }
+
+  render() {
     return (
       <Timeline
-        value={samples}
-        onClick={onClick}
+        value={this.state.points}
+        onClick={this.onClick}
         style={{
           border: '1px solid grey',
         }}
-        Tooltip={Tooltip}
+        Tooltip={this.Tooltip}
       >
         Playground
       </Timeline>
     )
-  })
+  }
+}
+storiesOf('Timeline', module)
+  .addDecorator(withKnobs)
+  .add('playground', () => <TimelineExample />)
