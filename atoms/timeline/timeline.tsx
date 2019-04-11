@@ -5,17 +5,6 @@ import styled from '../../styled'
 
 const clustering = require('density-clustering')
 
-type result = number[][]
-
-type DBSCAN = {
-  new (): DBSCAN
-  run: (dataset: number[][], radius: any, amount: any) => result
-}
-
-type clustering = {
-  DBSCAN: DBSCAN
-}
-
 export type Point = {
   id: string
   date: Date
@@ -23,12 +12,10 @@ export type Point = {
   data?: any
 }
 
-type ClusterPoint = {
+type CoordinatePoint = {
   cx: number
   cy: number
-  radius: number
-  points: Point[]
-  selected: boolean
+  point: Point
 }
 
 type OnClick = (point: Point[]) => void
@@ -39,11 +26,26 @@ type Props = {
   style?: {}
   children?: any
   value: Point[]
-
-  //expected to set `selected` onClick
   onClick?: OnClick
   onHover?: OnHover
-  Tooltip?: any // React.Component | (points: Point[]) => JSX.Element
+  Tooltip?: any
+}
+
+type DBSCAN = {
+  new (): DBSCAN
+  run: (dataset: number[][], radius: any, amount: any) => number[][]
+}
+
+type clustering = {
+  DBSCAN: DBSCAN
+}
+
+type ClusterPoint = {
+  cx: number
+  cy: number
+  radius: number
+  points: Point[]
+  selected: boolean
 }
 
 const dbscan = new clustering.DBSCAN()
@@ -79,31 +81,6 @@ const ZoomArea = styled.div`
   }
 `
 
-const circleProps = (points: Point[]) => {
-  var stroke = ''
-  var strokeWidth = ''
-  var strokeOpacity = ''
-
-  if (points.every(p => p.selected)) {
-    stroke = 'black'
-    strokeWidth = '3px'
-    strokeOpacity = '100%'
-  }
-  const clusterProps = points.every(p => p.selected)
-    ? {
-        stroke: 'black',
-        strokeWidth: '3px',
-        strokeOpacity: '100%',
-      }
-    : {}
-
-  return {
-    stroke,
-    strokeWidth,
-    strokeOpacity,
-  }
-}
-
 const createClusterPoint = (points: any[]): ClusterPoint => {
   const pointCxs: number[] = points.map(p => p.cx)
   const max = Math.max(...pointCxs)
@@ -113,7 +90,6 @@ const createClusterPoint = (points: any[]): ClusterPoint => {
 
   // All points are on the y axis, no need to take average
   const cy = points[0].cy
-  debugger
   return {
     cx,
     cy,
@@ -256,7 +232,21 @@ const Circles = ({ points, onClick, onHover, margin }: any) => {
 
 const margin = { top: 20, right: 20, bottom: 30, left: 40 }
 
-class Timeline extends React.Component<Props, any> {
+type TooltipState = {
+  x: number
+  y: number
+  points: Point[]
+}
+
+type State = {
+  width: number
+  height: number
+  points: CoordinatePoint[]
+  tooltip: TooltipState | undefined
+  resizeToggle: boolean
+}
+
+class Timeline extends React.Component<Props, State> {
   d3Ref = React.createRef()
   view: any = null
   constructor(props: Props) {
@@ -405,7 +395,7 @@ class Timeline extends React.Component<Props, any> {
   render() {
     const width = this.state.width - margin.left - margin.right
     const height = SVG_HEIGHT - margin.top - margin.bottom
-    const { Tooltip = () => null } = this.props
+    const { Tooltip = (points: Point[]) => <div /> } = this.props
 
     return (
       <Root style={this.props.style} className={this.props.className}>
@@ -429,7 +419,13 @@ class Timeline extends React.Component<Props, any> {
                 pointerEvent: 'none',
               }}
             >
-              <Tooltip points={this.state.tooltip.points} />
+              <Tooltip
+                points={
+                  this.state.tooltip === undefined
+                    ? []
+                    : this.state.tooltip.points
+                }
+              />
             </div>
           ) : null}
           <svg
@@ -464,6 +460,4 @@ class Timeline extends React.Component<Props, any> {
     )
   }
 }
-
-// circle color, cluster color, cluster label background + text, axis
 export default Timeline
