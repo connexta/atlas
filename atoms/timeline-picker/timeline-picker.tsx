@@ -1,13 +1,20 @@
 import * as React from 'react'
 import * as d3 from 'd3'
-import styled from '../../styled'
-import RemoveCircle from '@material-ui/icons/DeleteForeverTwoTone'
+const moment = require('moment-timezone')
 
 type Mode = 'single' | 'range'
 
 type Props = {
   onChange?: (value: string) => any
+  onHover?: (value: string) => any
+  onMouseLeave?: () => any
   mode: Mode
+  tickFormat?: (value: string) => string
+  ticks?: number
+  timezone?: string
+  format?: string
+  hoverColor: string
+  value?: string
 }
 
 type State = {
@@ -17,29 +24,40 @@ type State = {
   yAxis: any
   xScale: any
   yScale: any
-  start: any
-  startCoord: any
-  end: any
+  value: any
 }
 
-const Root = styled<State, 'div'>('div')`
-  display: block;
-  cursor: pointer;
-
-  .remove {
-    cursor: pointer;
-    display: ${props => (props.start ? 'block' : 'none')};
-  }
-`
 const Y_VALUE = 0
 const SVG_HEIGHT = 100
 const margin = { top: 20, right: 20, bottom: 30, left: 40 }
 
 const xAxisScale = () => {
   return {
-    min: new Date('2019-04-18T21:46:14.642Z'),
+    min: new Date('1980-04-18T21:46:14.642Z'),
     max: new Date('2019-04-20T21:46:14.642Z'),
   }
+}
+
+const adjustValueToTimeZone = (
+  value: Date,
+  timezone?: string,
+  format?: string
+) => {
+  const momentValue = moment.tz(value, timezone)
+  const utcOffsetMinutes = momentValue.utcOffset()
+  return momentValue.subtract(utcOffsetMinutes, 'minutes').format(format)
+  // if (utcOffsetMinutes < 0) {
+  //   return momentValue.subtract(utcOffsetMinutes, 'minutes').format(format)
+  // } else if (utcOffsetMinutes > 0) {
+  //   return momentValue.subtract(utcOffsetMinutes, 'minutes').format(format)
+  // }
+  // return momentValue.format(format)
+}
+
+const adjustIncomingValueToUTC = (value: string, timezone?: string) => {
+  const momentValue = moment.tz(value, timezone)
+  const utcOffsetMinutes = momentValue.utcOffset()
+  return momentValue.add(utcOffsetMinutes, 'minutes').toDate()
 }
 
 class TimelinePicker extends React.Component<Props, State> {
@@ -52,21 +70,37 @@ class TimelinePicker extends React.Component<Props, State> {
       yAxis: undefined,
       xScale: undefined,
       yScale: undefined,
-      start: undefined,
-      startCoord: undefined,
-      end: undefined,
+      value: props.value
+        ? adjustIncomingValueToUTC(props.value, props.timezone)
+        : undefined,
     }
   }
-  componentDidUpdate() {
-    if (this.state.start && this.d3Refs.hover.line) {
-      d3.select(this.d3Refs.hover.line.current as any)
-        .attr(
-          'transform',
-          `translate(${this.state.xScale(this.state.start)}, 0)`
+
+  componentDidUpdate(prevProps: Props) {
+    if (prevProps.value !== this.props.value) {
+      this.setState({
+        value: this.props.value
+          ? adjustIncomingValueToUTC(this.props.value, this.props.timezone)
+          : undefined,
+      })
+    }
+    if (this.d3Refs.value.marker.current) {
+      if (this.state.value) {
+        d3.select(this.d3Refs.value.marker.current as any)
+          .attr(
+            'transform',
+            `translate(${this.state.xScale(this.state.value)}, 0)`
+          )
+          .attr('style', 'display: block')
+      } else {
+        d3.select(this.d3Refs.value.marker.current as any).attr(
+          'style',
+          'display: none'
         )
-        .attr('style', 'display: block')
+      }
     }
   }
+
   componentDidMount() {
     this.renderD3()
     this.attachD3Event()
@@ -80,7 +114,7 @@ class TimelinePicker extends React.Component<Props, State> {
     const width = this.state.width - margin.left - margin.right
     const height = SVG_HEIGHT - margin.top - margin.bottom
     return (
-      <Root {...this.state}>
+      <div>
         <svg
           ref={this.d3Refs.root as any}
           className="timeline"
@@ -92,7 +126,7 @@ class TimelinePicker extends React.Component<Props, State> {
               <rect width={width} height={height} />
             </clipPath>
           </defs>
-          <g transform={'translate(' + margin.left + ',' + margin.top + ')'}>
+          <g>
             <g
               className="hover-line"
               ref={this.d3Refs.hover.line as any}
@@ -104,31 +138,49 @@ class TimelinePicker extends React.Component<Props, State> {
                 x2="0"
                 y2="70"
                 style={{
-                  stroke: 'rgba(0, 0, 0, 0.2)',
+                  stroke: this.props.hoverColor,
                   strokeWidth: '2',
                 }}
               />
-              <RemoveCircle
-                onClick={e => {
-                  this.setState({
-                    start: undefined,
-                  })
-                  //   e.currentTarget.style.display = 'none'
+            </g>
+            <g
+              className="value-marker"
+              ref={this.d3Refs.value.marker as any}
+              style={{ display: 'none' }}
+            >
+              <line
+                x1="10"
+                y1="20"
+                x2="-10"
+                y2="50"
+                style={{
+                  stroke: this.props.hoverColor,
+                  strokeWidth: '2',
                 }}
-                component="g"
-                className="remove"
-                transform="translate(-12, 70)"
-                viewBox=""
+              />
+              <line
+                x1="-10"
+                y1="20"
+                x2="10"
+                y2="50"
+                style={{
+                  stroke: this.props.hoverColor,
+                  strokeWidth: '2',
+                }}
               />
             </g>
-            <g className="hover-value">
-              <text x="0" y="0" ref={this.d3Refs.hover.value as any} />
-            </g>
-            <g className="axis--x" transform={'translate(0,' + height + ')'} />
+            <g
+              className="axis--x"
+              transform={'translate(0,' + height + ')'}
+              style={{
+                fontSize: '1rem',
+                fontFamily: 'inherit',
+              }}
+            />
             <g className="axis--y" display="none" />
           </g>
         </svg>
-      </Root>
+      </div>
     )
   }
   attachD3Event() {
@@ -143,35 +195,40 @@ class TimelinePicker extends React.Component<Props, State> {
       const coord = d3.mouse(this.querySelector('g'))
       const value = that.state.xScale.invert(coord[0])
       that.setState({
-        start: value,
-        startCoord: coord[0],
+        value,
       })
       if (that.props.onChange) {
-        that.props.onChange(value.toISOString())
+        that.props.onChange(
+          adjustValueToTimeZone(value, that.props.timezone, that.props.format)
+        )
       }
-      d3.select(that.d3Refs.hover.line.current as any)
-        .select('circle')
-        .attr('style', 'display: block')
     })
 
     d3.select(this.d3Refs.root.current as any).on('mousemove', function() {
-      if (that.state.start) {
-        return
-      }
       const coord = d3.mouse(this.querySelector('g'))
+      const value = that.state.xScale.invert(coord[0])
       d3.select(that.d3Refs.hover.line.current as any)
         .attr('transform', `translate(${coord[0]}, 0)`)
         .attr('style', 'display: block')
-      d3.select(that.d3Refs.hover.value.current as any).text(
-        that.state.xScale.invert(coord[0])
-      )
+      if (that.props.onHover) {
+        that.props.onHover(
+          adjustValueToTimeZone(value, that.props.timezone, that.props.format)
+        )
+      }
+    })
+    d3.select(this.d3Refs.root.current as any).on('mouseleave', function() {
+      if (that.props.onMouseLeave) {
+        that.props.onMouseLeave()
+      }
     })
   }
   d3Refs = {
     root: React.createRef(),
     hover: {
       line: React.createRef(),
-      value: React.createRef(),
+    },
+    value: {
+      marker: React.createRef(),
     },
   }
   onResize = () => {
@@ -184,7 +241,7 @@ class TimelinePicker extends React.Component<Props, State> {
     const { width, height } = (this.d3Refs.root
       .current as any).getBoundingClientRect()
     this.setState({ width, height })
-    const x = d3.scaleTime().range([0, width])
+    const x = d3.scaleUtc().range([0, width])
     const y = d3.scaleLinear().range([height, 0])
 
     // @ts-ignore
@@ -201,6 +258,13 @@ class TimelinePicker extends React.Component<Props, State> {
     y.domain([0, Y_VALUE])
 
     const xAxis = d3.axisBottom(x)
+    if (this.props.tickFormat) {
+      // @ts-ignore
+      xAxis.tickFormat(this.props.tickFormat)
+    }
+    if (this.props.ticks) {
+      xAxis.ticks(this.props.ticks)
+    }
     const yAxis = d3.axisLeft(y)
     this.setState({
       xScale: x,
@@ -209,8 +273,12 @@ class TimelinePicker extends React.Component<Props, State> {
       yAxis,
     })
 
-    d3.select('.axis--x').call(xAxis)
-    d3.select('.axis--y').call(yAxis)
+    d3.select(this.d3Refs.root.current as any)
+      .select('.axis--x')
+      .call(xAxis)
+    d3.select(this.d3Refs.root.current as any)
+      .select('.axis--y')
+      .call(yAxis)
 
     const zoomMin = 1
     const zoomMax = (xAxisMax.getTime() - xAxisMin.getTime()) / (1000 * 60)
@@ -222,12 +290,9 @@ class TimelinePicker extends React.Component<Props, State> {
       .extent([[0, 0], [width, height]])
       .on('zoom', this.onZoom)
 
-    const timelineContainer = d3.select('.timeline') as d3.Selection<
-      SVGSVGElement,
-      {},
-      HTMLElement,
-      any
-    >
+    //@ts-ignore
+    const timelineContainer = d3.select(this.d3Refs.root
+      .current as any) as d3.Selection<SVGSVGElement, {}, HTMLElement, any>
 
     // TODO: try and use onZoom here instead
     this.zoomIn = () => {
@@ -239,7 +304,7 @@ class TimelinePicker extends React.Component<Props, State> {
       zoom.scaleBy(timelineContainer.transition().duration(500), 0.5)
     }
 
-    d3.select('.timeline')
+    d3.select(this.d3Refs.root.current as any)
       .call(zoom)
       .transition()
       .duration(1500)
@@ -251,7 +316,7 @@ class TimelinePicker extends React.Component<Props, State> {
       )
   }
   onZoom = () => {
-    const timelineContainer = d3.select('.timeline')
+    const timelineContainer = d3.select(this.d3Refs.root.current as any)
     let t = d3.zoomTransform(timelineContainer.node() as any)
 
     // TODO - No idea why k ends up being -1, this is a hacky fix :(
@@ -267,11 +332,21 @@ class TimelinePicker extends React.Component<Props, State> {
     const newYScale = t.rescaleY(this.y)
     // @ts-ignore
     const xAxis = d3.axisBottom(newXScale)
+    if (this.props.tickFormat) {
+      xAxis.tickFormat(this.props.tickFormat)
+    }
+    if (this.props.ticks) {
+      xAxis.ticks(this.props.ticks)
+    }
     // @ts-ignore
     const yAxis = d3.axisLeft(newYScale)
 
-    d3.select('.axis--x').call(xAxis.scale(newXScale))
-    d3.select('.axis--y').call(yAxis.scale(newYScale))
+    d3.select(this.d3Refs.root.current as any)
+      .select('.axis--x')
+      .call(xAxis.scale(newXScale))
+    d3.select(this.d3Refs.root.current as any)
+      .select('.axis--y')
+      .call(yAxis.scale(newYScale))
 
     this.setState({
       xScale: newXScale,
