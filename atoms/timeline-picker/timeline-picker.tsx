@@ -57,7 +57,7 @@ const adjustValueToTimeZone = (
 const adjustIncomingValueToUTC = (value: string, timezone?: string) => {
   const momentValue = moment.tz(value, timezone)
   const utcOffsetMinutes = momentValue.utcOffset()
-  return momentValue.add(utcOffsetMinutes, 'minutes').toDate()
+  return momentValue.toDate()
 }
 
 class TimelinePicker extends React.Component<Props, State> {
@@ -78,6 +78,7 @@ class TimelinePicker extends React.Component<Props, State> {
 
   componentDidUpdate(prevProps: Props) {
     if (prevProps.value !== this.props.value) {
+      console.log('cdu value')
       this.setState({
         value: this.props.value
           ? adjustIncomingValueToUTC(this.props.value, this.props.timezone)
