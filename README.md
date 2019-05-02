@@ -8,4 +8,4 @@ Atlas is available as an [npm package](https://www.npmjs.com/package/@connexta/a
 
 Check out the latest [Storybook](https://unpkg.com/@connexta/atlas@0.0.34/.storybook/index.html) to learn how to use the library.
 
-![alt text](https://image.shutterstock.com/image-vector/atlas-titan-kneeling-carrying-lifting-260nw-568664710.jpg)
+![alt text](https://media3.giphy.com/media/5RORsXDYXUOelTmtsQ/giphy-downsized.gif?cid=6104955e5cca41e94766374877f8a195&rid=giphy-downsized.gif)
