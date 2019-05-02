@@ -2,7 +2,7 @@
   "name": "@connexta/atlas",
   "description": "Atlas",
   "author": "Connexta LLC",
-  "version": "0.0.34",
+  "version": "0.0.35",
   "private": false,
   "scripts": {
     "copy:package": "cpx package.json dist",
