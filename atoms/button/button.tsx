@@ -22,8 +22,6 @@ type OurProps = TrimmedMUIProps & {
    * @description Used to
    */
   color?: Color
-
-  onClick?: () => any
 }
 
 const mapEmphasisToMUI = (emphasis?: Emphasis) => {
@@ -59,13 +57,12 @@ const mapColorToMUI = (customColor?: Color) => {
 }
 
 const mapPropsToMUI = (props: OurProps) => {
-  const { emphasis, color, children, onClick } = props
+  const { emphasis, color, ...otherProps } = props
   return {
     ...mapEmphasisToMUI(emphasis),
     ...mapColorToMUI(color),
     ...mapThemeToMUI(props.theme),
-    onClick,
-    children,
+    ...otherProps,
   }
 }
 
