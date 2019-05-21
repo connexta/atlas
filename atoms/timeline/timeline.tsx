@@ -67,20 +67,6 @@ const xAxisScale = (points: Point[]) => {
   }
 }
 
-const Root = styled.div`
-  position: relative;
-`
-
-const ZoomArea = styled.div`
-  position: absolute;
-  top: 10px;
-  right: 10px;
-
-  button + button {
-    margin-left: 10px;
-  }
-`
-
 const createClusterPoint = (points: any[]): ClusterPoint => {
   const pointCxs: number[] = points.map(p => p.cx)
   const max = Math.max(...pointCxs)
@@ -307,6 +293,7 @@ class Timeline extends React.Component<Props, State> {
     }
     const { width, height } = (this.d3Ref
       .current as any).getBoundingClientRect()
+
     this.setState({ width, height })
 
     const x = d3.scaleTime().range([0, width])
@@ -398,16 +385,28 @@ class Timeline extends React.Component<Props, State> {
     const { Tooltip = (points: Point[]) => <div /> } = this.props
 
     return (
-      <Root style={this.props.style} className={this.props.className}>
-        <ZoomArea>
+      <div
+        style={{ position: 'relative', width: '100%' }}
+        className={this.props.className}
+      >
+        <div
+          style={{
+            position: 'absolute',
+            top: '10px',
+            right: '10px',
+            // button + button {
+            //   margin-left: 10px;
+            // }
+          }}
+        >
           <Button onClick={this.zoomIn} emphasis="medium">
             +
           </Button>
           <Button onClick={this.zoomOut} emphasis="medium">
             -
           </Button>
-        </ZoomArea>
-        <div style={{ flexDirection: 'column' }}>
+        </div>
+        <div style={{ flexDirection: 'column', width: '100%' }}>
           {(this as any).state.tooltip !== undefined ? (
             <div
               className="tooltip"
@@ -434,29 +433,37 @@ class Timeline extends React.Component<Props, State> {
             height={SVG_HEIGHT}
             style={{ width: '100%' }}
           >
-            <defs>
-              <clipPath className="clip">
-                <rect width={width} height={height} />
-              </clipPath>
-            </defs>
-            <g transform={'translate(' + margin.left + ',' + margin.top + ')'}>
-              <g clipPath="url(.clip)">
-                <Circles
-                  points={this.state.points}
-                  margin={margin}
-                  onClick={this.props.onClick}
-                  onHover={this.onHover}
-                />
-              </g>
-              <g
-                className="axis--x"
-                transform={'translate(0,' + height + ')'}
-              />
-              <g className="axis--y" display="none" />
-            </g>
+            {width <= 0 ? null : (
+              <>
+                <defs>
+                  <clipPath className="clip">
+                    <rect width={width} height={height} />
+                  </clipPath>
+                </defs>
+                <g
+                  transform={
+                    'translate(' + margin.left + ',' + margin.top + ')'
+                  }
+                >
+                  <g clipPath="url(.clip)">
+                    <Circles
+                      points={this.state.points}
+                      margin={margin}
+                      onClick={this.props.onClick}
+                      onHover={this.onHover}
+                    />
+                  </g>
+                  <g
+                    className="axis--x"
+                    transform={'translate(0,' + height + ')'}
+                  />
+                  <g className="axis--y" display="none" />
+                </g>
+              </>
+            )}
           </svg>
         </div>
-      </Root>
+      </div>
     )
   }
 }
