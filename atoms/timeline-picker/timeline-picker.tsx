@@ -5,11 +5,11 @@ const moment = require('moment-timezone')
 type Mode = 'single' | 'range'
 
 type Props = {
-  onChange?: (value: string) => any
-  onHover?: (value: string) => any
-  onMouseLeave?: () => any
-  mode: Mode
+  onChange?: (value: string) => void
+  onHover?: (value: string) => void
+  onMouseLeave?: () => void
   tickFormat?: (value: string) => string
+  mode: Mode
   ticks?: number
   timezone?: string
   format?: string
@@ -34,6 +34,7 @@ const margin = { top: 20, right: 20, bottom: 30, left: 40 }
 const xAxisScale = () => {
   return {
     min: new Date('1980-04-18T21:46:14.642Z'),
+    // Use newDate() or make this configurable
     max: new Date('2019-04-20T21:46:14.642Z'),
   }
 }
@@ -56,7 +57,7 @@ const adjustValueToTimeZone = (
 
 const adjustIncomingValueToUTC = (value: string, timezone?: string) => {
   const momentValue = moment.tz(value, timezone)
-  const utcOffsetMinutes = momentValue.utcOffset()
+  // const utcOffsetMinutes = momentValue.utcOffset()
   return momentValue.toDate()
 }
 

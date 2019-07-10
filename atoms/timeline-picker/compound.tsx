@@ -6,43 +6,26 @@ type Props = {
   onChange?: () => void
 }
 
-type State = {
-  hover?: string
-  value?: string
-}
+const CompoundTimeline = (props: Props) => {
+  const [value, setValue] = React.useState<string | undefined>(undefined)
+  const [hover, setHover] = React.useState<string | undefined>(undefined)
 
-class CompoundTimeline extends React.Component<Props, State> {
-  constructor(props: Props) {
-    super(props)
-    this.state = {
-      value: undefined,
-      hover: undefined,
-    }
-  }
-  render() {
-    return (
-      <div
-        style={{
-          width: '400px',
-        }}
-      >
-        <Timeline
-          mode="single"
-          onChange={value => {
-            this.setState({ value })
-          }}
-          onMouseLeave={() => {
-            this.setState({ hover: undefined })
-          }}
-          onHover={hover => {
-            this.setState({ hover })
-          }}
-        />
-        <div>Hover: {this.state.hover}</div>
-        <div>Value: {this.state.value}</div>
-      </div>
-    )
-  }
+  return (
+    <div
+      style={{
+        width: '700px',
+      }}
+    >
+      <Timeline
+        mode="single"
+        onChange={value => setValue(value)}
+        onMouseLeave={() => setHover(undefined)}
+        onHover={hover => setHover(hover)}
+      />
+      <div>Hover: {hover}</div>
+      <div>Value: {value}</div>
+    </div>
+  )
 }
 
 export default CompoundTimeline
