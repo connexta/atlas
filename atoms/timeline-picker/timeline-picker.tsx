@@ -13,7 +13,7 @@ type Props = {
   ticks?: number
   timezone?: string
   format?: string
-  hoverColor: string
+  hoverColor?: string
   value?: string
 }
 
