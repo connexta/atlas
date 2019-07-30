@@ -1,7 +1,7 @@
 import * as React from 'react'
 import { useState } from 'react'
-import { action } from '../../../ace/@storybook/addon-actions'
-import { storiesOf } from '../../../ace/@storybook/react'
+import { action } from '@storybook/addon-actions'
+import { storiesOf } from '@storybook/react'
 import TimelinePicker from './index'
 
 //@ts-ignore
@@ -76,7 +76,7 @@ stories.add(
           timezone={TIMEZONE}
           onChange={(v: Date[]) => {
             action('onChange')(v)
-            setValue(v)
+            setValue(v as any)
           }}
           onHover={(v: Date) => setHover(v)}
           value={value}

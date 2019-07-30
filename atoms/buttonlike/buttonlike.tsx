@@ -21,8 +21,8 @@ type Props = {
 const Root = styled.div`
   display: inline-block;
   cursor: pointer;
-  min-height: ${props => props.theme.minimumButtonSize};
-  min-width: ${props => props.theme.minimumButtonSize};
+  min-height: ${(props: any) => props.theme.minimumButtonSize};
+  min-width: ${(props: any) => props.theme.minimumButtonSize};
 `
 /**
  * This should be done on keydown, check buttons out in a browser if you're in doubt.
