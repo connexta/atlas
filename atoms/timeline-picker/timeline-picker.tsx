@@ -1,364 +1,352 @@
-import * as React from 'react'
 import * as d3 from 'd3'
-const moment = require('moment-timezone')
+import * as React from 'react'
+import { useEffect, useRef, useState } from 'react'
+import styled from '../../styled'
 
-type Mode = 'single' | 'range'
+// @ts-ignore
+import moment from 'moment-timezone'
 
-type Props = {
-  onChange?: (value: string) => void
-  onHover?: (value: string) => void
-  onMouseLeave?: () => void
-  tickFormat?: (value: string) => string
-  mode: Mode
-  ticks?: number
+const hoverColor = '#000'
+const CONSTANT_Y_POS = 330
+const INTERNAL_DATE_FORMAT = 'YYYY/MM/DD HH:mm:mm'
+
+const MarkerHover = styled.g`
+  width: 40px;
+`
+
+const MarkerLine = styled.line`
+  stroke: ${hoverColor};
+  stroke-width: 10;
+  :hover {
+    cursor: ew-resize;
+  }
+`
+
+const HoverLine = styled.line`
+  stroke: ${hoverColor};
+  opacity: 0.3;
+  stroke-width: 2;
+`
+
+const Container = styled.div`
+  display: flex;
+  flex-direction: column;
+`
+
+/**
+ * Domain is the minimum and maximum values that the scale contains.
+ */
+const getInitialTimeScale = () => {
+  const min = new Date('1980-01-01:00:00.000z')
+  // const max = new Date("1980-01-02:00:00.000z"); //Uncomment to easily test timezones
+  const max = new Date()
+  const timeScale = d3
+    .scaleUtc()
+    .domain([min, max])
+    .nice()
+
+  return timeScale
+}
+
+// alias DatePair
+
+/**
+ * Convert a given date to UTC to render correctly on the Timeline.
+ *
+ * @param {string} value Moment time object.
+ * @param {string} timezone Timezone the incoming value is in.
+ */
+const toUtc = (value: Date, timezone: string = '') =>
+  moment.tz(value, timezone).toDate()
+
+const convertDateToTimezoneDate = (time: Date, timezone: string = '') =>
+  moment.tz(time, timezone).toDate()
+
+interface TimelinePickerProps {
+  /**
+   * Timezone to use when displaying times
+   */
   timezone?: string
-  format?: string
-  hoverColor?: string
-  value?: string
+
+  /**
+   * Range of dates
+   */
+  value: Date[]
+
+  /**
+   * onChange handler that gets called when making a selection on the TimelinePicker
+   */
+  onChange: (v: Date[]) => void
+
+  /**
+   * onHover handler that gets called when hovering over the TimelinePicker
+   */
+  onHover?: (v: Date | null) => void
 }
 
-type State = {
-  width: any
-  height: any
-  xAxis: any
-  yAxis: any
-  xScale: any
-  yScale: any
-  value: any
-}
+/*
+ * TODOS
+ * --------------------
+ * 1. When dragging a marker, it should stop short of overlapping the other marker.
+ * You should not be able to drag a marker past another marker as it would create a negative width rectange.
+ */
 
-const Y_VALUE = 0
-const SVG_HEIGHT = 100
-const margin = { top: 20, right: 20, bottom: 30, left: 40 }
+// Please see https://alignedleft.com/tutorials/d3/scales for more information about d3 scales.
+export const TimelinePicker = (props: TimelinePickerProps) => {
+  /**
+   * The useRef Hook creates a variable that "holds on" to a value across rendering
+   * passes. In this case it will hold our component's SVG DOM element. It's
+   * initialized null and React will assign it later (see the return statement)
+   */
+  const d3ContainerRef = useRef(null)
 
-const xAxisScale = () => {
-  return {
-    min: new Date('1980-04-18T21:46:14.642Z'),
-    // Use newDate() or make this configurable
-    max: new Date('2019-04-20T21:46:14.642Z'),
+  const hoverLineRef = useRef(null)
+
+  const leftMarkerRef = useRef(null)
+  const rightMarkerRef = useRef(null)
+  const areaMarkerRef = useRef(null)
+
+  const [width] = useState(800)
+  const [height] = useState(400)
+
+  const [xScale, setXScale] = useState(() => getInitialTimeScale())
+  const [xAxis, setXAxis] = useState(() => d3.axisBottom(xScale))
+
+  /**
+   *
+   * @param slider - Which slider the drag behavior should affect. Possible values: 'LEFT', 'RIGHT'
+   * @param currentValues - The current values to be used when setting the value that isn't changed.
+   */
+  const getDrag = (slider: String, currentValues: Date[]) =>
+    d3
+      .drag()
+      .on('start', () => {
+        d3.select(hoverLineRef.current).attr('style', 'display: none')
+      })
+      .on('end', () => {})
+      .on('drag', () => {
+        const value = xScale.invert(d3.event.x)
+        const convertedTimezoneValue = convertDateToTimezoneDate(
+          value,
+          props.timezone
+        )
+
+        if (slider === 'LEFT' && convertedTimezoneValue > xScale.domain()[0]) {
+          props.onChange([convertedTimezoneValue, currentValues[1]])
+        } else if (
+          slider === 'RIGHT' &&
+          convertedTimezoneValue < xScale.domain()[1]
+        ) {
+          props.onChange([currentValues[0], convertedTimezoneValue])
+        }
+      })
+
+  /**
+   * Range is the range of possible output values used in display.
+   * Domain maps to Range
+   * i.e. Dates map to Pixels
+   */
+  const renderInitialXAxis = () => {
+    const axisMargin = 20
+
+    xScale.range([axisMargin, width - axisMargin])
+
+    const svg = d3
+      .select(d3ContainerRef.current)
+      .attr('width', width)
+      .attr('height', height)
+
+    svg
+      .select('.axis--x')
+      .attr('transform', `translate(0 380)`)
+      .call(xAxis)
   }
-}
 
-const adjustValueToTimeZone = (
-  value: Date,
-  timezone?: string,
-  format?: string
-) => {
-  const momentValue = moment.tz(value, timezone)
-  const utcOffsetMinutes = momentValue.utcOffset()
-  return momentValue.subtract(utcOffsetMinutes, 'minutes').format(format)
-  // if (utcOffsetMinutes < 0) {
-  //   return momentValue.subtract(utcOffsetMinutes, 'minutes').format(format)
-  // } else if (utcOffsetMinutes > 0) {
-  //   return momentValue.subtract(utcOffsetMinutes, 'minutes').format(format)
-  // }
-  // return momentValue.format(format)
-}
+  /**
+   * When a zoom event is triggered, use the transform event to create a new xScale,
+   * then create a new xAxis using the scale and update existing xAxis
+   */
+  const handleZoom = () => {
+    const transform = d3.event.transform
 
-const adjustIncomingValueToUTC = (value: string, timezone?: string) => {
-  const momentValue = moment.tz(value, timezone)
-  // const utcOffsetMinutes = momentValue.utcOffset()
-  return momentValue.toDate()
-}
+    // Returns a copy of the continuous scale x whose domain is transformed.
+    const newXScale = transform.rescaleX(xScale)
+    setXScale(() => newXScale)
 
-class TimelinePicker extends React.Component<Props, State> {
-  constructor(props: Props) {
-    super(props)
-    this.state = {
-      width: 0,
-      height: 0,
-      xAxis: undefined,
-      yAxis: undefined,
-      xScale: undefined,
-      yScale: undefined,
-      value: props.value
-        ? adjustIncomingValueToUTC(props.value, props.timezone)
-        : undefined,
+    // Create a new xAxis with the new timeScale
+    const newXAxis = xAxis.scale(newXScale)
+    setXAxis(() => newXAxis)
+
+    // Apply the new xAxis
+    d3.select('.axis--x').call(newXAxis)
+  }
+
+  useEffect(() => {
+    if (d3ContainerRef.current) {
+      renderInitialXAxis()
+
+      const container = d3.select(d3ContainerRef.current)
+      container.call(
+        //@ts-ignore
+        d3
+          .zoom()
+          .scaleExtent([1, 60 * 60 * 24]) // Allows selections down to the minute at full zoom
+          .translateExtent([[0, 0], [width, height]])
+          .on('zoom', handleZoom)
+      )
     }
-  }
+  }, [])
 
-  componentDidUpdate(prevProps: Props) {
-    if (prevProps.value !== this.props.value) {
-      console.log('cdu value')
-      this.setState({
-        value: this.props.value
-          ? adjustIncomingValueToUTC(this.props.value, this.props.timezone)
-          : undefined,
+  // Add mouse handlers to listen to d3 mouse events
+  // Note: Can't use arrow functions when detecting d3.mouse events because we don't want 'this' auto bound
+  useEffect(() => {
+    if (props.value !== undefined) {
+      // When the d3Container mousemove event triggers, show the hover line
+      d3.select(d3ContainerRef.current).on('mousemove', function() {
+        const coord = d3.mouse(this as any)
+        d3.select(hoverLineRef.current)
+          .attr('transform', `translate(${coord[0]}, 250)`)
+          .attr('style', 'display: block')
+
+        if (props.onHover) {
+          const hoverValue = xScale.invert(coord[0])
+          const convertedHoverValue = convertDateToTimezoneDate(
+            hoverValue,
+            props.timezone
+          )
+          props.onHover(convertedHoverValue)
+        }
+      })
+
+      // When the d3Container mouseleave event triggers, set the hoverValue to null and hide the hoverLine line
+      d3.select(d3ContainerRef.current).on('mouseleave', function() {
+        props.onHover && props.onHover(null)
+        d3.select(hoverLineRef.current).attr('style', 'display: none')
+      })
+
+      // When the d3Container click event triggers, set the clickValue
+      d3.select(d3ContainerRef.current).on('click', function() {
+        const coord = d3.mouse(this as any)
+        const value = xScale.invert(coord[0])
+        const convertedTimezoneValue = convertDateToTimezoneDate(
+          value,
+          props.timezone
+        )
+
+        // If not values are provided, first click will create a new range at +/- 1 year from the click point
+        if (props.value.length === 0) {
+          const lower = moment(
+            convertedTimezoneValue,
+            INTERNAL_DATE_FORMAT
+          ).subtract(365, 'days')
+
+          const higher = moment(
+            convertedTimezoneValue,
+            INTERNAL_DATE_FORMAT
+          ).add(365, 'days')
+
+          props.onChange([lower, higher])
+        } else {
+          if (convertedTimezoneValue < props.value[0]) {
+            props.onChange([convertedTimezoneValue, props.value[1]])
+          } else if (
+            props.value[0] < convertedTimezoneValue &&
+            convertedTimezoneValue < props.value[1]
+          ) {
+            console.log('do nothing')
+          } else if (props.value[1] < convertedTimezoneValue) {
+            props.onChange([props.value[0], convertedTimezoneValue])
+          }
+        }
       })
     }
-    if (this.d3Refs.value.marker.current) {
-      if (this.state.value) {
-        d3.select(this.d3Refs.value.marker.current as any)
+  }, [xScale, props.value, props.timezone, props.onHover])
+
+  // When a value is changed or the scale changes, update a marker
+  useEffect(() => {
+    // @ts-ignore
+    d3.select(leftMarkerRef.current).call(getDrag('LEFT', props.value))
+    // @ts-ignore
+    d3.select(rightMarkerRef.current).call(getDrag('RIGHT', props.value))
+
+    if (
+      leftMarkerRef.current &&
+      rightMarkerRef.current &&
+      areaMarkerRef.current
+    ) {
+      const leftMarker = d3.select(leftMarkerRef.current)
+      const rightMarker = d3.select(rightMarkerRef.current)
+      const areaMarker = d3.select(areaMarkerRef.current)
+
+      if (props.value.length == 2) {
+        const [leftValue, rightValue] = props.value
+        const leftUtc = toUtc(leftValue)
+        const rightUtc = toUtc(rightValue)
+
+        leftMarker
+          // TODO: Set y of this css transform dynamically
           .attr(
             'transform',
-            `translate(${this.state.xScale(this.state.value)}, 0)`
+            `translate(${xScale(leftUtc)}, ${CONSTANT_Y_POS + 5})`
           )
           .attr('style', 'display: block')
+
+        rightMarker
+          // TODO: Set y of this css transform dynamically
+          .attr(
+            'transform',
+            `translate(${xScale(rightUtc)}, ${CONSTANT_Y_POS + 5})`
+          )
+          .attr('style', 'display: block')
+
+        areaMarker
+          // TODO: Set yof this css transform dynamically
+          .attr('transform', `translate(${xScale(leftUtc)},${CONSTANT_Y_POS})`)
+          .attr('width', xScale(rightUtc) - xScale(leftUtc))
+          .attr('height', '50')
+          .attr('fill', '#a9a9a9')
+          .attr('opacity', 0.3)
+          .attr('style', 'display: block')
       } else {
-        d3.select(this.d3Refs.value.marker.current as any).attr(
-          'style',
-          'display: none'
-        )
+        leftMarker.attr('style', 'display: none')
+        rightMarker.attr('style', 'display: none')
+        areaMarker.attr('style', 'display: none')
       }
     }
-  }
+  }, [xScale, props.value])
 
-  componentDidMount() {
-    this.renderD3()
-    this.attachD3Event()
-    window.addEventListener('resize', this.onResize)
-  }
-
-  componentWillUnmount() {
-    window.removeEventListener('resize', this.onResize)
-  }
-  render() {
-    const width = this.state.width - margin.left - margin.right
-    const height = SVG_HEIGHT - margin.top - margin.bottom
-    return (
-      <div>
-        <svg
-          ref={this.d3Refs.root as any}
-          className="timeline"
-          height={SVG_HEIGHT}
-          style={{ width: '100%', overflow: 'visible' }}
+  return (
+    <Container>
+      <svg
+        style={{
+          marginBottom: '50px',
+        }}
+        ref={d3ContainerRef}
+      >
+        {/* Vertical line showing the current hover position */}
+        <g
+          className="hover-line"
+          ref={hoverLineRef}
+          style={{ display: 'none' }}
         >
-          <defs>
-            <clipPath className="clip">
-              <rect width={width} height={height} />
-            </clipPath>
-          </defs>
-          <g>
-            <g
-              className="hover-line"
-              ref={this.d3Refs.hover.line as any}
-              style={{ display: 'none' }}
-            >
-              <line
-                x1="0"
-                y1="0"
-                x2="0"
-                y2="70"
-                style={{
-                  stroke: this.props.hoverColor,
-                  strokeWidth: '2',
-                }}
-              />
-            </g>
-            <g
-              className="value-marker"
-              ref={this.d3Refs.value.marker as any}
-              style={{ display: 'none' }}
-            >
-              <line
-                x1="10"
-                y1="20"
-                x2="-10"
-                y2="50"
-                style={{
-                  stroke: this.props.hoverColor,
-                  strokeWidth: '2',
-                }}
-              />
-              <line
-                x1="-10"
-                y1="20"
-                x2="10"
-                y2="50"
-                style={{
-                  stroke: this.props.hoverColor,
-                  strokeWidth: '2',
-                }}
-              />
-            </g>
-            <g
-              className="axis--x"
-              transform={'translate(0,' + height + ')'}
-              style={{
-                fontSize: '1rem',
-                fontFamily: 'inherit',
-              }}
-            />
-            <g className="axis--y" display="none" />
-          </g>
-        </svg>
-      </div>
-    )
-  }
-  attachD3Event() {
-    if (
-      this.d3Refs.root.current === null ||
-      this.d3Refs.hover.line.current === null
-    ) {
-      return
-    }
-    const that = this
-    d3.select(this.d3Refs.root.current as any).on('click', function() {
-      const coord = d3.mouse(this.querySelector('g'))
-      const value = that.state.xScale.invert(coord[0])
-      that.setState({
-        value,
-      })
-      if (that.props.onChange) {
-        that.props.onChange(
-          adjustValueToTimeZone(value, that.props.timezone, that.props.format)
-        )
-      }
-    })
+          <HoverLine x1="0" y1="0" x2="0" y2="200" />
+        </g>
 
-    d3.select(this.d3Refs.root.current as any).on('mousemove', function() {
-      const coord = d3.mouse(this.querySelector('g'))
-      const value = that.state.xScale.invert(coord[0])
-      d3.select(that.d3Refs.hover.line.current as any)
-        .attr('transform', `translate(${coord[0]}, 0)`)
-        .attr('style', 'display: block')
-      if (that.props.onHover) {
-        that.props.onHover(
-          adjustValueToTimeZone(value, that.props.timezone, that.props.format)
-        )
-      }
-    })
-    d3.select(this.d3Refs.root.current as any).on('mouseleave', function() {
-      if (that.props.onMouseLeave) {
-        that.props.onMouseLeave()
-      }
-    })
-  }
-  d3Refs = {
-    root: React.createRef(),
-    hover: {
-      line: React.createRef(),
-    },
-    value: {
-      marker: React.createRef(),
-    },
-  }
-  onResize = () => {
-    this.renderD3()
-  }
-  renderD3 = () => {
-    if (this.d3Refs.root.current === null) {
-      return
-    }
-    const { width, height } = (this.d3Refs.root
-      .current as any).getBoundingClientRect()
-    this.setState({ width, height })
-    const x = d3.scaleUtc().range([0, width])
-    const y = d3.scaleLinear().range([height, 0])
+        <rect ref={areaMarkerRef} style={{ display: 'none' }} />
 
-    // @ts-ignore
-    this.x = x
-    // @ts-ignore
-    this.y = y
+        {/* Lines that appears upon clicking on the timeline */}
+        <MarkerHover ref={leftMarkerRef} style={{ display: 'none' }}>
+          <MarkerLine x1="0" y1="0" x2="0" y2="40" />
+        </MarkerHover>
+        <MarkerHover ref={rightMarkerRef} style={{ display: 'none' }}>
+          <MarkerLine x1="0" y1="0" x2="0" y2="40" />
+        </MarkerHover>
 
-    // setup axises
-    const range = xAxisScale()
-    const xAxisMin = range.min
-    const xAxisMax = range.max
-
-    x.domain([xAxisMin, xAxisMax])
-    y.domain([0, Y_VALUE])
-
-    const xAxis = d3.axisBottom(x)
-    if (this.props.tickFormat) {
-      // @ts-ignore
-      xAxis.tickFormat(this.props.tickFormat)
-    }
-    if (this.props.ticks) {
-      xAxis.ticks(this.props.ticks)
-    }
-    const yAxis = d3.axisLeft(y)
-    this.setState({
-      xScale: x,
-      yScale: y,
-      xAxis,
-      yAxis,
-    })
-
-    d3.select(this.d3Refs.root.current as any)
-      .select('.axis--x')
-      .call(xAxis)
-    d3.select(this.d3Refs.root.current as any)
-      .select('.axis--y')
-      .call(yAxis)
-
-    const zoomMin = 1
-    const zoomMax = (xAxisMax.getTime() - xAxisMin.getTime()) / (1000 * 60)
-
-    const zoom = d3
-      .zoom()
-      .scaleExtent([zoomMin, zoomMax])
-      .translateExtent([[0, 0], [width, height]])
-      .extent([[0, 0], [width, height]])
-      .on('zoom', this.onZoom)
-
-    //@ts-ignore
-    const timelineContainer = d3.select(this.d3Refs.root
-      .current as any) as d3.Selection<SVGSVGElement, {}, HTMLElement, any>
-
-    // TODO: try and use onZoom here instead
-    this.zoomIn = () => {
-      zoom.scaleBy(timelineContainer.transition().duration(500), 2)
-    }
-
-    // TODO: try and use onZoom here instead
-    this.zoomOut = () => {
-      zoom.scaleBy(timelineContainer.transition().duration(500), 0.5)
-    }
-
-    d3.select(this.d3Refs.root.current as any)
-      .call(zoom)
-      .transition()
-      .duration(1500)
-      .call(
-        zoom.transform as any,
-        d3.zoomIdentity
-          .scale(width / (x(xAxisMin) - x(xAxisMax)))
-          .translate(-x(xAxisMin), 0)
-      )
-  }
-  onZoom = () => {
-    const timelineContainer = d3.select(this.d3Refs.root.current as any)
-    let t = d3.zoomTransform(timelineContainer.node() as any)
-
-    // TODO - No idea why k ends up being -1, this is a hacky fix :(
-    //0 means nothing will display, -1 inverts
-    if (t.k === -1) {
-      // @ts-ignore
-      t.k = 1
-    }
-
-    // @ts-ignore
-    const newXScale = t.rescaleX(this.x)
-    // @ts-ignore
-    const newYScale = t.rescaleY(this.y)
-    // @ts-ignore
-    const xAxis = d3.axisBottom(newXScale)
-    if (this.props.tickFormat) {
-      xAxis.tickFormat(this.props.tickFormat)
-    }
-    if (this.props.ticks) {
-      xAxis.ticks(this.props.ticks)
-    }
-    // @ts-ignore
-    const yAxis = d3.axisLeft(newYScale)
-
-    d3.select(this.d3Refs.root.current as any)
-      .select('.axis--x')
-      .call(xAxis.scale(newXScale))
-    d3.select(this.d3Refs.root.current as any)
-      .select('.axis--y')
-      .call(yAxis.scale(newYScale))
-
-    this.setState({
-      xScale: newXScale,
-      yScale: newYScale,
-      xAxis,
-      yAxis,
-    })
-  }
-  zoomIn() {}
-  zoomOut() {}
+        {/* X Axis Placeholder */}
+        <g className="axis axis--x" />
+      </svg>
+    </Container>
+  )
 }
 
 export default TimelinePicker
