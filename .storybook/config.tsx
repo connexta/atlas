@@ -1,6 +1,6 @@
 // import * as React from 'react'
-import { configure, addDecorator } from '@storybook/react'
-import { withInfo } from '@storybook/addon-info'
+import { configure, addDecorator } from '@connexta/ace/@storybook/react'
+import { withInfo } from '@connexta/ace/@storybook/addon-info'
 import { withThemesProvider } from 'storybook-addon-styled-component-theme'
 // import Theme from '../atoms/theme'
 

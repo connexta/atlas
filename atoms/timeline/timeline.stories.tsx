@@ -1,6 +1,6 @@
 import * as React from 'react'
-import { storiesOf } from '@storybook/react'
-import { withKnobs } from '@storybook/addon-knobs'
+import { storiesOf } from '@connexta/ace/@storybook/react'
+import { withKnobs } from '@connexta/ace/@storybook/addon-knobs'
 import Timeline, { Point } from './timeline'
 
 const randomDate = (start: Date, end: Date) =>

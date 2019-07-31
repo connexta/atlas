@@ -17,7 +17,7 @@ import { ThemeInterface } from './theme'
 const {
   default: styled,
   css,
-  injectGlobal,
+  createGlobalStyle,
   keyframes,
   ThemeProvider,
   withTheme,
@@ -35,7 +35,7 @@ const keyframesWithTheme: (
 
 export {
   css,
-  injectGlobal,
+  createGlobalStyle,
   keyframesWithTheme as keyframes,
   ThemeProvider,
   withTheme,
