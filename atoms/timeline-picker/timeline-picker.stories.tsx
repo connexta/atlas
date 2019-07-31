@@ -12,7 +12,7 @@ const TIMEZONE = 'America/New_York'
 
 const stories = storiesOf('Timeline Picker', module)
 
-// Hack to make hooks work with storybook. Fix available in https://github.com/storybookjs/storybook/releases/tag/v5.2.0-beta.10
+// Hack to make hooks work with storybook. Real fix available in https://github.com/storybookjs/storybook/releases/tag/v5.2.0-beta.10
 stories.addDecorator((Story: any) => <Story />)
 
 const TIMELINE_PICKER_DESCRIPTION = `
