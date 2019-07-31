@@ -10,15 +10,13 @@ import moment from 'moment-timezone'
 const DATE_FORMAT = 'MM/DD/YYYY h:mm a'
 const TIMEZONE = 'America/New_York'
 
-const stories = storiesOf('Timeline Picker', module)
+const stories = storiesOf('Timeline Picker', module).addParameters({
+  info: `The TimelinePicker can be used to select a time range. The TimelinePicker utilizies d3.js,
+  and supports zooming and dragging as well as translation between timezones.`,
+})
 
 // Hack to make hooks work with storybook. Real fix available in https://github.com/storybookjs/storybook/releases/tag/v5.2.0-beta.10
 stories.addDecorator((Story: any) => <Story />)
-
-const TIMELINE_PICKER_DESCRIPTION = `
-The TimelinePicker can be used to select a time range. The TimelinePicker utilizies d3.js,
-and supports zooming and dragging as well as translation between timezones.
-`
 
 const formatDate = (value: Date) => moment(value).format(DATE_FORMAT)
 
@@ -56,8 +54,7 @@ stories.add(
         />
       </div>
     )
-  },
-  { info: TIMELINE_PICKER_DESCRIPTION }
+  }
 )
 
 stories.add(
@@ -83,6 +80,5 @@ stories.add(
         />
       </div>
     )
-  },
-  { info: TIMELINE_PICKER_DESCRIPTION }
+  }
 )
