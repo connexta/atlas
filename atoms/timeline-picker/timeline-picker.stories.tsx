@@ -7,6 +7,8 @@ import TimelinePicker from './index'
 //@ts-ignore
 import moment from 'moment-timezone'
 
+import { test_data as data } from './util'
+
 const DATE_FORMAT = 'MM/DD/YYYY h:mm a'
 const TIMEZONE = 'America/New_York'
 
@@ -28,7 +30,7 @@ const renderValues = (value: Date[]) => {
   return `${formatDate(value[0])} - ${formatDate(value[1])}`
 }
 
-stories.add('Initial Values', () => {
+stories.add('Initial Range', () => {
   const [value, setValue] = useState([
     new Date('01/25/1995'),
     new Date('05/04/2008'),
@@ -43,6 +45,7 @@ stories.add('Initial Values', () => {
       {`Hover: ${hover != null ? formatDate(hover) : ''}`}
       <TimelinePicker
         timezone={TIMEZONE}
+        // data={data}
         onChange={(v: Date[]) => {
           action('onChange')(v)
           setValue(v)
@@ -54,7 +57,7 @@ stories.add('Initial Values', () => {
   )
 })
 
-stories.add('No Initial Values', () => {
+stories.add('No Initial Range', () => {
   const [value, setValue] = useState([])
   const [hover, setHover] = useState()
 

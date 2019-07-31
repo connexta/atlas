@@ -6,7 +6,7 @@
   "private": false,
   "scripts": {
     "copy:package": "cpx package.json dist",
-    "prebuild": "rimraf dist && yarn copy:package && yarn storybook:build",
+    "prebuild": "rimraf dist && yarn copy:package && yarn storybook:build && cpx target/storybook dist",
     "build": "tsc",
     "publish:npm": "yarn build && npm publish dist",
     "storybook": "ace storybook --root atoms",

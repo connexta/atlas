@@ -300,12 +300,12 @@ export const TimelinePicker = (props: TimelinePickerProps) => {
           .attr('style', 'display: block')
 
         areaMarker
-          // TODO: Set yof this css transform dynamically
+          // TODO: Set y of this css transform dynamically
           .attr('transform', `translate(${xScale(leftUtc)},${CONSTANT_Y_POS})`)
           .attr('width', xScale(rightUtc) - xScale(leftUtc))
           .attr('height', '50')
           .attr('fill', '#a9a9a9')
-          .attr('opacity', 0.3)
+          .attr('opacity', 0.2)
           .attr('style', 'display: block')
       } else {
         leftMarker.attr('style', 'display: none')
