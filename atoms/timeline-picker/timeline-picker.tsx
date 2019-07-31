@@ -5,18 +5,19 @@ import styled from '../../styled'
 
 // @ts-ignore
 import moment from 'moment-timezone'
+import { Data } from './util'
 
 const hoverColor = '#000'
 const CONSTANT_Y_POS = 330
 const INTERNAL_DATE_FORMAT = 'YYYY/MM/DD HH:mm:mm'
 
 const MarkerHover = styled.g`
-  width: 40px;
+  width: 10px;
 `
 
 const MarkerLine = styled.line`
   stroke: ${hoverColor};
-  stroke-width: 10;
+  stroke-width: 4;
   :hover {
     cursor: ew-resize;
   }
@@ -48,7 +49,9 @@ const getInitialTimeScale = () => {
   return timeScale
 }
 
-// alias DatePair
+const inRange = (date: number, selectionRange: number[]) => {
+  return selectionRange[0] < date && date < selectionRange[1]
+}
 
 /**
  * Convert a given date to UTC to render correctly on the Timeline.
@@ -71,7 +74,7 @@ interface TimelinePickerProps {
   /**
    * Range of dates
    */
-  value: Date[]
+  selectionRange: Date[]
 
   /**
    * onChange handler that gets called when making a selection on the TimelinePicker
@@ -82,6 +85,16 @@ interface TimelinePickerProps {
    * onHover handler that gets called when hovering over the TimelinePicker
    */
   onHover?: (v: Date | null) => void
+
+  /**
+   *
+   */
+  data?: Data[]
+
+  /**
+   *
+   */
+  dateAttribute?: string
 }
 
 /*
@@ -112,12 +125,14 @@ export const TimelinePicker = (props: TimelinePickerProps) => {
   const [xScale, setXScale] = useState(() => getInitialTimeScale())
   const [xAxis, setXAxis] = useState(() => d3.axisBottom(xScale))
 
+  // const [brushDragStart, setBrushDragStart] = useState()
+
   /**
    *
    * @param slider - Which slider the drag behavior should affect. Possible values: 'LEFT', 'RIGHT'
    * @param currentValues - The current values to be used when setting the value that isn't changed.
    */
-  const getDrag = (slider: String, currentValues: Date[]) =>
+  const getEdgeDrag = (slider: String, currentValues: Date[]) =>
     d3
       .drag()
       .on('start', () => {
@@ -140,6 +155,40 @@ export const TimelinePicker = (props: TimelinePickerProps) => {
           props.onChange([currentValues[0], convertedTimezoneValue])
         }
       })
+
+  /**
+   * Drag behavior used when selecting the middle area between a range.
+   *
+   * @param currentValues - The current values to be used when setting the value that isn't changed.
+   */
+  const getBrushDrag = (currentValues: Date[]) =>
+    d3.drag().on('drag', () => {
+      const value = d3.event.x - d3.event.subject.x
+
+      const currentLeft = xScale(currentValues[0])
+      const currentRight = xScale(currentValues[1])
+
+      const newLeft = currentLeft + value
+      const newRight = currentRight + value
+
+      const newLeftDate = convertDateToTimezoneDate(
+        xScale.invert(newLeft),
+        props.timezone
+      )
+
+      const newRightDate = convertDateToTimezoneDate(
+        xScale.invert(newRight),
+        props.timezone
+      )
+
+      // Improve this bounds check.
+      if (
+        xScale.domain()[0] < newLeftDate &&
+        newRightDate < xScale.domain()[1]
+      ) {
+        props.onChange([newLeftDate, newRightDate])
+      }
+    })
 
   /**
    * Range is the range of possible output values used in display.
@@ -200,7 +249,7 @@ export const TimelinePicker = (props: TimelinePickerProps) => {
   // Add mouse handlers to listen to d3 mouse events
   // Note: Can't use arrow functions when detecting d3.mouse events because we don't want 'this' auto bound
   useEffect(() => {
-    if (props.value !== undefined) {
+    if (props.selectionRange !== undefined) {
       // When the d3Container mousemove event triggers, show the hover line
       d3.select(d3ContainerRef.current).on('mousemove', function() {
         const coord = d3.mouse(this as any)
@@ -234,7 +283,7 @@ export const TimelinePicker = (props: TimelinePickerProps) => {
         )
 
         // If not values are provided, first click will create a new range at +/- 1 year from the click point
-        if (props.value.length === 0) {
+        if (props.selectionRange.length === 0) {
           const lower = moment(
             convertedTimezoneValue,
             INTERNAL_DATE_FORMAT
@@ -247,27 +296,72 @@ export const TimelinePicker = (props: TimelinePickerProps) => {
 
           props.onChange([lower, higher])
         } else {
-          if (convertedTimezoneValue < props.value[0]) {
-            props.onChange([convertedTimezoneValue, props.value[1]])
+          if (convertedTimezoneValue < props.selectionRange[0]) {
+            props.onChange([convertedTimezoneValue, props.selectionRange[1]])
           } else if (
-            props.value[0] < convertedTimezoneValue &&
-            convertedTimezoneValue < props.value[1]
+            props.selectionRange[0] < convertedTimezoneValue &&
+            convertedTimezoneValue < props.selectionRange[1]
           ) {
             console.log('do nothing')
-          } else if (props.value[1] < convertedTimezoneValue) {
-            props.onChange([props.value[0], convertedTimezoneValue])
+          } else if (props.selectionRange[1] < convertedTimezoneValue) {
+            props.onChange([props.selectionRange[0], convertedTimezoneValue])
           }
         }
       })
     }
-  }, [xScale, props.value, props.timezone, props.onHover])
+  }, [xScale, props.selectionRange, props.timezone, props.onHover])
+
+  // Render points
+  useEffect(() => {
+    if (
+      d3ContainerRef.current &&
+      props.data &&
+      props.dateAttribute !== undefined
+    ) {
+      d3.selectAll('.data').remove()
+
+      const container = d3.select(d3ContainerRef.current)
+
+      props.data.forEach(d => {
+        const date = d.attributes[props.dateAttribute!]
+        if (date == null) {
+          return
+        }
+
+        const scaledDate = xScale(date)
+
+        container
+          .append('rect')
+          .attr('class', 'data')
+          .attr(
+            'fill',
+            `${
+              inRange(scaledDate, props.selectionRange.map(r => xScale(r)))
+                ? 'blue'
+                : 'grey'
+            }`
+          )
+          .attr('width', '10')
+          .attr('height', '20')
+          .attr('transform', `translate(${scaledDate}, ${CONSTANT_Y_POS + 30})`)
+      })
+    }
+  }, [props.data, xScale, props.selectionRange, props.dateAttribute])
 
   // When a value is changed or the scale changes, update a marker
   useEffect(() => {
+    d3.select(leftMarkerRef.current).call(
+      // @ts-ignore
+      getEdgeDrag('LEFT', props.selectionRange)
+    )
+
+    d3.select(rightMarkerRef.current).call(
+      // @ts-ignore
+      getEdgeDrag('RIGHT', props.selectionRange)
+    )
+
     // @ts-ignore
-    d3.select(leftMarkerRef.current).call(getDrag('LEFT', props.value))
-    // @ts-ignore
-    d3.select(rightMarkerRef.current).call(getDrag('RIGHT', props.value))
+    d3.select(areaMarkerRef.current).call(getBrushDrag(props.selectionRange))
 
     if (
       leftMarkerRef.current &&
@@ -278,8 +372,8 @@ export const TimelinePicker = (props: TimelinePickerProps) => {
       const rightMarker = d3.select(rightMarkerRef.current)
       const areaMarker = d3.select(areaMarkerRef.current)
 
-      if (props.value.length == 2) {
-        const [leftValue, rightValue] = props.value
+      if (props.selectionRange.length == 2) {
+        const [leftValue, rightValue] = props.selectionRange
         const leftUtc = toUtc(leftValue)
         const rightUtc = toUtc(rightValue)
 
@@ -313,7 +407,7 @@ export const TimelinePicker = (props: TimelinePickerProps) => {
         areaMarker.attr('style', 'display: none')
       }
     }
-  }, [xScale, props.value])
+  }, [xScale, props.selectionRange])
 
   return (
     <Container>

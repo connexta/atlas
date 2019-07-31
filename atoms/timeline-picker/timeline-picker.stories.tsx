@@ -1,6 +1,7 @@
 import * as React from 'react'
 import { useState } from 'react'
 import { action } from '@connexta/ace/@storybook/addon-actions'
+import { select } from '@connexta/ace/@storybook/addon-knobs'
 import { storiesOf } from '@connexta/ace/@storybook/react'
 import TimelinePicker from './index'
 
@@ -31,27 +32,37 @@ const renderValues = (value: Date[]) => {
 }
 
 stories.add('Initial Range', () => {
-  const [value, setValue] = useState([
+  const [selectionRange, setSelectionRange] = useState([
     new Date('01/25/1995'),
     new Date('05/04/2008'),
   ])
   const [hover, setHover] = useState()
 
+  const dateAttribute = select(
+    'Date Attribute',
+    {
+      Created: 'created',
+      Modified: 'modified',
+    },
+    'created'
+  )
+
   return (
     <div>
-      {`Values: ${renderValues(value)}`}
+      {`Values: ${renderValues(selectionRange)}`}
       <br />
       <br />
       {`Hover: ${hover != null ? formatDate(hover) : ''}`}
       <TimelinePicker
         timezone={TIMEZONE}
-        // data={data}
+        data={data}
+        dateAttribute={dateAttribute}
         onChange={(v: Date[]) => {
           action('onChange')(v)
-          setValue(v)
+          setSelectionRange(v)
         }}
         onHover={(v: Date) => setHover(v)}
-        value={value}
+        selectionRange={selectionRange}
       />
     </div>
   )
@@ -61,6 +72,15 @@ stories.add('No Initial Range', () => {
   const [value, setValue] = useState([])
   const [hover, setHover] = useState()
 
+  const dateAttribute = select(
+    'Date Attribute',
+    {
+      Created: 'created',
+      Modified: 'modified',
+    },
+    'created'
+  )
+
   return (
     <div>
       {`Values: ${renderValues(value)}`}
@@ -69,12 +89,14 @@ stories.add('No Initial Range', () => {
       {`Hover: ${hover != null ? formatDate(hover) : ''}`}
       <TimelinePicker
         timezone={TIMEZONE}
+        data={data}
+        dateAttribute={dateAttribute}
         onChange={(v: Date[]) => {
           action('onChange')(v)
           setValue(v as any)
         }}
         onHover={(v: Date) => setHover(v)}
-        value={value}
+        selectionRange={value}
       />
     </div>
   )
