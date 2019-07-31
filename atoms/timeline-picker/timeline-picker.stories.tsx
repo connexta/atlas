@@ -1,7 +1,7 @@
 import * as React from 'react'
 import { useState } from 'react'
-import { action } from '@storybook/addon-actions'
-import { storiesOf } from '@storybook/react'
+import { action } from '@connexta/ace/@storybook/addon-actions'
+import { storiesOf } from '@connexta/ace/@storybook/react'
 import TimelinePicker from './index'
 
 //@ts-ignore
@@ -28,57 +28,51 @@ const renderValues = (value: Date[]) => {
   return `${formatDate(value[0])} - ${formatDate(value[1])}`
 }
 
-stories.add(
-  'Initial Values',
-  () => {
-    const [value, setValue] = useState([
-      new Date('01/25/1995'),
-      new Date('05/04/2008'),
-    ])
-    const [hover, setHover] = useState()
+stories.add('Initial Values', () => {
+  const [value, setValue] = useState([
+    new Date('01/25/1995'),
+    new Date('05/04/2008'),
+  ])
+  const [hover, setHover] = useState()
 
-    return (
-      <div>
-        {`Values: ${renderValues(value)}`}
-        <br />
-        <br />
-        {`Hover: ${hover != null ? formatDate(hover) : ''}`}
-        <TimelinePicker
-          timezone={TIMEZONE}
-          onChange={(v: Date[]) => {
-            action('onChange')(v)
-            setValue(v)
-          }}
-          onHover={(v: Date) => setHover(v)}
-          value={value}
-        />
-      </div>
-    )
-  }
-)
+  return (
+    <div>
+      {`Values: ${renderValues(value)}`}
+      <br />
+      <br />
+      {`Hover: ${hover != null ? formatDate(hover) : ''}`}
+      <TimelinePicker
+        timezone={TIMEZONE}
+        onChange={(v: Date[]) => {
+          action('onChange')(v)
+          setValue(v)
+        }}
+        onHover={(v: Date) => setHover(v)}
+        value={value}
+      />
+    </div>
+  )
+})
 
-stories.add(
-  'No Initial Values',
-  () => {
-    const [value, setValue] = useState([])
-    const [hover, setHover] = useState()
+stories.add('No Initial Values', () => {
+  const [value, setValue] = useState([])
+  const [hover, setHover] = useState()
 
-    return (
-      <div>
-        {`Values: ${renderValues(value)}`}
-        <br />
-        <br />
-        {`Hover: ${hover != null ? formatDate(hover) : ''}`}
-        <TimelinePicker
-          timezone={TIMEZONE}
-          onChange={(v: Date[]) => {
-            action('onChange')(v)
-            setValue(v as any)
-          }}
-          onHover={(v: Date) => setHover(v)}
-          value={value}
-        />
-      </div>
-    )
-  }
-)
+  return (
+    <div>
+      {`Values: ${renderValues(value)}`}
+      <br />
+      <br />
+      {`Hover: ${hover != null ? formatDate(hover) : ''}`}
+      <TimelinePicker
+        timezone={TIMEZONE}
+        onChange={(v: Date[]) => {
+          action('onChange')(v)
+          setValue(v as any)
+        }}
+        onHover={(v: Date) => setHover(v)}
+        value={value}
+      />
+    </div>
+  )
+})
