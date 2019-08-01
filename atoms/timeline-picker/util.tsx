@@ -20,8 +20,12 @@ export const test_data = (n: number): Data[] => {
     return {
       id: (num + 1).toString(),
       attributes: {
-        created: moment(new Date(1981, 0, 1)).add(num, 'months'),
-        modified: moment(new Date(1986, 0, 1)).add(num, 'years'),
+        created: moment(new Date(1981, 0, 1))
+          .add(num, 'months')
+          .toDate(),
+        modified: moment(new Date(1986, 0, 1))
+          .add(num, 'years')
+          .toDate(),
       },
     }
   })

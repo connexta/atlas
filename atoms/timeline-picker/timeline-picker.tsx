@@ -31,14 +31,14 @@ const Container = styled.div`
   display: flex;
   flex-direction: column;
 
-  .data {
-    :hover {
-      color: white;
-    }
+  .axis {
+    color: #d6d6d8;
   }
 
-  .axis--x text {
-    fill: 'white';
+  .data-holder {
+    :hover {
+      fill: white;
+    }
   }
 `
 
@@ -247,12 +247,10 @@ export const TimelinePicker = (props: TimelinePickerProps) => {
       .attr('width', width)
       .attr('height', height)
 
-    const axis = svg.select('.axis--x')
-
-    axis.attr('transform', `translate(0 380)`).call(xAxis)
-    axis.selectAll('text').style('stroke', 'white')
-    axis.selectAll('path').style('stroke', 'white')
-    axis.selectAll('line').style('stroke', 'white')
+    svg
+      .select('.axis--x')
+      .attr('transform', `translate(0 380)`)
+      .call(xAxis)
   }
 
   /**
@@ -271,11 +269,7 @@ export const TimelinePicker = (props: TimelinePickerProps) => {
     setXAxis(() => newXAxis)
 
     // Apply the new xAxis
-    const axis = d3.select('.axis--x')
-    axis.call(newXAxis)
-    axis.selectAll('text').style('stroke', 'white')
-    axis.selectAll('path').style('stroke', 'white')
-    axis.selectAll('line').style('stroke', 'white')
+    d3.select('.axis--x').call(newXAxis)
   }
 
   useEffect(() => {
@@ -334,31 +328,29 @@ export const TimelinePicker = (props: TimelinePickerProps) => {
 
   // Add mouse handlers to listen to d3 mouse events
   useEffect(() => {
-    if (props.selectionRange !== undefined) {
-      // When the d3Container mousemove event triggers, show the hover line
-      d3.select(d3ContainerRef.current).on('mousemove', function() {
-        const coord = d3.mouse(this as any)
-        d3.select(hoverLineRef.current)
-          .attr('transform', `translate(${coord[0]}, 250)`)
-          .attr('style', 'display: block')
+    // When the d3Container mousemove event triggers, show the hover line
+    d3.select(d3ContainerRef.current).on('mousemove', function() {
+      const coord = d3.mouse(this as any)
+      d3.select(hoverLineRef.current)
+        .attr('transform', `translate(${coord[0]}, 250)`)
+        .attr('style', 'display: block')
 
-        if (props.onHover) {
-          const hoverValue = xScale.invert(coord[0])
-          const convertedHoverValue = convertDateToTimezoneDate(
-            hoverValue,
-            props.timezone
-          )
-          // props.onHover(convertedHoverValue) // This line is causing performance issues because it triggers re-renders for some reason.
-        }
-      })
+      if (props.onHover) {
+        const hoverValue = xScale.invert(coord[0])
+        const convertedHoverValue = convertDateToTimezoneDate(
+          hoverValue,
+          props.timezone
+        )
+        // props.onHover(convertedHoverValue) // This line is causing performance issues because it triggers re-renders for some reason.
+      }
+    })
 
-      // When the d3Container mouseleave event triggers, set the hoverValue to null and hide the hoverLine line
-      d3.select(d3ContainerRef.current).on('mouseleave', function() {
-        props.onHover && props.onHover(null)
-        hideElement(d3.select(hoverLineRef.current))
-      })
-    }
-  }, [xScale, props.selectionRange, props.timezone, props.onHover])
+    // When the d3Container mouseleave event triggers, set the hoverValue to null and hide the hoverLine line
+    d3.select(d3ContainerRef.current).on('mouseleave', function() {
+      props.onHover && props.onHover(null)
+      hideElement(d3.select(hoverLineRef.current))
+    })
+  }, [xScale, props.timezone, props.onHover])
 
   // Render rectangles
   useEffect(() => {
@@ -428,7 +420,8 @@ export const TimelinePicker = (props: TimelinePickerProps) => {
         }
       })
 
-      // console.log('Clustered Rectangles: ', clusteredRectangles)
+      console.log(props.data[0].attributes.created)
+
       buckets.forEach(b => {
         const rectangleHeight = b.data.length * 10
         d3.select('.data-holder')

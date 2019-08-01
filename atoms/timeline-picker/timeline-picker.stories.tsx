@@ -36,7 +36,11 @@ stories.add('Initial Range', () => {
     new Date('01/25/1995'),
     new Date('05/04/2008'),
   ])
-  const [hover, setHover] = useState()
+  // const [hover, setHover] = useState()
+
+  const numDataPoints = number('Number of spaced data points to render', 1)
+
+  const [data] = useState(test_data(numDataPoints))
 
   const dateAttribute = select(
     'Date Attribute',
@@ -47,32 +51,31 @@ stories.add('Initial Range', () => {
     'created'
   )
 
-  const numDataPoints = number(
-    'Number of yearly spaced data points to render',
-    10
-  )
-
   return (
     <div style={{ backgroundColor: '#35343a' }}>
       <TimelinePicker
         timezone={TIMEZONE}
-        data={test_data(numDataPoints)}
+        data={data}
         dateAttribute={dateAttribute}
         onChange={(v: Date[]) => {
           action('onChange')(v)
           setSelectionRange(v)
         }}
-        onHover={(v: Date) => setHover(v)}
+        // onHover={(v: Date) => setHover(v)}
         selectionRange={selectionRange}
       />
       <div style={{ display: 'flex', color: 'white' }}>
-        <div style={{ paddingRight: '100px' }}>
-          <p>Start</p>
-          <p>{formatDate(selectionRange[0])}</p>
+        <div style={{ paddingRight: '100px', margin: '10px' }}>
+          <p>
+            <b>Start</b>
+          </p>
+          {/* <p>{formatDate(selectionRange[0])}</p> */}
         </div>
-        <div>
-          <p>End</p>
-          <p>{formatDate(selectionRange[1])}</p>
+        <div style={{ paddingRight: '100px', margin: '10px' }}>
+          <p>
+            <b>End</b>
+          </p>
+          {/* <p>{formatDate(selectionRange[1])}</p> */}
         </div>
       </div>
     </div>
