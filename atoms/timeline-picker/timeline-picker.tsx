@@ -5,10 +5,10 @@ import styled from '../../styled'
 
 // @ts-ignore
 import moment from 'moment-timezone'
-import { Data } from './util'
+import { Data, range } from './util'
 
 const hoverColor = '#000'
-const CONSTANT_Y_POS = 330
+const AXIS_MARGIN = 20
 const INTERNAL_DATE_FORMAT = 'YYYY/MM/DD HH:mm:mm'
 
 const MarkerHover = styled.g`
@@ -231,9 +231,7 @@ export const TimelinePicker = (props: TimelinePickerProps) => {
    * i.e. Dates map to Pixels
    */
   const renderInitialXAxis = () => {
-    const axisMargin = 20
-
-    xScale.range([axisMargin, width - axisMargin])
+    xScale.range([AXIS_MARGIN, width - AXIS_MARGIN])
 
     const svg = d3
       .select(d3ContainerRef.current)
@@ -281,34 +279,11 @@ export const TimelinePicker = (props: TimelinePickerProps) => {
     }
   }, [])
 
-  // Add mouse handlers to listen to d3 mouse events
+  // Add click handlers to listen to d3 mouse events
   // Note: Can't use arrow functions when detecting d3.mouse events because we don't want 'this' auto bound
   useEffect(() => {
     if (props.selectionRange !== undefined) {
-      // When the d3Container mousemove event triggers, show the hover line
-      d3.select(d3ContainerRef.current).on('mousemove', function() {
-        const coord = d3.mouse(this as any)
-        d3.select(hoverLineRef.current)
-          .attr('transform', `translate(${coord[0]}, 250)`)
-          .attr('style', 'display: block')
-
-        if (props.onHover) {
-          const hoverValue = xScale.invert(coord[0])
-          const convertedHoverValue = convertDateToTimezoneDate(
-            hoverValue,
-            props.timezone
-          )
-          props.onHover(convertedHoverValue)
-        }
-      })
-
-      // When the d3Container mouseleave event triggers, set the hoverValue to null and hide the hoverLine line
-      d3.select(d3ContainerRef.current).on('mouseleave', function() {
-        props.onHover && props.onHover(null)
-        hideElement(d3.select(hoverLineRef.current))
-      })
-
-      // When the d3Container click event triggers, set the clickValue
+      // When the d3Container click event triggers, set the selectionRange
       d3.select(d3ContainerRef.current).on('click', function() {
         const coord = d3.mouse(this as any)
         const value = xScale.invert(coord[0])
@@ -331,18 +306,79 @@ export const TimelinePicker = (props: TimelinePickerProps) => {
 
           props.onChange([left, right])
         } else {
-          if (convertedTimezoneValue < props.selectionRange[0]) {
-            props.onChange([convertedTimezoneValue, props.selectionRange[1]])
-          } else if (props.selectionRange[1] < convertedTimezoneValue) {
-            props.onChange([props.selectionRange[0], convertedTimezoneValue])
-          }
+          // Uncomment to enable click based range extension
+          // if (convertedTimezoneValue < props.selectionRange[0]) {
+          //   props.onChange([convertedTimezoneValue, props.selectionRange[1]])
+          // } else if (props.selectionRange[1] < convertedTimezoneValue) {
+          //   props.onChange([props.selectionRange[0], convertedTimezoneValue])
+          // }
         }
+      })
+    }
+  }, [xScale, props.selectionRange, props.timezone])
+
+  // Add mouse handlers to listen to d3 mouse events
+  useEffect(() => {
+    if (props.selectionRange !== undefined) {
+      // When the d3Container mousemove event triggers, show the hover line
+      d3.select(d3ContainerRef.current).on('mousemove', function() {
+        const coord = d3.mouse(this as any)
+        d3.select(hoverLineRef.current)
+          .attr('transform', `translate(${coord[0]}, 250)`)
+          .attr('style', 'display: block')
+
+        if (props.onHover) {
+          const hoverValue = xScale.invert(coord[0])
+          const convertedHoverValue = convertDateToTimezoneDate(
+            hoverValue,
+            props.timezone
+          )
+          // props.onHover(convertedHoverValue) // This line is causing performance issues because it triggers re-renders for some reason.
+        }
+      })
+
+      // When the d3Container mouseleave event triggers, set the hoverValue to null and hide the hoverLine line
+      d3.select(d3ContainerRef.current).on('mouseleave', function() {
+        props.onHover && props.onHover(null)
+        hideElement(d3.select(hoverLineRef.current))
       })
     }
   }, [xScale, props.selectionRange, props.timezone, props.onHover])
 
   // Render rectangles
   useEffect(() => {
+    // console.log('Use Effect Triggered ----------------')
+    // console.log('props.data', props.data)
+    // console.log('xScale', xScale)
+    // console.log('props.selectionRange', props.selectionRange)
+    // console.log('props.dataAttribute', props.dateAttribute)
+    // props.data, xScale, props.selectionRange, props.dateAttribute
+
+    // Create 50 buckets
+
+    const min = xScale.range()[0]
+    const max = xScale.range()[1]
+
+    const NUM_BUCKETS = 50
+
+    const bucketWidth = (max - min) / NUM_BUCKETS
+
+    console.log(bucketWidth)
+
+    type Bucket = {
+      x1: number
+      x2: number
+      data: string[]
+    }
+
+    const buckets: Bucket[] = range(NUM_BUCKETS).map(i => ({
+      x1: min + bucketWidth * i,
+      x2: min + bucketWidth * (i + 1),
+      data: [],
+    }))
+
+    debugger
+
     if (
       d3ContainerRef.current &&
       props.data &&
@@ -352,6 +388,16 @@ export const TimelinePicker = (props: TimelinePickerProps) => {
 
       const container = d3.select(d3ContainerRef.current)
 
+      const rectangleWidth = 10
+
+      type Cluster = {
+        x1: number
+        x2: number
+        rectangles: string[]
+      }
+
+      const clusteredRectangles: Cluster[] = []
+
       props.data.forEach(d => {
         const date = d.attributes[props.dateAttribute!]
         if (date == null) {
@@ -359,18 +405,74 @@ export const TimelinePicker = (props: TimelinePickerProps) => {
         }
 
         const scaledDate = xScale(date)
-        const isSelected = inSelectionRange(
-          scaledDate,
-          props.selectionRange.map(r => xScale(r))
-        )
 
+        // const isSelected = false
+        // const isSelected = inSelectionRange(
+        //   scaledDate,
+        //   props.selectionRange.map(r => xScale(r))
+        // )
+
+        // If rectangle to be created would fall into x range of another data point, add to it's cluster.
+
+        // console.log(scaledDate)
+
+        for (let i = 0; i < buckets.length; i++) {
+          const b = buckets[i]
+          if (b.x1 < scaledDate && scaledDate < b.x2) {
+            b.data.push(d.id)
+          }
+        }
+
+        // Base Case - 0 clusters created
+        if (clusteredRectangles.length == 0) {
+          // Create a cluster from the first rectangle
+          clusteredRectangles.push({
+            x1: scaledDate - rectangleWidth / 2,
+            x2: scaledDate + rectangleWidth / 2,
+            rectangles: [d.id],
+          })
+          // Case 1 - Cluster already exists
+        } else {
+          // If current rectangle will fall in cluster bounds, add to cluster
+          let inCluster = false
+          for (let i = 0; i < clusteredRectangles.length; i++) {
+            const cr = clusteredRectangles[i]
+            if (cr.x1 < scaledDate && scaledDate <= cr.x2) {
+              cr.rectangles.push(d.id)
+              inCluster = true
+              break
+            }
+          }
+
+          if (!inCluster) {
+            clusteredRectangles.push({
+              x1: scaledDate - rectangleWidth / 2,
+              x2: scaledDate + rectangleWidth / 2,
+              rectangles: [d.id],
+            })
+          }
+        }
+
+        // clusteredRectangles.push({})
+      })
+
+      // console.log('Clustered Rectangles: ', clusteredRectangles)
+      clusteredRectangles.forEach(cr => {
+        const rectangleHeight = cr.rectangles.length * 10
         container
           .append('rect')
           .attr('class', 'data')
-          .attr('fill', `${isSelected ? 'blue' : 'grey'}`)
-          .attr('width', '10')
-          .attr('height', '20')
-          .attr('transform', `translate(${scaledDate}, ${CONSTANT_Y_POS + 30})`)
+          .attr('fill', 'blue')
+          .attr('stroke-width', '1')
+          .attr('stroke', 'black')
+          .attr('width', rectangleWidth)
+          .attr('height', rectangleHeight)
+          .attr(
+            'transform',
+            `translate(${(cr.x1 + cr.x2) / 2}, ${height -
+              rectangleHeight -
+              AXIS_MARGIN})`
+          )
       })
     }
   }, [props.data, xScale, props.selectionRange, props.dateAttribute])
@@ -404,28 +506,28 @@ export const TimelinePicker = (props: TimelinePickerProps) => {
         const leftUtc = toUtc(leftValue)
         const rightUtc = toUtc(rightValue)
 
+        const markerHeight = height - 65
+
         leftMarker
           // TODO: Set y of this css transform dynamically
-          .attr(
-            'transform',
-            `translate(${xScale(leftUtc)}, ${CONSTANT_Y_POS + 5})`
-          )
+          .attr('transform', `translate(${xScale(leftUtc)}, ${markerHeight})`)
           .attr('style', 'display: block')
 
         rightMarker
           // TODO: Set y of this css transform dynamically
-          .attr(
-            'transform',
-            `translate(${xScale(rightUtc)}, ${CONSTANT_Y_POS + 5})`
-          )
+          .attr('transform', `translate(${xScale(rightUtc)}, ${markerHeight})`)
           .attr('style', 'display: block')
 
         areaMarker
           // TODO: Set y of this css transform dynamically
-          .attr('transform', `translate(${xScale(leftUtc)},${CONSTANT_Y_POS})`)
+          .attr(
+            'transform',
+            `translate(${xScale(leftUtc)},${markerHeight - 5})`
+          )
           .attr('width', xScale(rightUtc) - xScale(leftUtc))
           .attr('height', '50')
           .attr('fill', '#a9a9a9')
+          .attr('stroke', '')
           .attr('opacity', 0.2)
           .attr('style', 'display: block')
       } else {

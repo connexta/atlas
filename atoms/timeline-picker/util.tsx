@@ -8,16 +8,19 @@ export type Data = {
   }
 }
 
-export const test_data = (numData: number): Data[] => {
-  if (typeof numData !== 'number' || numData < 1) {
+/** Python's "range" function */
+export const range = (n: number) => Array.from(Array(n).keys())
+
+export const test_data = (n: number): Data[] => {
+  if (typeof n !== 'number' || n < 1) {
     return []
   }
 
-  return Array.from(Array(numData).keys()).map(num => {
+  return range(n).map(num => {
     return {
-      id: num.toString(),
+      id: (num + 1).toString(),
       attributes: {
-        created: moment(new Date(1981, 0, 1)).add(num, 'years'),
+        created: moment(new Date(1981, 0, 1)).add(num, 'months'),
         modified: moment(new Date(1986, 0, 1)).add(num, 'years'),
       },
     }
