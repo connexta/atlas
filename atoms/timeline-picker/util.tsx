@@ -8,12 +8,18 @@ export type Data = {
   }
 }
 
-export const test_data: Data[] = Array.from(Array(20).keys()).map(num => {
-  return {
-    id: num.toString(),
-    attributes: {
-      created: moment(new Date(1990, 0, 1)).add(num, 'years'),
-      modified: moment(new Date(1996, 0, 1)).add(num, 'years'),
-    },
+export const test_data = (numData: number): Data[] => {
+  if (typeof numData !== 'number' || numData < 1) {
+    return []
   }
-})
+
+  return Array.from(Array(numData).keys()).map(num => {
+    return {
+      id: num.toString(),
+      attributes: {
+        created: moment(new Date(1981, 0, 1)).add(num, 'years'),
+        modified: moment(new Date(1986, 0, 1)).add(num, 'years'),
+      },
+    }
+  })
+}

@@ -1,20 +1,20 @@
 import * as React from 'react'
 import { useState } from 'react'
 import { action } from '@connexta/ace/@storybook/addon-actions'
-import { select } from '@connexta/ace/@storybook/addon-knobs'
+import { select, number } from '@connexta/ace/@storybook/addon-knobs'
 import { storiesOf } from '@connexta/ace/@storybook/react'
 import TimelinePicker from './index'
 
 //@ts-ignore
 import moment from 'moment-timezone'
 
-import { test_data as data } from './util'
+import { test_data } from './util'
 
 const DATE_FORMAT = 'MM/DD/YYYY h:mm a'
 const TIMEZONE = 'America/New_York'
 
 const stories = storiesOf('Timeline Picker', module).addParameters({
-  info: `The TimelinePicker can be used to select a time range. The TimelinePicker utilizies d3.js,
+  info: `The TimelinePicker is a controlled component that can be used to select a time range. The TimelinePicker utilizies d3.js,
   and supports zooming and dragging as well as translation between timezones.`,
 })
 
@@ -47,6 +47,11 @@ stories.add('Initial Range', () => {
     'created'
   )
 
+  const numDataPoints = number(
+    'Number of yearly spaced data points to render',
+    10
+  )
+
   return (
     <div>
       {`Values: ${renderValues(selectionRange)}`}
@@ -55,7 +60,7 @@ stories.add('Initial Range', () => {
       {`Hover: ${hover != null ? formatDate(hover) : ''}`}
       <TimelinePicker
         timezone={TIMEZONE}
-        data={data}
+        data={test_data(numDataPoints)}
         dateAttribute={dateAttribute}
         onChange={(v: Date[]) => {
           action('onChange')(v)
@@ -81,6 +86,11 @@ stories.add('No Initial Range', () => {
     'created'
   )
 
+  const numDataPoints = number(
+    'Number of yearly spaced data points to render',
+    10
+  )
+
   return (
     <div>
       {`Values: ${renderValues(value)}`}
@@ -89,7 +99,7 @@ stories.add('No Initial Range', () => {
       {`Hover: ${hover != null ? formatDate(hover) : ''}`}
       <TimelinePicker
         timezone={TIMEZONE}
-        data={data}
+        data={test_data(numDataPoints)}
         dateAttribute={dateAttribute}
         onChange={(v: Date[]) => {
           action('onChange')(v)
