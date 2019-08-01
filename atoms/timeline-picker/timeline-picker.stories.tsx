@@ -10,7 +10,7 @@ import moment from 'moment-timezone'
 
 import { test_data } from './util'
 
-const DATE_FORMAT = 'MM/DD/YYYY h:mm a'
+const DATE_FORMAT = 'DD MMMM YYYY h:mm a'
 const TIMEZONE = 'America/New_York'
 
 const stories = storiesOf('Timeline Picker', module).addParameters({
@@ -53,11 +53,7 @@ stories.add('Initial Range', () => {
   )
 
   return (
-    <div>
-      {`Values: ${renderValues(selectionRange)}`}
-      <br />
-      <br />
-      {`Hover: ${hover != null ? formatDate(hover) : ''}`}
+    <div style={{ backgroundColor: '#35343a' }}>
       <TimelinePicker
         timezone={TIMEZONE}
         data={test_data(numDataPoints)}
@@ -69,6 +65,16 @@ stories.add('Initial Range', () => {
         onHover={(v: Date) => setHover(v)}
         selectionRange={selectionRange}
       />
+      <div style={{ display: 'flex', color: 'white' }}>
+        <div style={{ paddingRight: '100px' }}>
+          <p>Start</p>
+          <p>{formatDate(selectionRange[0])}</p>
+        </div>
+        <div>
+          <p>End</p>
+          <p>{formatDate(selectionRange[1])}</p>
+        </div>
+      </div>
     </div>
   )
 })

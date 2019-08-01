@@ -7,30 +7,39 @@ import styled from '../../styled'
 import moment from 'moment-timezone'
 import { Data, range } from './util'
 
-const hoverColor = '#000'
 const AXIS_MARGIN = 20
 const INTERNAL_DATE_FORMAT = 'YYYY/MM/DD HH:mm:mm'
 
 const MarkerHover = styled.g`
-  width: 10px;
-`
-const MarkerLine = styled.line`
-  stroke: ${hoverColor};
-  stroke-width: 4;
+  stroke: 'white';
   :hover {
     cursor: ew-resize;
   }
 `
-
-const HoverLine = styled.line`
-  stroke: ${hoverColor};
-  opacity: 0.3;
-  stroke-width: 2;
+const MarkerLine = styled.line`
+  stroke: ${(props: any) => (!props.hidden ? '#3f66b7' : 'rgba(0, 0, 0, 0)')};
+  stroke-width: ${(props: any) => (!props.hidden ? 2 : 10)};
 `
+
+// const HoverLine = styled.line`
+//   stroke: ${hoverColor};
+//   opacity: 0.3;
+//   stroke-width: 2;
+// `
 
 const Container = styled.div`
   display: flex;
   flex-direction: column;
+
+  .data {
+    :hover {
+      color: white;
+    }
+  }
+
+  .axis--x text {
+    fill: 'white';
+  }
 `
 
 /**
@@ -238,10 +247,12 @@ export const TimelinePicker = (props: TimelinePickerProps) => {
       .attr('width', width)
       .attr('height', height)
 
-    svg
-      .select('.axis--x')
-      .attr('transform', `translate(0 380)`)
-      .call(xAxis)
+    const axis = svg.select('.axis--x')
+
+    axis.attr('transform', `translate(0 380)`).call(xAxis)
+    axis.selectAll('text').style('stroke', 'white')
+    axis.selectAll('path').style('stroke', 'white')
+    axis.selectAll('line').style('stroke', 'white')
   }
 
   /**
@@ -260,7 +271,11 @@ export const TimelinePicker = (props: TimelinePickerProps) => {
     setXAxis(() => newXAxis)
 
     // Apply the new xAxis
-    d3.select('.axis--x').call(newXAxis)
+    const axis = d3.select('.axis--x')
+    axis.call(newXAxis)
+    axis.selectAll('text').style('stroke', 'white')
+    axis.selectAll('path').style('stroke', 'white')
+    axis.selectAll('line').style('stroke', 'white')
   }
 
   useEffect(() => {
@@ -359,11 +374,10 @@ export const TimelinePicker = (props: TimelinePickerProps) => {
     const min = xScale.range()[0]
     const max = xScale.range()[1]
 
-    const NUM_BUCKETS = 50
+    //
+    const NUM_BUCKETS = Math.round(width / 30)
 
     const bucketWidth = (max - min) / NUM_BUCKETS
-
-    console.log(bucketWidth)
 
     type Bucket = {
       x1: number
@@ -377,8 +391,6 @@ export const TimelinePicker = (props: TimelinePickerProps) => {
       data: [],
     }))
 
-    debugger
-
     if (
       d3ContainerRef.current &&
       props.data &&
@@ -388,16 +400,7 @@ export const TimelinePicker = (props: TimelinePickerProps) => {
 
       const container = d3.select(d3ContainerRef.current)
 
-      const rectangleWidth = 10
-
-      type Cluster = {
-        x1: number
-        x2: number
-        rectangles: string[]
-      }
-
-      const clusteredRectangles: Cluster[] = []
-
+      const rectangleWidth = bucketWidth
       props.data.forEach(d => {
         const date = d.attributes[props.dateAttribute!]
         if (date == null) {
@@ -420,62 +423,31 @@ export const TimelinePicker = (props: TimelinePickerProps) => {
           const b = buckets[i]
           if (b.x1 < scaledDate && scaledDate < b.x2) {
             b.data.push(d.id)
+            break
           }
         }
-
-        // Base Case - 0 clusters created
-        if (clusteredRectangles.length == 0) {
-          // Create a cluster from the first rectangle
-          clusteredRectangles.push({
-            x1: scaledDate - rectangleWidth / 2,
-            x2: scaledDate + rectangleWidth / 2,
-            rectangles: [d.id],
-          })
-          // Case 1 - Cluster already exists
-        } else {
-          // If current rectangle will fall in cluster bounds, add to cluster
-          let inCluster = false
-          for (let i = 0; i < clusteredRectangles.length; i++) {
-            const cr = clusteredRectangles[i]
-            if (cr.x1 < scaledDate && scaledDate <= cr.x2) {
-              cr.rectangles.push(d.id)
-              inCluster = true
-              break
-            }
-          }
-
-          if (!inCluster) {
-            clusteredRectangles.push({
-              x1: scaledDate - rectangleWidth / 2,
-              x2: scaledDate + rectangleWidth / 2,
-              rectangles: [d.id],
-            })
-          }
-        }
-
-        // clusteredRectangles.push({})
       })
 
       // console.log('Clustered Rectangles: ', clusteredRectangles)
-      clusteredRectangles.forEach(cr => {
-        const rectangleHeight = cr.rectangles.length * 10
-        container
+      buckets.forEach(b => {
+        const rectangleHeight = b.data.length * 10
+        d3.select('.data-holder')
           .append('rect')
           .attr('class', 'data')
-          .attr('fill', 'blue')
+          .attr('fill', '#5b5a5f')
           .attr('stroke-width', '1')
           .attr('stroke', 'black')
           .attr('width', rectangleWidth)
           .attr('height', rectangleHeight)
           .attr(
             'transform',
-            `translate(${(cr.x1 + cr.x2) / 2}, ${height -
+            `translate(${(b.x1 + b.x2) / 2}, ${height -
               rectangleHeight -
-              AXIS_MARGIN})`
+              (AXIS_MARGIN + 1)})`
           )
       })
     }
-  }, [props.data, xScale, props.selectionRange, props.dateAttribute])
+  }, [props.data, xScale, props.dateAttribute])
 
   // When the selection range is changed or the scale changes, update the markers and drag behaviors
   useEffect(() => {
@@ -506,7 +478,7 @@ export const TimelinePicker = (props: TimelinePickerProps) => {
         const leftUtc = toUtc(leftValue)
         const rightUtc = toUtc(rightValue)
 
-        const markerHeight = height - 65
+        const markerHeight = height - 70
 
         leftMarker
           // TODO: Set y of this css transform dynamically
@@ -520,14 +492,10 @@ export const TimelinePicker = (props: TimelinePickerProps) => {
 
         areaMarker
           // TODO: Set y of this css transform dynamically
-          .attr(
-            'transform',
-            `translate(${xScale(leftUtc)},${markerHeight - 5})`
-          )
+          .attr('transform', `translate(${xScale(leftUtc)},${markerHeight})`)
           .attr('width', xScale(rightUtc) - xScale(leftUtc))
           .attr('height', '50')
-          .attr('fill', '#a9a9a9')
-          .attr('stroke', '')
+          .attr('fill', '#3f66b7')
           .attr('opacity', 0.2)
           .attr('style', 'display: block')
       } else {
@@ -547,18 +515,22 @@ export const TimelinePicker = (props: TimelinePickerProps) => {
         ref={d3ContainerRef}
       >
         {/* Vertical line showing the current hover position */}
-        <g ref={hoverLineRef} style={{ display: 'none' }}>
+        {/* <g ref={hoverLineRef} style={{ display: 'none' }}>
           <HoverLine x1="0" y1="0" x2="0" y2="200" />
-        </g>
+        </g> */}
+
+        <g className="data-holder" />
 
         <rect ref={areaMarkerRef} style={{ display: 'none' }} />
 
         {/* Lines that appears upon clicking on the timeline */}
-        <MarkerHover ref={leftMarkerRef} style={{ display: 'none' }}>
-          <MarkerLine x1="0" y1="0" x2="0" y2="40" />
+        <MarkerHover ref={leftMarkerRef}>
+          <MarkerLine x1="0" y1="0" x2="0" y2="50" />
+          <MarkerLine x1="0" y1="0" x2="0" y2="50" hidden={true} />
         </MarkerHover>
-        <MarkerHover ref={rightMarkerRef} style={{ display: 'none' }}>
-          <MarkerLine x1="0" y1="0" x2="0" y2="40" />
+        <MarkerHover ref={rightMarkerRef}>
+          <MarkerLine x1="0" y1="0" x2="0" y2="50" />
+          <MarkerLine x1="0" y1="0" x2="0" y2="50" hidden={true} />
         </MarkerHover>
 
         {/* X Axis Placeholder */}
