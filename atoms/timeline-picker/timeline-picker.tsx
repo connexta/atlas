@@ -319,25 +319,20 @@ export const TimelinePicker = (props: TimelinePickerProps) => {
 
         // If values are not provided, first click will create a new range at +/- 1 year from the click point
         if (props.selectionRange.length === 0) {
-          const lower = moment(
+          const left = moment(
             convertedTimezoneValue,
             INTERNAL_DATE_FORMAT
           ).subtract(365, 'days')
 
-          const higher = moment(
+          const right = moment(
             convertedTimezoneValue,
             INTERNAL_DATE_FORMAT
           ).add(365, 'days')
 
-          props.onChange([lower, higher])
+          props.onChange([left, right])
         } else {
           if (convertedTimezoneValue < props.selectionRange[0]) {
             props.onChange([convertedTimezoneValue, props.selectionRange[1]])
-          } else if (
-            props.selectionRange[0] < convertedTimezoneValue &&
-            convertedTimezoneValue < props.selectionRange[1]
-          ) {
-            console.log('do nothing')
           } else if (props.selectionRange[1] < convertedTimezoneValue) {
             props.onChange([props.selectionRange[0], convertedTimezoneValue])
           }
@@ -364,21 +359,15 @@ export const TimelinePicker = (props: TimelinePickerProps) => {
         }
 
         const scaledDate = xScale(date)
+        const isSelected = inSelectionRange(
+          scaledDate,
+          props.selectionRange.map(r => xScale(r))
+        )
 
         container
           .append('rect')
           .attr('class', 'data')
-          .attr(
-            'fill',
-            `${
-              inSelectionRange(
-                scaledDate,
-                props.selectionRange.map(r => xScale(r))
-              )
-                ? 'blue'
-                : 'grey'
-            }`
-          )
+          .attr('fill', `${isSelected ? 'blue' : 'grey'}`)
           .attr('width', '10')
           .attr('height', '20')
           .attr('transform', `translate(${scaledDate}, ${CONSTANT_Y_POS + 30})`)
@@ -386,7 +375,7 @@ export const TimelinePicker = (props: TimelinePickerProps) => {
     }
   }, [props.data, xScale, props.selectionRange, props.dateAttribute])
 
-  // When a value is changed or the scale changes, update a marker and update the drag behaviors
+  // When the selection range is changed or the scale changes, update the markers and drag behaviors
   useEffect(() => {
     d3.select(leftMarkerRef.current).call(
       // @ts-ignore
