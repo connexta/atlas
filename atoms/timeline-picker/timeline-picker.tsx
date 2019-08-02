@@ -6,7 +6,10 @@ import Button from '../button'
 
 // @ts-ignore
 import moment from 'moment-timezone'
-import { Data, range } from './util'
+import { Data, range, toUtc } from './util'
+import { Tooltip } from './tooltip'
+
+import { convertDateToTimezoneDate } from './util'
 
 const AXIS_MARGIN = 20
 const INTERNAL_DATE_FORMAT = 'YYYY/MM/DD HH:mm:mm'
@@ -15,6 +18,12 @@ type Bucket = {
   x1: number
   x2: number
   data: string[]
+}
+
+type Tooltip = {
+  x: number
+  y: number
+  message: string
 }
 
 const MarkerHover = styled.g`
@@ -70,6 +79,31 @@ const Container = styled.div`
   }
 `
 
+const generateTooltipMessage = (data: any) => {
+  const titles = data.slice(0, 5).map(d => {
+    return (
+      <React.Fragment>
+        <span>{d}</span>
+        <br />
+      </React.Fragment>
+    )
+  })
+
+  const extra = (
+    <React.Fragment>
+      <br />
+      {`+${data.length - 5} other events`}
+    </React.Fragment>
+  )
+
+  return (
+    <React.Fragment>
+      {titles}
+      {data.length > 5 && extra}
+    </React.Fragment>
+  )
+}
+
 /**
  * Given a d3 selection, set the display to none.
  */
@@ -102,23 +136,6 @@ const getInitialTimeScale = (width: number) => {
 const inSelectionRange = (date: number, selectionRange: number[]) => {
   return selectionRange[0] < date && date < selectionRange[1]
 }
-
-/**
- * Convert a given date to UTC to render correctly on the Timeline.
- *
- * @param value Moment time object.
- * @param timezone Timezone the incoming value is in.
- */
-const toUtc = (value: Date, timezone: string = '') =>
-  moment.tz(value, timezone).toDate()
-
-/**
- *
- * @param time UTC time
- * @param timezone Timezone to convert the incoming value to.
- */
-const convertDateToTimezoneDate = (time: Date, timezone: string = ''): Date =>
-  moment.tz(time, timezone).toDate()
 
 interface TimelinePickerProps {
   /**
@@ -182,6 +199,7 @@ export const TimelinePicker = (props: TimelinePickerProps) => {
   const [height] = useState(300)
 
   const [dataBuckets, setDataBuckets] = useState<Bucket[]>([])
+  const [tooltip, setTooltip] = useState<Tooltip>()
 
   const [xScale, setXScale] = useState(() => getInitialTimeScale(width))
   const [xAxis, setXAxis] = useState(() => d3.axisBottom(xScale))
@@ -486,8 +504,18 @@ export const TimelinePicker = (props: TimelinePickerProps) => {
   useEffect(() => {
     d3.select('.data-holder')
       .selectAll('.data')
+      .on('mouseleave', function() {
+        setTooltip(null)
+      })
       .on('mousemove', function(d, i) {
         const id = d3.select(this).node().id
+        const { x, y } = d3.event
+        setTooltip({
+          x: x + 10,
+          y: y - 20,
+          message: generateTooltipMessage(dataBuckets[id].data),
+        })
+        // setTooltip()
         console.log('Data Elements in hovered item:', dataBuckets[id].data)
         // console.log('d: ', d)
         // console.log('i: ', i)
@@ -559,6 +587,10 @@ export const TimelinePicker = (props: TimelinePickerProps) => {
           +
         </Button>
       </ZoomArea>
+
+      {tooltip && (
+        <Tooltip message={tooltip.message} x={tooltip.x} y={tooltip.y} />
+      )}
 
       <SVG ref={d3ContainerRef}>
         <g className="data-holder" />

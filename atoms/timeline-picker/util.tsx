@@ -21,7 +21,7 @@ const getDataPoint = (
   const day = Math.floor(Math.random() * 28)
 
   return {
-    id: (num + 1).toString(),
+    id: `Event ${(num + 1).toString()}`,
     attributes: {
       created: moment(new Date(createdYear + year, 0, 1))
         .add(month, 'months')
@@ -42,3 +42,22 @@ export const test_data = (n: number): Data[] => {
 
   return range(n).map(num => getDataPoint(num, 1980, 1986))
 }
+
+/**
+ * Convert a given date to UTC to render correctly on the Timeline.
+ *
+ * @param value Moment time object.
+ * @param timezone Timezone the incoming value is in.
+ */
+export const toUtc = (value: Date, timezone: string = '') =>
+  moment.tz(value, timezone).toDate()
+
+/**
+ *
+ * @param time UTC time
+ * @param timezone Timezone to convert the incoming value to.
+ */
+export const convertDateToTimezoneDate = (
+  time: Date,
+  timezone: string = ''
+): Date => moment.tz(time, timezone).toDate()
