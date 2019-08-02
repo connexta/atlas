@@ -11,6 +11,12 @@ import { Data, range } from './util'
 const AXIS_MARGIN = 20
 const INTERNAL_DATE_FORMAT = 'YYYY/MM/DD HH:mm:mm'
 
+type Bucket = {
+  x1: number
+  x2: number
+  data: string[]
+}
+
 const MarkerHover = styled.g`
   :hover {
     cursor: ew-resize;
@@ -20,13 +26,6 @@ const MarkerLine = styled.line`
   stroke: ${(props: any) => (!props.hidden ? '#3f66b7' : 'rgba(0, 0, 0, 0)')};
   stroke-width: ${(props: any) => (!props.hidden ? 2 : 30)};
 `
-
-// const HoverLine = styled.line`
-//   stroke: ${hoverColor};
-//   opacity: 0.3;
-//   stroke-width: 2;
-// `
-
 const SVG = styled.svg`
   /* border: 1px solid red; */
 `
@@ -47,7 +46,6 @@ const Container = styled.div`
   width: ${(props: any) => props.width}px;
 
   .areaMarker {
-    /* fill: #3f66b7; */
     fill: #3f66b7;
     opacity: 0.2;
 
@@ -182,6 +180,8 @@ export const TimelinePicker = (props: TimelinePickerProps) => {
 
   const [width] = useState(800)
   const [height] = useState(300)
+
+  const [dataBuckets, setDataBuckets] = useState<Bucket[]>([])
 
   const [xScale, setXScale] = useState(() => getInitialTimeScale(width))
   const [xAxis, setXAxis] = useState(() => d3.axisBottom(xScale))
@@ -418,13 +418,6 @@ export const TimelinePicker = (props: TimelinePickerProps) => {
     const NUM_BUCKETS = Math.round(width / 30) // 30 is just a constant that I found to look good.
 
     const bucketWidth = (max - min) / NUM_BUCKETS
-
-    type Bucket = {
-      x1: number
-      x2: number
-      data: string[]
-    }
-
     const buckets: Bucket[] = range(NUM_BUCKETS).map(i => ({
       x1: min + bucketWidth * i,
       x2: min + bucketWidth * (i + 1),
@@ -464,22 +457,42 @@ export const TimelinePicker = (props: TimelinePickerProps) => {
 
       // console.log(props.data[0].attributes.created)
 
-      buckets.forEach(b => {
+      setDataBuckets(buckets)
+
+      buckets.forEach((b, i) => {
         const rectangleHeight = b.data.length * 10
         d3.select('.data-holder')
           .append('rect')
           .attr('class', 'data')
           .attr('width', rectangleWidth)
           .attr('height', rectangleHeight)
+          .attr('id', i)
           .attr(
             'transform',
             `translate(${(b.x1 + b.x2) / 2}, ${height -
               rectangleHeight -
               (AXIS_MARGIN + 1)})`
           )
+        // .on('mouseenter', function(d, i) {
+        //   const id = d3.select(this).node().id
+        //   console.log('Data Elements in hovered item:', dataBuckets[id].data)
+        //   // console.log('d: ', d)
+        //   // console.log('i: ', i)
+        // })
       })
     }
   }, [props.data, xScale, props.dateAttribute])
+
+  useEffect(() => {
+    d3.select('.data-holder')
+      .selectAll('.data')
+      .on('mousemove', function(d, i) {
+        const id = d3.select(this).node().id
+        console.log('Data Elements in hovered item:', dataBuckets[id].data)
+        // console.log('d: ', d)
+        // console.log('i: ', i)
+      })
+  }, [dataBuckets])
 
   // When the selection range is changed or the scale changes, update the markers and drag behaviors
   useEffect(() => {
@@ -548,11 +561,6 @@ export const TimelinePicker = (props: TimelinePickerProps) => {
       </ZoomArea>
 
       <SVG ref={d3ContainerRef}>
-        {/* Vertical line showing the current hover position */}
-        {/* <g ref={hoverLineRef} style={{ display: 'none' }}>
-          <HoverLine x1="0" y1="0" x2="0" y2="200" />
-        </g> */}
-
         <g className="data-holder" />
 
         <rect

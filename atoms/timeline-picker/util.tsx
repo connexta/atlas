@@ -18,13 +18,16 @@ const getDataPoint = (
 ) => {
   const month = Math.floor(Math.random() * 12)
   const year = Math.floor(Math.random() * 40)
+  const day = Math.floor(Math.random() * 28)
 
   return {
     id: (num + 1).toString(),
     attributes: {
       created: moment(new Date(createdYear + year, 0, 1))
         .add(month, 'months')
+        .add(day, 'days')
         .toDate(),
+
       modified: moment(new Date(modifiedYear + year, 0, 1))
         .add(num, 'years')
         .toDate(),
