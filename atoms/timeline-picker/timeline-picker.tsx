@@ -46,6 +46,18 @@ const Container = styled.div`
   flex-direction: column;
   width: ${(props: any) => props.width}px;
 
+  .areaMarker {
+    /* fill: #3f66b7; */
+    fill: #3f66b7;
+    opacity: 0.2;
+
+    :hover {
+      cursor: move;
+      fill: #3f66b7;
+      opacity: 0.5;
+    }
+  }
+
   .axis {
     color: #d6d6d8;
   }
@@ -173,8 +185,6 @@ export const TimelinePicker = (props: TimelinePickerProps) => {
 
   const [xScale, setXScale] = useState(() => getInitialTimeScale(width))
   const [xAxis, setXAxis] = useState(() => d3.axisBottom(xScale))
-
-  console.log('Everything updated - xScale: ', xScale.domain()[0])
 
   const initialX = getInitialTimeScale(width)
 
@@ -402,20 +412,10 @@ export const TimelinePicker = (props: TimelinePickerProps) => {
 
   // Render rectangles
   useEffect(() => {
-    // console.log('Use Effect Triggered ----------------')
-    // console.log('props.data', props.data)
-    // console.log('xScale', xScale)
-    // console.log('props.selectionRange', props.selectionRange)
-    // console.log('props.dataAttribute', props.dateAttribute)
-    // props.data, xScale, props.selectionRange, props.dateAttribute
-
-    // Create 50 buckets
-
     const min = xScale.range()[0]
     const max = xScale.range()[1]
 
-    //
-    const NUM_BUCKETS = Math.round(width / 30)
+    const NUM_BUCKETS = Math.round(width / 30) // 30 is just a constant that I found to look good.
 
     const bucketWidth = (max - min) / NUM_BUCKETS
 
@@ -527,8 +527,6 @@ export const TimelinePicker = (props: TimelinePickerProps) => {
           .attr('transform', `translate(${xScale(leftUtc)},${markerHeight})`)
           .attr('width', xScale(rightUtc) - xScale(leftUtc))
           .attr('height', '50')
-          .attr('fill', '#3f66b7')
-          .attr('opacity', 0.2)
           .attr('style', 'display: block')
       } else {
         hideElement(leftMarker)
@@ -557,7 +555,11 @@ export const TimelinePicker = (props: TimelinePickerProps) => {
 
         <g className="data-holder" />
 
-        <rect ref={areaMarkerRef} style={{ display: 'none' }} />
+        <rect
+          ref={areaMarkerRef}
+          style={{ display: 'none' }}
+          className="areaMarker"
+        />
 
         {/* Lines that appears upon clicking on the timeline */}
         <MarkerHover ref={leftMarkerRef}>
