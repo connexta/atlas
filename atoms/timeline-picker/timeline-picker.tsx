@@ -27,12 +27,6 @@ const MarkerLine = styled.line`
 //   stroke-width: 2;
 // `
 
-// const ZoomButton = styled(Button)`
-//   background-color: white;
-//   fill: white;
-//   color: white;
-// `
-
 const SVG = styled.svg`
   /* border: 1px solid red; */
 `
@@ -75,14 +69,16 @@ const hideElement = (element: d3.Selection<null, unknown, null, undefined>) =>
 /**
  * Domain is the minimum and maximum values that the scale contains.
  */
-const getInitialTimeScale = () => {
+const getInitialTimeScale = (width: number) => {
   const min = new Date('1980-01-01:00:00.000z')
-  // const max = new Date("1980-01-02:00:00.000z"); //Uncomment to easily test timezones
+  // const max = new Date("1980-01-02:00:00.000z"); // Uncomment to easily test timezones
   const max = new Date()
   const timeScale = d3
     .scaleUtc()
     .domain([min, max])
     .nice()
+
+  timeScale.range([AXIS_MARGIN, width - AXIS_MARGIN])
 
   return timeScale
 }
@@ -157,9 +153,6 @@ interface TimelinePickerProps {
  * 3. Add onHover showing data points
  *
  * 4. On hover should work when the on hover is behind the area marker.
- *
- * 5. Zoom buttons create a weird behavior
- *
  */
 
 // Please see https://alignedleft.com/tutorials/d3/scales for more information about d3 scales.
@@ -178,8 +171,12 @@ export const TimelinePicker = (props: TimelinePickerProps) => {
   const [width] = useState(800)
   const [height] = useState(300)
 
-  const [xScale, setXScale] = useState(() => getInitialTimeScale())
+  const [xScale, setXScale] = useState(() => getInitialTimeScale(width))
   const [xAxis, setXAxis] = useState(() => d3.axisBottom(xScale))
+
+  console.log('Everything updated - xScale: ', xScale.domain()[0])
+
+  const initialX = getInitialTimeScale(width)
 
   /**
    * When a zoom event is triggered, use the transform event to create a new xScale,
@@ -187,28 +184,19 @@ export const TimelinePicker = (props: TimelinePickerProps) => {
    */
   const handleZoom = () => {
     const transform = d3.event.transform
-    console.log('Zoom Event: ', d3.event.transform)
-
-    // const t = d3.zoomTransform(d3.select(d3ContainerRef.current))
-
-    // debugger
 
     // Returns a copy of the continuous scale x whose domain is transformed.
-    const newXScale = transform.rescaleX(xScale)
+    const newXScale = transform.rescaleX(initialX)
     setXScale(() => newXScale)
-  }
 
-  useEffect(() => {
-    // console.log('Updating xAxis from new scale')
-    // Create a new xAxis with the new timeScale
-    const newXAxis = xAxis.scale(xScale)
+    const newXAxis = xAxis.scale(newXScale)
     setXAxis(() => newXAxis)
 
     console.log(newXAxis.scale().domain()[0])
 
     // Apply the new xAxis
-    d3.select('.axis--x').call(newXAxis)
-  }, [xScale])
+    d3.select('.axis--x').call(xAxis)
+  }
 
   const zoomBehavior = d3
     .zoom()
@@ -219,25 +207,18 @@ export const TimelinePicker = (props: TimelinePickerProps) => {
 
   // @ts-ignore
   const zoomIn = () => {
-    zoomBehavior
-      // .scaleExtent([1, 60 * 60 * 24]) // Allows selections down to the minute at full zoom
-      // .translateExtent([[0, 0], [width, height]])
-      .scaleBy(
-        // @ts-ignore
-        d3
-          .select(d3ContainerRef.current)
-          .transition()
-          .duration(750),
-        2
-      )
+    zoomBehavior.scaleBy(
+      // @ts-ignore
+      d3
+        .select(d3ContainerRef.current)
+        .transition()
+        .duration(750),
+      2
+    )
   }
 
   // @ts-ignore
   const zoomOut = () => {
-    console.log('-----------------------------------------')
-    console.log('-----------------------------------------')
-    console.log('-----------------------------------------')
-    console.log('Zooming Out: ', xAxis.scale().domain()[0])
     zoomBehavior.scaleBy(
       // @ts-ignore
       d3
@@ -317,7 +298,7 @@ export const TimelinePicker = (props: TimelinePickerProps) => {
         props.timezone
       )
 
-      const originalTimeScale = getInitialTimeScale()
+      const originalTimeScale = getInitialTimeScale(width)
 
       if (
         originalTimeScale.domain()[0] < newLeftDate &&
@@ -333,8 +314,6 @@ export const TimelinePicker = (props: TimelinePickerProps) => {
    * i.e. Dates map to Pixels
    */
   const renderInitialXAxis = () => {
-    xScale.range([AXIS_MARGIN, width - AXIS_MARGIN])
-
     const svg = d3
       .select(d3ContainerRef.current)
       .attr('width', width)
