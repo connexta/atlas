@@ -1,18 +1,49 @@
 import * as d3 from 'd3'
+// @ts-ignore
+import moment from 'moment-timezone'
 import * as React from 'react'
 import { useEffect, useRef, useState } from 'react'
 import styled from '../../styled'
 import Button from '../button'
-
-// @ts-ignore
-import moment from 'moment-timezone'
-import { Data, range, toUtc } from './util'
 import { Tooltip } from './tooltip'
+import { convertDateToTimezoneDate, Data, range, toUtc } from './util'
 
-import { convertDateToTimezoneDate } from './util'
-
+// Constants
 const AXIS_MARGIN = 20
 const INTERNAL_DATE_FORMAT = 'YYYY/MM/DD HH:mm:mm'
+
+// Types
+interface TimelinePickerProps {
+  /**
+   * onChange handler that gets called when making a selection on the TimelinePicker
+   */
+  onChange: (v: Date[]) => void
+
+  /**
+   * Range of dates
+   */
+  selectionRange: Date[]
+
+  /**
+   * Timezone to use when displaying times
+   */
+  timezone?: string
+
+  /**
+   * onHover handler that gets called when hovering over the TimelinePicker
+   */
+  onHover?: (v: Date | null) => void
+
+  /**
+   * Data points
+   */
+  data?: Data[]
+
+  /**
+   * Attribute name to use when rendering data points.
+   */
+  dateAttribute?: string
+}
 
 type Bucket = {
   x1: number
@@ -23,9 +54,10 @@ type Bucket = {
 type Tooltip = {
   x: number
   y: number
-  message: string
+  message: string | any
 }
 
+// Styled Components
 const MarkerHover = styled.g`
   :hover {
     cursor: ew-resize;
@@ -36,7 +68,7 @@ const MarkerLine = styled.line`
   stroke-width: ${(props: any) => (!props.hidden ? 2 : 30)};
 `
 const SVG = styled.svg`
-  /* border: 1px solid red; */
+  /* a */
 `
 
 const ZoomArea = styled.div`
@@ -49,7 +81,7 @@ const ZoomArea = styled.div`
   }
 `
 
-const Container = styled.div`
+const Root = styled.div`
   display: flex;
   flex-direction: column;
   width: ${(props: any) => props.width}px;
@@ -57,6 +89,7 @@ const Container = styled.div`
   .areaMarker {
     fill: #3f66b7;
     opacity: 0.2;
+    display: none;
 
     :hover {
       cursor: move;
@@ -79,8 +112,9 @@ const Container = styled.div`
   }
 `
 
+// Helper Methods
 const generateTooltipMessage = (data: any) => {
-  const titles = data.slice(0, 5).map(d => {
+  const titles = data.slice(0, 5).map((d: any) => {
     return (
       <React.Fragment>
         <span>{d}</span>
@@ -137,38 +171,6 @@ const inSelectionRange = (date: number, selectionRange: number[]) => {
   return selectionRange[0] < date && date < selectionRange[1]
 }
 
-interface TimelinePickerProps {
-  /**
-   * onChange handler that gets called when making a selection on the TimelinePicker
-   */
-  onChange: (v: Date[]) => void
-
-  /**
-   * Range of dates
-   */
-  selectionRange: Date[]
-
-  /**
-   * Timezone to use when displaying times
-   */
-  timezone?: string
-
-  /**
-   * onHover handler that gets called when hovering over the TimelinePicker
-   */
-  onHover?: (v: Date | null) => void
-
-  /**
-   * Data points
-   */
-  data?: Data[]
-
-  /**
-   * Attribute name to use when rendering data points.
-   */
-  dateAttribute?: string
-}
-
 /*
  * TODOS
  * --------------------
@@ -199,7 +201,7 @@ export const TimelinePicker = (props: TimelinePickerProps) => {
   const [height] = useState(300)
 
   const [dataBuckets, setDataBuckets] = useState<Bucket[]>([])
-  const [tooltip, setTooltip] = useState<Tooltip>()
+  const [tooltip, setTooltip] = useState<Tooltip | null>()
 
   const [xScale, setXScale] = useState(() => getInitialTimeScale(width))
   const [xAxis, setXAxis] = useState(() => d3.axisBottom(xScale))
@@ -219,8 +221,6 @@ export const TimelinePicker = (props: TimelinePickerProps) => {
 
     const newXAxis = xAxis.scale(newXScale)
     setXAxis(() => newXAxis)
-
-    console.log(newXAxis.scale().domain()[0])
 
     // Apply the new xAxis
     d3.select('.axis--x').call(xAxis)
@@ -454,15 +454,10 @@ export const TimelinePicker = (props: TimelinePickerProps) => {
 
         const scaledDate = xScale(date)
 
-        // const isSelected = false
         // const isSelected = inSelectionRange(
         //   scaledDate,
         //   props.selectionRange.map(r => xScale(r))
         // )
-
-        // If rectangle to be created would fall into x range of another data point, add to it's cluster.
-
-        // console.log(scaledDate)
 
         for (let i = 0; i < buckets.length; i++) {
           const b = buckets[i]
@@ -472,8 +467,6 @@ export const TimelinePicker = (props: TimelinePickerProps) => {
           }
         }
       })
-
-      // console.log(props.data[0].attributes.created)
 
       setDataBuckets(buckets)
 
@@ -507,7 +500,8 @@ export const TimelinePicker = (props: TimelinePickerProps) => {
       .on('mouseleave', function() {
         setTooltip(null)
       })
-      .on('mousemove', function(d, i) {
+      .on('mousemove', function() {
+        // @ts-ignore
         const id = d3.select(this).node().id
         const { x, y } = d3.event
         setTooltip({
@@ -515,10 +509,6 @@ export const TimelinePicker = (props: TimelinePickerProps) => {
           y: y - 20,
           message: generateTooltipMessage(dataBuckets[id].data),
         })
-        // setTooltip()
-        console.log('Data Elements in hovered item:', dataBuckets[id].data)
-        // console.log('d: ', d)
-        // console.log('i: ', i)
       })
   }, [dataBuckets])
 
@@ -554,17 +544,14 @@ export const TimelinePicker = (props: TimelinePickerProps) => {
         const markerHeight = height - 70
 
         leftMarker
-          // TODO: Set y of this css transform dynamically
           .attr('transform', `translate(${xScale(leftUtc)}, ${markerHeight})`)
           .attr('style', 'display: block')
 
         rightMarker
-          // TODO: Set y of this css transform dynamically
           .attr('transform', `translate(${xScale(rightUtc)}, ${markerHeight})`)
           .attr('style', 'display: block')
 
         areaMarker
-          // TODO: Set y of this css transform dynamically
           .attr('transform', `translate(${xScale(leftUtc)},${markerHeight})`)
           .attr('width', xScale(rightUtc) - xScale(leftUtc))
           .attr('height', '50')
@@ -578,7 +565,7 @@ export const TimelinePicker = (props: TimelinePickerProps) => {
   }, [xScale, props.selectionRange])
 
   return (
-    <Container width={width}>
+    <Root width={width}>
       <ZoomArea>
         <Button emphasis="high" color="primary" onClick={() => zoomOut()}>
           -
@@ -595,13 +582,9 @@ export const TimelinePicker = (props: TimelinePickerProps) => {
       <SVG ref={d3ContainerRef}>
         <g className="data-holder" />
 
-        <rect
-          ref={areaMarkerRef}
-          style={{ display: 'none' }}
-          className="areaMarker"
-        />
+        <rect ref={areaMarkerRef} className="areaMarker" />
 
-        {/* Lines that appears upon clicking on the timeline */}
+        {/* Lines that appear upon clicking on the timeline and creating a selection range */}
         <MarkerHover ref={leftMarkerRef}>
           <MarkerLine x1="0" y1="0" x2="0" y2="50" />
           <MarkerLine x1="0" y1="0" x2="0" y2="50" hidden={true} />
@@ -614,7 +597,7 @@ export const TimelinePicker = (props: TimelinePickerProps) => {
         {/* X Axis Placeholder */}
         <g className="axis axis--x" />
       </SVG>
-    </Container>
+    </Root>
   )
 }
 

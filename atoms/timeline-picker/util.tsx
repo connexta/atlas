@@ -14,7 +14,8 @@ export const range = (n: number) => Array.from(Array(n).keys())
 const getDataPoint = (
   num: number,
   createdYear: number,
-  modifiedYear: number
+  modifiedYear: number,
+  publishedYear: number
 ) => {
   const month = Math.floor(Math.random() * 12)
   const year = Math.floor(Math.random() * 40)
@@ -31,6 +32,11 @@ const getDataPoint = (
       modified: moment(new Date(modifiedYear + year, 0, 1))
         .add(num, 'years')
         .toDate(),
+
+      published: moment(new Date(publishedYear + year, 0, 1))
+        .add(num, 'years')
+        .add(day, 'days')
+        .toDate(),
     },
   }
 }
@@ -40,7 +46,7 @@ export const test_data = (n: number): Data[] => {
     return []
   }
 
-  return range(n).map(num => getDataPoint(num, 1980, 1986))
+  return range(n).map(num => getDataPoint(num, 1980, 1983, 1987))
 }
 
 /**
