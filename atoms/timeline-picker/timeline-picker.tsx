@@ -2,6 +2,7 @@ import * as d3 from 'd3'
 import * as React from 'react'
 import { useEffect, useRef, useState } from 'react'
 import styled from '../../styled'
+import Button from '../button'
 
 // @ts-ignore
 import moment from 'moment-timezone'
@@ -11,14 +12,13 @@ const AXIS_MARGIN = 20
 const INTERNAL_DATE_FORMAT = 'YYYY/MM/DD HH:mm:mm'
 
 const MarkerHover = styled.g`
-  stroke: 'white';
   :hover {
     cursor: ew-resize;
   }
 `
 const MarkerLine = styled.line`
   stroke: ${(props: any) => (!props.hidden ? '#3f66b7' : 'rgba(0, 0, 0, 0)')};
-  stroke-width: ${(props: any) => (!props.hidden ? 2 : 10)};
+  stroke-width: ${(props: any) => (!props.hidden ? 2 : 30)};
 `
 
 // const HoverLine = styled.line`
@@ -27,17 +27,41 @@ const MarkerLine = styled.line`
 //   stroke-width: 2;
 // `
 
+// const ZoomButton = styled(Button)`
+//   background-color: white;
+//   fill: white;
+//   color: white;
+// `
+
+const SVG = styled.svg`
+  /* border: 1px solid red; */
+`
+
+const ZoomArea = styled.div`
+  margin: 10px;
+  display: flex;
+  justify-content: flex-end;
+
+  button {
+    margin-left: 10px;
+  }
+`
+
 const Container = styled.div`
   display: flex;
   flex-direction: column;
+  width: ${(props: any) => props.width}px;
 
   .axis {
     color: #d6d6d8;
   }
 
-  .data-holder {
+  .data {
+    fill: #5b5a5f;
+    stroke-width: 1;
+    stroke: black;
     :hover {
-      fill: white;
+      fill: #a1a1a1;
     }
   }
 `
@@ -125,15 +149,17 @@ interface TimelinePickerProps {
 /*
  * TODOS
  * --------------------
- * 1. Need to figure out what to do when data points fall in the same space (clustering).
- *
- * 2. Clicking to create a new range should not be hardcoded to +/- 1 year, but instance based on current xscale
+ * 1. Clicking to create a new range should not be hardcoded to +/- 1 year, but instance based on current xscale
  * (or start it from a drag instead of a click)
  *
- * 3. x/y positions should be dynamic based on height/width
+ * 2. All x/y position translations should be dynamic based on height/width
  *
- * 4. Performance is a bit slow when greater than 20 data points are provided, presumably because the rectangles are removed
- * and redrawn every time the selection range changes in order to re-color them if they are "selected"
+ * 3. Add onHover showing data points
+ *
+ * 4. On hover should work when the on hover is behind the area marker.
+ *
+ * 5. Zoom buttons create a weird behavior
+ *
  */
 
 // Please see https://alignedleft.com/tutorials/d3/scales for more information about d3 scales.
@@ -150,10 +176,77 @@ export const TimelinePicker = (props: TimelinePickerProps) => {
   const areaMarkerRef = useRef(null)
 
   const [width] = useState(800)
-  const [height] = useState(400)
+  const [height] = useState(300)
 
   const [xScale, setXScale] = useState(() => getInitialTimeScale())
   const [xAxis, setXAxis] = useState(() => d3.axisBottom(xScale))
+
+  /**
+   * When a zoom event is triggered, use the transform event to create a new xScale,
+   * then create a new xAxis using the scale and update existing xAxis
+   */
+  const handleZoom = () => {
+    const transform = d3.event.transform
+    console.log('Zoom Event: ', d3.event.transform)
+
+    // const t = d3.zoomTransform(d3.select(d3ContainerRef.current))
+
+    // debugger
+
+    // Returns a copy of the continuous scale x whose domain is transformed.
+    const newXScale = transform.rescaleX(xScale)
+    setXScale(() => newXScale)
+  }
+
+  useEffect(() => {
+    // console.log('Updating xAxis from new scale')
+    // Create a new xAxis with the new timeScale
+    const newXAxis = xAxis.scale(xScale)
+    setXAxis(() => newXAxis)
+
+    console.log(newXAxis.scale().domain()[0])
+
+    // Apply the new xAxis
+    d3.select('.axis--x').call(newXAxis)
+  }, [xScale])
+
+  const zoomBehavior = d3
+    .zoom()
+    .scaleExtent([1, 60 * 60 * 24]) // Allows selections down to the minute at full zoom
+    .translateExtent([[0, 0], [width, height]])
+    .extent([[0, 0], [width, height]])
+    .on('zoom', handleZoom)
+
+  // @ts-ignore
+  const zoomIn = () => {
+    zoomBehavior
+      // .scaleExtent([1, 60 * 60 * 24]) // Allows selections down to the minute at full zoom
+      // .translateExtent([[0, 0], [width, height]])
+      .scaleBy(
+        // @ts-ignore
+        d3
+          .select(d3ContainerRef.current)
+          .transition()
+          .duration(750),
+        2
+      )
+  }
+
+  // @ts-ignore
+  const zoomOut = () => {
+    console.log('-----------------------------------------')
+    console.log('-----------------------------------------')
+    console.log('-----------------------------------------')
+    console.log('Zooming Out: ', xAxis.scale().domain()[0])
+    zoomBehavior.scaleBy(
+      // @ts-ignore
+      d3
+        .select(d3ContainerRef.current)
+        .transition()
+        .duration(750),
+      0.5
+    )
+  }
 
   /**
    * Creates the drag behavior used when selecting the left or right slider.
@@ -249,27 +342,8 @@ export const TimelinePicker = (props: TimelinePickerProps) => {
 
     svg
       .select('.axis--x')
-      .attr('transform', `translate(0 380)`)
+      .attr('transform', `translate(0 ${height - 20})`)
       .call(xAxis)
-  }
-
-  /**
-   * When a zoom event is triggered, use the transform event to create a new xScale,
-   * then create a new xAxis using the scale and update existing xAxis
-   */
-  const handleZoom = () => {
-    const transform = d3.event.transform
-
-    // Returns a copy of the continuous scale x whose domain is transformed.
-    const newXScale = transform.rescaleX(xScale)
-    setXScale(() => newXScale)
-
-    // Create a new xAxis with the new timeScale
-    const newXAxis = xAxis.scale(newXScale)
-    setXAxis(() => newXAxis)
-
-    // Apply the new xAxis
-    d3.select('.axis--x').call(newXAxis)
   }
 
   useEffect(() => {
@@ -277,14 +351,9 @@ export const TimelinePicker = (props: TimelinePickerProps) => {
       renderInitialXAxis()
 
       const container = d3.select(d3ContainerRef.current)
-      container.call(
-        //@ts-ignore
-        d3
-          .zoom()
-          .scaleExtent([1, 60 * 60 * 24]) // Allows selections down to the minute at full zoom
-          .translateExtent([[0, 0], [width, height]])
-          .on('zoom', handleZoom)
-      )
+
+      //@ts-ignore
+      container.call(zoomBehavior)
     }
   }, [])
 
@@ -383,14 +452,8 @@ export const TimelinePicker = (props: TimelinePickerProps) => {
       data: [],
     }))
 
-    if (
-      d3ContainerRef.current &&
-      props.data &&
-      props.dateAttribute !== undefined
-    ) {
+    if (props.data && props.dateAttribute !== undefined) {
       d3.selectAll('.data').remove()
-
-      const container = d3.select(d3ContainerRef.current)
 
       const rectangleWidth = bucketWidth
       props.data.forEach(d => {
@@ -420,16 +483,13 @@ export const TimelinePicker = (props: TimelinePickerProps) => {
         }
       })
 
-      console.log(props.data[0].attributes.created)
+      // console.log(props.data[0].attributes.created)
 
       buckets.forEach(b => {
         const rectangleHeight = b.data.length * 10
         d3.select('.data-holder')
           .append('rect')
           .attr('class', 'data')
-          .attr('fill', '#5b5a5f')
-          .attr('stroke-width', '1')
-          .attr('stroke', 'black')
           .attr('width', rectangleWidth)
           .attr('height', rectangleHeight)
           .attr(
@@ -500,13 +560,17 @@ export const TimelinePicker = (props: TimelinePickerProps) => {
   }, [xScale, props.selectionRange])
 
   return (
-    <Container>
-      <svg
-        style={{
-          marginBottom: '50px',
-        }}
-        ref={d3ContainerRef}
-      >
+    <Container width={width}>
+      <ZoomArea>
+        <Button emphasis="high" color="primary" onClick={() => zoomOut()}>
+          -
+        </Button>
+        <Button emphasis="high" color="primary" onClick={() => zoomIn()}>
+          +
+        </Button>
+      </ZoomArea>
+
+      <SVG ref={d3ContainerRef}>
         {/* Vertical line showing the current hover position */}
         {/* <g ref={hoverLineRef} style={{ display: 'none' }}>
           <HoverLine x1="0" y1="0" x2="0" y2="200" />
@@ -528,7 +592,7 @@ export const TimelinePicker = (props: TimelinePickerProps) => {
 
         {/* X Axis Placeholder */}
         <g className="axis axis--x" />
-      </svg>
+      </SVG>
     </Container>
   )
 }

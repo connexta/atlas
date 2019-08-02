@@ -275,6 +275,7 @@ class Timeline extends React.Component<Props, State> {
     // TODO - No idea why k ends up being -1, this is a hacky fix :(
     //0 means nothing will display, -1 inverts
     if (t.k === -1) {
+      console.log('t.k was -1')
       // @ts-ignore
       t.k = 1
     }

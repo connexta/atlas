@@ -38,8 +38,7 @@ stories.add('Initial Range', () => {
   ])
   // const [hover, setHover] = useState()
 
-  const numDataPoints = number('Number of spaced data points to render', 1)
-
+  const numDataPoints = number('Number of spaced data points to render', 500)
   const [data] = useState(test_data(numDataPoints))
 
   const dateAttribute = select(
@@ -69,13 +68,13 @@ stories.add('Initial Range', () => {
           <p>
             <b>Start</b>
           </p>
-          {/* <p>{formatDate(selectionRange[0])}</p> */}
+          <p>{formatDate(selectionRange[0])}</p>
         </div>
         <div style={{ paddingRight: '100px', margin: '10px' }}>
           <p>
             <b>End</b>
           </p>
-          {/* <p>{formatDate(selectionRange[1])}</p> */}
+          <p>{formatDate(selectionRange[1])}</p>
         </div>
       </div>
     </div>
