@@ -39,7 +39,7 @@ stories.add('Initial Range', () => {
   )
 
   return (
-    <div style={{ backgroundColor: '#35343a' }}>
+    <div style={{ backgroundColor: '#233540' }}>
       <TimelinePicker
         timezone={TIMEZONE}
         data={data}
@@ -75,7 +75,7 @@ stories.add('No Initial Range', () => {
   )
 
   return (
-    <div style={{ backgroundColor: '#35343a' }}>
+    <div style={{ backgroundColor: '#233540' }}>
       <TimelinePicker
         timezone={TIMEZONE}
         data={data}

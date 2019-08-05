@@ -10,11 +10,20 @@ import styled from '../../styled'
 
 // Constants
 const AXIS_MARGIN = 20
+const AXIS_HEIGHT = 15
+
+const TEXT_COLOR = '#d6d6d8'
+const PRIMARY_COLOR = '#2a616a'
 
 const ContextRow = styled.div`
   display: flex;
   justify-content: space-between;
   margin-top: 10px;
+`
+
+const HoverLine = styled.line`
+  stroke: #30a6ad;
+  stroke-width: 3;
 `
 
 const MarkerHover = styled.g`
@@ -58,15 +67,19 @@ const Root = styled.div`
   }
 
   .axis {
-    color: #d6d6d8; /* Light Grey */
+    color: ${TEXT_COLOR};
+    font-size: 0.9rem;
   }
 
   .data {
-    fill: #5b5a5f;
-    stroke-width: 1;
-    stroke: black;
+    fill: #3a4a54;
     :hover {
-      fill: #a1a1a1;
+      stroke-width: 2px;
+      stroke: ${PRIMARY_COLOR};
+      /* fill: #a1a1a1; */
+      /* box-shadow: 'rgba(42, 97, 106, 1)'; */
+      /* box-shadow: 10px 10px 10px #2a616a; */
+      /* filter: drop-shadow(3px 3px 2px rgba(255, 255, 255, 0.7)); */
     }
   }
 `
@@ -76,7 +89,7 @@ const TimeText = styled.div`
   margin: 10px;
   font-family: 'Open Sans', sans-serif;
   span {
-    color: #d6d6d8;
+    color: ${TEXT_COLOR};
   }
 
   br {
@@ -84,10 +97,11 @@ const TimeText = styled.div`
   }
 `
 
-// const ActionsArea = styled.div`
-//   display: flex;
-//   justify-content: flex-end;
-// `
+const Message = styled.span`
+  font-family: 'Open Sans', sans-serif;
+  margin: 10px;
+  color: ${TEXT_COLOR};
+`
 
 // Types
 interface TimelinePickerProps {
@@ -120,8 +134,6 @@ interface TimelinePickerProps {
    * Attribute name to use when rendering data points.
    */
   dateAttribute?: string
-
-  onCancel?: () => void
 
   onDone?: () => void
 }
@@ -226,22 +238,28 @@ export const TimelinePicker = (props: TimelinePickerProps) => {
   const rightMarkerRef = useRef(null)
   const areaMarkerRef = useRef(null)
 
-  const [width] = useState(800)
+  const [width] = useState(1425)
   const [height] = useState(300)
 
   const [dataBuckets, setDataBuckets] = useState<Bucket[]>([])
   const [tooltip, setTooltip] = useState<Tooltip | null>()
 
   const [xScale, setXScale] = useState(() => getInitialTimeScale(width))
-  const [xAxis, setXAxis] = useState(() => d3.axisBottom(xScale))
+  const [xAxis, setXAxis] = useState(() =>
+    d3.axisBottom(xScale).tickSize(AXIS_HEIGHT)
+  )
 
   const initialX = getInitialTimeScale(width)
+  const markerHeight = height - 70 - AXIS_HEIGHT
 
   /**
    * When a zoom event is triggered, use the transform event to create a new xScale,
    * then create a new xAxis using the scale and update existing xAxis
    */
   const handleZoom = () => {
+    // Tooltip sticks around without this.
+    setTooltip(null)
+
     const transform = d3.event.transform
 
     // Returns a copy of the continuous scale x whose domain is transformed.
@@ -378,7 +396,7 @@ export const TimelinePicker = (props: TimelinePickerProps) => {
 
     svg
       .select('.axis--x')
-      .attr('transform', `translate(0 ${height - 20})`)
+      .attr('transform', `translate(0 ${height - 20 - AXIS_HEIGHT})`)
       .call(xAxis)
   }
 
@@ -435,7 +453,7 @@ export const TimelinePicker = (props: TimelinePickerProps) => {
     d3.select(d3ContainerRef.current).on('mousemove', function() {
       const coord = d3.mouse(this as any)
       d3.select(hoverLineRef.current)
-        .attr('transform', `translate(${coord[0]}, 250)`)
+        .attr('transform', `translate(${coord[0]}, ${markerHeight})`)
         .attr('style', 'display: block')
 
       if (props.onHover) {
@@ -473,8 +491,6 @@ export const TimelinePicker = (props: TimelinePickerProps) => {
       d3.selectAll('.data').remove()
 
       const rectangleWidth = bucketWidth
-      const numDates = props.data.map(d => d.attributes[props.dateAttribute!])
-        .length
       props.data.forEach(d => {
         const date = d.attributes[props.dateAttribute!]
         if (date == null) {
@@ -501,18 +517,16 @@ export const TimelinePicker = (props: TimelinePickerProps) => {
 
       buckets.forEach((b, i) => {
         const rectangleHeight = b.data.length * 10
+        const x = (b.x1 + b.x2) / 2 - 15
+        const y = height - rectangleHeight - (AXIS_MARGIN + 1 + AXIS_HEIGHT)
+
         d3.select('.data-holder')
           .append('rect')
           .attr('class', 'data')
-          .attr('width', rectangleWidth)
+          .attr('width', rectangleWidth - 5)
           .attr('height', rectangleHeight)
           .attr('id', i)
-          .attr(
-            'transform',
-            `translate(${(b.x1 + b.x2) / 2}, ${height -
-              rectangleHeight -
-              (AXIS_MARGIN + 1)})`
-          )
+          .attr('transform', `translate(${x}, ${y})`)
         // .on('mouseenter', function(d, i) {
         //   const id = d3.select(this).node().id
         //   console.log('Data Elements in hovered item:', dataBuckets[id].data)
@@ -528,6 +542,11 @@ export const TimelinePicker = (props: TimelinePickerProps) => {
       .selectAll('.data')
       .on('mouseleave', function() {
         setTooltip(null)
+      })
+      .on('click', function() {
+        //@ts-ignore
+        const id = d3.select(this).node().id
+        console.log(dataBuckets[id].data)
       })
       .on('mousemove', function() {
         // @ts-ignore
@@ -570,8 +589,6 @@ export const TimelinePicker = (props: TimelinePickerProps) => {
         const leftUtc = toUtc(leftValue)
         const rightUtc = toUtc(rightValue)
 
-        const markerHeight = height - 70
-
         leftMarker
           .attr('transform', `translate(${xScale(leftUtc)}, ${markerHeight})`)
           .attr('style', 'display: block')
@@ -595,14 +612,7 @@ export const TimelinePicker = (props: TimelinePickerProps) => {
 
   return (
     <Root width={width}>
-      <ButtonArea>
-        <Button emphasis="high" color="primary" onClick={() => zoomOut()}>
-          -
-        </Button>
-        <Button emphasis="high" color="primary" onClick={() => zoomIn()}>
-          +
-        </Button>
-      </ButtonArea>
+      <ButtonArea />
 
       {tooltip && (
         <Tooltip message={tooltip.message} x={tooltip.x} y={tooltip.y} />
@@ -612,6 +622,11 @@ export const TimelinePicker = (props: TimelinePickerProps) => {
         <g className="data-holder" />
 
         <rect ref={areaMarkerRef} className="areaMarker" />
+
+        {/* Vertical line showing the current hover position */}
+        <g ref={hoverLineRef} style={{ display: 'none' }}>
+          <HoverLine x1="0" y1="0" x2="0" y2="50" />
+        </g>
 
         {/* Lines that appear upon clicking on the timeline and creating a selection range */}
         <MarkerHover ref={leftMarkerRef}>
@@ -627,22 +642,31 @@ export const TimelinePicker = (props: TimelinePickerProps) => {
         <g className="axis axis--x" />
       </SVG>
       <ContextRow>
-        <TimeText>
-          <b>Start</b>
-          <br />
-          <span>{formatDate(props.selectionRange[0])}</span>
-        </TimeText>
-        <TimeText>
-          <b>End</b>
-          <br />
-          <span>{formatDate(props.selectionRange[1])}</span>
-        </TimeText>
+        {props.selectionRange.length === 0 ? (
+          <Message>
+            Click to select a cluster of results. Zoom with the scroll wheel.
+          </Message>
+        ) : (
+          <React.Fragment>
+            <TimeText>
+              <b>Start</b>
+              <br />
+              <span>{formatDate(props.selectionRange[0])}</span>
+            </TimeText>
+            <TimeText>
+              <b>End</b>
+              <br />
+              <span>{formatDate(props.selectionRange[1])}</span>
+            </TimeText>
+          </React.Fragment>
+        )}
         <ButtonArea>
-          {props.onCancel && (
-            <Button emphasis="high" color="neutral" onClick={props.onCancel}>
-              Cancel
-            </Button>
-          )}
+          <Button emphasis="high" color="primary" onClick={() => zoomOut()}>
+            -
+          </Button>
+          <Button emphasis="high" color="primary" onClick={() => zoomIn()}>
+            +
+          </Button>
           {props.onDone && (
             <Button emphasis="high" color="primary" onClick={props.onDone}>
               Done
