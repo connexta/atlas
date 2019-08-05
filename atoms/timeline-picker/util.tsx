@@ -29,12 +29,9 @@ const getDataPoint = (
         .add(day, 'days')
         .toDate(),
 
-      modified: moment(new Date(modifiedYear + year, 0, 1))
-        .add(num, 'years')
-        .toDate(),
+      modified: moment(new Date(modifiedYear + year, 0, 1)).toDate(),
 
       published: moment(new Date(publishedYear + year, 0, 1))
-        .add(num, 'years')
         .add(day, 'days')
         .toDate(),
     },

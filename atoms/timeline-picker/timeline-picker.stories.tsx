@@ -6,11 +6,8 @@ import { storiesOf } from '@connexta/ace/@storybook/react'
 import TimelinePicker from './index'
 
 //@ts-ignore
-import moment from 'moment-timezone'
-
 import { test_data } from './util'
 
-const DATE_FORMAT = 'DD MMMM YYYY h:mm a'
 const TIMEZONE = 'America/New_York'
 
 const stories = storiesOf('Timeline Picker', module).addParameters({
@@ -20,8 +17,6 @@ const stories = storiesOf('Timeline Picker', module).addParameters({
 
 // Hack to make hooks work with storybook. Real fix available in https://github.com/storybookjs/storybook/releases/tag/v5.2.0-beta.10
 stories.addDecorator((Story: any) => <Story />)
-
-const formatDate = (value: Date) => moment(value).format(DATE_FORMAT)
 
 stories.add('Initial Range', () => {
   const [selectionRange, setSelectionRange] = useState([
@@ -92,20 +87,6 @@ stories.add('No Initial Range', () => {
         onHover={(v: Date) => setHover(v)}
         selectionRange={selectionRange}
       />
-      <div style={{ display: 'flex', color: 'white' }}>
-        <div style={{ paddingRight: '100px', margin: '10px' }}>
-          <p>
-            <b>Start</b>
-          </p>
-          <p>{formatDate(selectionRange[0])}</p>
-        </div>
-        <div style={{ paddingRight: '100px', margin: '10px' }}>
-          <p>
-            <b>End</b>
-          </p>
-          <p>{formatDate(selectionRange[1])}</p>
-        </div>
-      </div>
     </div>
   )
 })

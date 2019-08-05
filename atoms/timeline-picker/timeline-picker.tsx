@@ -10,11 +10,11 @@ import styled from '../../styled'
 
 // Constants
 const AXIS_MARGIN = 20
-const INTERNAL_DATE_FORMAT = 'YYYY/MM/DD HH:mm:mm'
 
 const ContextRow = styled.div`
   display: flex;
   justify-content: space-between;
+  margin-top: 10px;
 `
 
 const MarkerHover = styled.g`
@@ -164,7 +164,7 @@ const generateTooltipMessage = (data: any) => {
   )
 }
 
-const DATE_FORMAT = 'DD MMMM YYYY h:mm a'
+const DATE_FORMAT = 'DD MMMM YYYY h:mm a Z'
 const formatDate = (value: Date) => moment(value).format(DATE_FORMAT)
 
 /**
@@ -396,39 +396,37 @@ export const TimelinePicker = (props: TimelinePickerProps) => {
   // Add click handlers to listen to d3 mouse events
   // Note: Can't use arrow functions when detecting d3.mouse events because we don't want 'this' auto bound
   useEffect(() => {
-    if (props.selectionRange !== undefined) {
-      // When the d3Container click event triggers, set the selectionRange
-      d3.select(d3ContainerRef.current).on('click', function() {
-        const coord = d3.mouse(this as any)
-        const value = xScale.invert(coord[0])
-        const convertedTimezoneValue = convertDateToTimezoneDate(
-          value,
-          props.timezone
-        )
-
-        // If values are not provided, first click will create a new range at +/- 1 year from the click point
-        if (props.selectionRange.length === 0) {
-          const left = moment(
-            convertedTimezoneValue,
-            INTERNAL_DATE_FORMAT
-          ).subtract(365, 'days')
-
-          const right = moment(
-            convertedTimezoneValue,
-            INTERNAL_DATE_FORMAT
-          ).add(365, 'days')
-
-          props.onChange([left, right])
-        } else {
-          // Uncomment to enable click based range extension
-          // if (convertedTimezoneValue < props.selectionRange[0]) {
-          //   props.onChange([convertedTimezoneValue, props.selectionRange[1]])
-          // } else if (props.selectionRange[1] < convertedTimezoneValue) {
-          //   props.onChange([props.selectionRange[0], convertedTimezoneValue])
-          // }
-        }
-      })
-    }
+    // const INTERNAL_DATE_FORMAT = 'YYYY/MM/DD HH:mm:mm'
+    // if (props.selectionRange !== undefined) {
+    //   // When the d3Container click event triggers, set the selectionRange
+    //   d3.select(d3ContainerRef.current).on('click', function() {
+    //     const coord = d3.mouse(this as any)
+    //     const value = xScale.invert(coord[0])
+    //     const convertedTimezoneValue = convertDateToTimezoneDate(
+    //       value,
+    //       props.timezone
+    //     )
+    //     // If values are not provided, first click will create a new range at +/- 1 year from the click point
+    //     if (props.selectionRange.length === 0) {
+    //       const left = moment(
+    //         convertedTimezoneValue,
+    //         INTERNAL_DATE_FORMAT
+    //       ).subtract(365, 'days')
+    //       const right = moment(
+    //         convertedTimezoneValue,
+    //         INTERNAL_DATE_FORMAT
+    //       ).add(365, 'days')
+    //       props.onChange([left, right])
+    //     } else {
+    //       // Uncomment to enable click based range extension
+    //       // if (convertedTimezoneValue < props.selectionRange[0]) {
+    //       //   props.onChange([convertedTimezoneValue, props.selectionRange[1]])
+    //       // } else if (props.selectionRange[1] < convertedTimezoneValue) {
+    //       //   props.onChange([props.selectionRange[0], convertedTimezoneValue])
+    //       // }
+    //     }
+    //   })
+    // }
   }, [xScale, props.selectionRange, props.timezone])
 
   // Add mouse handlers to listen to d3 mouse events
@@ -475,6 +473,8 @@ export const TimelinePicker = (props: TimelinePickerProps) => {
       d3.selectAll('.data').remove()
 
       const rectangleWidth = bucketWidth
+      const numDates = props.data.map(d => d.attributes[props.dateAttribute!])
+        .length
       props.data.forEach(d => {
         const date = d.attributes[props.dateAttribute!]
         if (date == null) {
