@@ -3,14 +3,91 @@ import * as d3 from 'd3'
 import moment from 'moment-timezone'
 import * as React from 'react'
 import { useEffect, useRef, useState } from 'react'
-import styled from '../../styled'
 import Button from '../button'
 import { Tooltip } from './tooltip'
 import { convertDateToTimezoneDate, Data, range, toUtc } from './util'
+import styled from '../../styled'
 
 // Constants
 const AXIS_MARGIN = 20
 const INTERNAL_DATE_FORMAT = 'YYYY/MM/DD HH:mm:mm'
+
+const ContextRow = styled.div`
+  display: flex;
+  justify-content: space-between;
+`
+
+const MarkerHover = styled.g`
+  :hover {
+    cursor: ew-resize;
+  }
+`
+const MarkerLine = styled.line`
+  stroke: ${(props: any) => (!props.hidden ? '#3f66b7' : 'rgba(0, 0, 0, 0)')};
+  stroke-width: ${(props: any) => (!props.hidden ? 2 : 30)};
+`
+const SVG = styled.svg`
+  /* no-op */
+`
+
+const ButtonArea = styled.div`
+  margin: 10px;
+  display: flex;
+  justify-content: flex-end;
+
+  button {
+    margin-left: 10px;
+  }
+`
+
+const Root = styled.div`
+  display: flex;
+  flex-direction: column;
+  width: ${(props: any) => props.width}px;
+
+  .areaMarker {
+    fill: #3f66b7;
+    opacity: 0.2;
+    display: none;
+
+    :hover {
+      cursor: move;
+      fill: #3f66b7;
+      opacity: 0.5;
+    }
+  }
+
+  .axis {
+    color: #d6d6d8; /* Light Grey */
+  }
+
+  .data {
+    fill: #5b5a5f;
+    stroke-width: 1;
+    stroke: black;
+    :hover {
+      fill: #a1a1a1;
+    }
+  }
+`
+
+const TimeText = styled.div`
+  color: white;
+  margin: 10px;
+  font-family: 'Open Sans', sans-serif;
+  span {
+    color: #d6d6d8;
+  }
+
+  br {
+    line-height: 150%;
+  }
+`
+
+// const ActionsArea = styled.div`
+//   display: flex;
+//   justify-content: flex-end;
+// `
 
 // Types
 interface TimelinePickerProps {
@@ -43,6 +120,10 @@ interface TimelinePickerProps {
    * Attribute name to use when rendering data points.
    */
   dateAttribute?: string
+
+  onCancel?: () => void
+
+  onDone?: () => void
 }
 
 type Bucket = {
@@ -56,61 +137,6 @@ type Tooltip = {
   y: number
   message: string | any
 }
-
-// Styled Components
-const MarkerHover = styled.g`
-  :hover {
-    cursor: ew-resize;
-  }
-`
-const MarkerLine = styled.line`
-  stroke: ${(props: any) => (!props.hidden ? '#3f66b7' : 'rgba(0, 0, 0, 0)')};
-  stroke-width: ${(props: any) => (!props.hidden ? 2 : 30)};
-`
-const SVG = styled.svg`
-  /* a */
-`
-
-const ZoomArea = styled.div`
-  margin: 10px;
-  display: flex;
-  justify-content: flex-end;
-
-  button {
-    margin-left: 10px;
-  }
-`
-
-const Root = styled.div`
-  display: flex;
-  flex-direction: column;
-  width: ${(props: any) => props.width}px;
-
-  .areaMarker {
-    fill: #3f66b7;
-    opacity: 0.2;
-    display: none;
-
-    :hover {
-      cursor: move;
-      fill: #3f66b7;
-      opacity: 0.5;
-    }
-  }
-
-  .axis {
-    color: #d6d6d8;
-  }
-
-  .data {
-    fill: #5b5a5f;
-    stroke-width: 1;
-    stroke: black;
-    :hover {
-      fill: #a1a1a1;
-    }
-  }
-`
 
 // Helper Methods
 const generateTooltipMessage = (data: any) => {
@@ -126,7 +152,7 @@ const generateTooltipMessage = (data: any) => {
   const extra = (
     <React.Fragment>
       <br />
-      {`+${data.length - 5} other events`}
+      {`+${data.length - 5} other results`}
     </React.Fragment>
   )
 
@@ -137,6 +163,9 @@ const generateTooltipMessage = (data: any) => {
     </React.Fragment>
   )
 }
+
+const DATE_FORMAT = 'DD MMMM YYYY h:mm a'
+const formatDate = (value: Date) => moment(value).format(DATE_FORMAT)
 
 /**
  * Given a d3 selection, set the display to none.
@@ -566,14 +595,14 @@ export const TimelinePicker = (props: TimelinePickerProps) => {
 
   return (
     <Root width={width}>
-      <ZoomArea>
+      <ButtonArea>
         <Button emphasis="high" color="primary" onClick={() => zoomOut()}>
           -
         </Button>
         <Button emphasis="high" color="primary" onClick={() => zoomIn()}>
           +
         </Button>
-      </ZoomArea>
+      </ButtonArea>
 
       {tooltip && (
         <Tooltip message={tooltip.message} x={tooltip.x} y={tooltip.y} />
@@ -597,6 +626,30 @@ export const TimelinePicker = (props: TimelinePickerProps) => {
         {/* X Axis Placeholder */}
         <g className="axis axis--x" />
       </SVG>
+      <ContextRow>
+        <TimeText>
+          <b>Start</b>
+          <br />
+          <span>{formatDate(props.selectionRange[0])}</span>
+        </TimeText>
+        <TimeText>
+          <b>End</b>
+          <br />
+          <span>{formatDate(props.selectionRange[1])}</span>
+        </TimeText>
+        <ButtonArea>
+          {props.onCancel && (
+            <Button emphasis="high" color="neutral" onClick={props.onCancel}>
+              Cancel
+            </Button>
+          )}
+          {props.onDone && (
+            <Button emphasis="high" color="primary" onClick={props.onDone}>
+              Done
+            </Button>
+          )}
+        </ButtonArea>
+      </ContextRow>
     </Root>
   )
 }

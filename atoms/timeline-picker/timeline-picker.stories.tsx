@@ -23,14 +23,6 @@ stories.addDecorator((Story: any) => <Story />)
 
 const formatDate = (value: Date) => moment(value).format(DATE_FORMAT)
 
-const renderValues = (value: Date[]) => {
-  if (value === undefined || value.length != 2) {
-    return ''
-  }
-
-  return `${formatDate(value[0])} - ${formatDate(value[1])}`
-}
-
 stories.add('Initial Range', () => {
   const [selectionRange, setSelectionRange] = useState([
     new Date('01/25/1995'),
@@ -63,21 +55,9 @@ stories.add('Initial Range', () => {
         }}
         // onHover={(v: Date) => setHover(v)}
         selectionRange={selectionRange}
+        onCancel={action('called onCancel()')}
+        onDone={action('called onDone()')}
       />
-      <div style={{ display: 'flex', color: 'white' }}>
-        <div style={{ paddingRight: '100px', margin: '10px' }}>
-          <p>
-            <b>Start</b>
-          </p>
-          <p>{formatDate(selectionRange[0])}</p>
-        </div>
-        <div style={{ paddingRight: '100px', margin: '10px' }}>
-          <p>
-            <b>End</b>
-          </p>
-          <p>{formatDate(selectionRange[1])}</p>
-        </div>
-      </div>
     </div>
   )
 })

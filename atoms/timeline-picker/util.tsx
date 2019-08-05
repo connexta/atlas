@@ -22,7 +22,7 @@ const getDataPoint = (
   const day = Math.floor(Math.random() * 28)
 
   return {
-    id: `Event ${(num + 1).toString()}`,
+    id: `Result ${(num + 1).toString()}`,
     attributes: {
       created: moment(new Date(createdYear + year, 0, 1))
         .add(month, 'months')

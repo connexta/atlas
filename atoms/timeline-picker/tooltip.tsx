@@ -8,11 +8,12 @@ const Root = styled.div`
   color: white;
   /* opacity: 0.5; */
   /* background-color: black; */
-  background-color: rgba(0, 0, 0, 0.3);
+  background-color: rgba(0, 0, 0, 0.5);
   max-height: 150px;
   width: 150px;
   border-radius: 8px;
   padding: 10px;
+  z-index: 1;
 `
 
 const Message = styled.span`
