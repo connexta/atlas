@@ -1,104 +1,176 @@
 import * as React from 'react'
+import { useState } from 'react'
+import { action } from '@connexta/ace/@storybook/addon-actions'
+import { select, number } from '@connexta/ace/@storybook/addon-knobs'
 import { storiesOf } from '@connexta/ace/@storybook/react'
-import { withKnobs } from '@connexta/ace/@storybook/addon-knobs'
-import Timeline, { Point } from './timeline'
+import Timeline from './index'
 
-const randomDate = (start: Date, end: Date) =>
-  new Date(start.getTime() + Math.random() * (end.getTime() - start.getTime()))
+//@ts-ignore
+import { createTestData } from './util'
 
-function uuidv4() {
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-    var r = (Math.random() * 16) | 0,
-      v = c == 'x' ? r : (r & 0x3) | 0x8
-    return v.toString(16)
-  })
-}
+const TIMEZONE = 'America/New_York'
 
-const createRandomData = (start: Date, sampleSize: number): Point[] => {
-  let samples = []
-  for (let i = 0; i < sampleSize; i++) {
-    const date = randomDate(start, new Date())
-    const id = uuidv4()
-    samples.push({
-      date,
-      data: {
-        id,
-        title: 'title - ' + id,
-      },
-      selected: false,
-      id: id,
-    })
-  }
+const stories = storiesOf('Timeline', module).addParameters({
+  info: `The TimelinePicker is a controlled component that can be used to select a time range. The TimelinePicker utilizies d3.js,
+  and supports zooming and dragging as well as translation between timezones.`,
+})
 
-  return samples
-}
+// Hack to make hooks work with storybook. Real fix available in https://github.com/storybookjs/storybook/releases/tag/v5.2.0-beta.10
+stories.addDecorator((Story: any) => <Story />)
 
-const createDuplicateData = (date: Date, sampleSize: number): Point[] => {
-  let samples = []
-  for (let i = 0; i < sampleSize; i++) {
-    const id = uuidv4()
-    samples.push({
-      date,
-      data: {
-        id,
-        title: 'title - ' + id,
-      },
-      selected: false,
-      id: id,
-    })
-  }
+stories.add('No Initial Range', () => {
+  const [selectionRange, setSelectionRange] = useState([])
+  const [hover, setHover] = useState()
 
-  return samples
-}
+  const numDataPoints = number('Number of spaced data points to render', 500)
+  const testData = createTestData(numDataPoints)
 
-type State = {
-  points: Point[]
-}
+  const dateAttributeKnob = select(
+    'Date Attribute',
+    {
+      Created: 'created',
+      Modified: 'modified',
+      Published: 'published',
+    },
+    'created'
+  )
 
-class TimelineExample extends React.Component<any, State> {
-  constructor(props: any) {
-    super(props)
-    const points = createRandomData(new Date(1990, 0, 1), 100).concat(
-      createDuplicateData(new Date(1980, 0, 1), 20)
-    )
+  const [data, setData] = useState(testData)
+  const [dateAttribute] = useState(dateAttributeKnob)
 
-    this.state = {
-      points,
-    }
-  }
-
-  Tooltip = (points: Point[]) => {
-    return <pre>{JSON.stringify(points, null, 2)}</pre>
-  }
-
-  onClick = (toMatch: Point[]) => {
-    var newPoints = this.state.points.map(p => {
-      if (toMatch.some(match => match.id === p.id)) {
-        p.selected = !p.selected
-      }
-
-      return p
-    })
-
-    this.setState({ points: newPoints })
-    alert('ON CLICK: \n' + JSON.stringify(toMatch))
-  }
-
-  render() {
-    return (
+  return (
+    <div style={{ backgroundColor: '#233540' }}>
       <Timeline
-        value={this.state.points}
-        onClick={this.onClick}
-        style={{
-          border: '1px solid grey',
+        timezone={TIMEZONE}
+        data={data}
+        dateAttribute={dateAttribute}
+        onSelect={(ids: string[]) => {
+          action('onSelect')(ids)
+          const newData = data.map(d => {
+            d.selected = ids.indexOf(d.id) !== -1
+            return d
+          })
+          setData(newData)
         }}
-        Tooltip={this.Tooltip}
-      >
-        Playground
-      </Timeline>
-    )
-  }
-}
-storiesOf('Timeline', module)
-  .addDecorator(withKnobs)
-  .add('playground', () => <TimelineExample />)
+        onChange={(v: Date[]) => {
+          action('onChange')(v)
+          setSelectionRange(v as any)
+        }}
+        onHover={(v: Date) => setHover(v)}
+        selectionRange={selectionRange}
+      />
+    </div>
+  )
+})
+
+stories.add('Initial Range', () => {
+  const [selectionRange, setSelectionRange] = useState([
+    new Date('01/25/1995'),
+    new Date('05/04/2008'),
+  ])
+  const numDataPoints = number('Number of spaced data points to render', 500)
+  const [data, setData] = useState(createTestData(numDataPoints))
+
+  const dateAttribute = select(
+    'Date Attribute',
+    {
+      Created: 'created',
+      Modified: 'modified',
+      Published: 'published',
+    },
+    'created'
+  )
+
+  return (
+    <div style={{ backgroundColor: '#233540' }}>
+      <Timeline
+        timezone={TIMEZONE}
+        data={data}
+        dateAttribute={dateAttribute}
+        onSelect={(ids: string[]) => {
+          action('onSelect')(ids)
+          const newData = data.map(d => {
+            d.selected = ids.indexOf(d.id) !== -1
+            return d
+          })
+          setData(newData)
+        }}
+        onChange={(v: Date[]) => {
+          action('onChange')(v)
+          setSelectionRange(v)
+        }}
+        selectionRange={selectionRange}
+      />
+    </div>
+  )
+})
+
+stories.add('Time Picker Input - Single', () => {
+  const [selectionRange, setSelectionRange] = useState([])
+  const [hover, setHover] = useState()
+
+  const numDataPoints = number('Number of spaced data points to render', 500)
+  const [data, setData] = useState(createTestData(numDataPoints))
+
+  const dateAttribute = select(
+    'Date Attribute',
+    {
+      Created: 'created',
+      Modified: 'modified',
+      Published: 'published',
+    },
+    'created'
+  )
+
+  return (
+    <div style={{ backgroundColor: '#233540' }}>
+      <Timeline
+        mode="single"
+        timezone={TIMEZONE}
+        dateAttribute={dateAttribute}
+        onChange={(v: Date[]) => {
+          action('onChange')(v)
+          setSelectionRange(v as any)
+        }}
+        onHover={(v: Date) => setHover(v)}
+        selectionRange={selectionRange}
+        onDone={action('clicked onDone')}
+      />
+    </div>
+  )
+})
+
+stories.add('Time Picker Input - Range', () => {
+  const [selectionRange, setSelectionRange] = useState([])
+  const [hover, setHover] = useState()
+
+  const numDataPoints = number('Number of spaced data points to render', 500)
+  const [data, setData] = useState(createTestData(numDataPoints))
+
+  const dateAttribute = select(
+    'Date Attribute',
+    {
+      Created: 'created',
+      Modified: 'modified',
+      Published: 'published',
+    },
+    'created'
+  )
+
+  return (
+    <div style={{ backgroundColor: '#233540' }}>
+      <Timeline
+        mode="range"
+        timezone={TIMEZONE}
+        dateAttribute={dateAttribute}
+        onChange={(v: Date[]) => {
+          action('onChange')(v)
+          setSelectionRange(v as any)
+        }}
+        onHover={(v: Date) => setHover(v)}
+        selectionRange={selectionRange}
+        onDone={action('clicked onDone')}
+      />
+    </div>
+  )
+})

@@ -3,6 +3,7 @@ import moment from 'moment-timezone'
 
 export type Data = {
   id: string
+  selected: boolean
   attributes: {
     [key: string]: Date
   }
@@ -23,6 +24,7 @@ const getDataPoint = (
 
   return {
     id: `Result ${(num + 1).toString()}`,
+    selected: false,
     attributes: {
       created: moment(new Date(createdYear + year, 0, 1))
         .add(month, 'months')
@@ -38,7 +40,7 @@ const getDataPoint = (
   }
 }
 
-export const test_data = (n: number): Data[] => {
+export const createTestData = (n: number): Data[] => {
   if (typeof n !== 'number' || n < 1) {
     return []
   }
