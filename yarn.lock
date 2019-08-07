@@ -1256,9 +1256,9 @@
     lodash "^4.17.13"
     to-fast-properties "^2.0.0"
 
-"@connexta/ace@git://github.com/connexta/ace.git#d48cdcd457289b66a310f2ab7ed4564ce5d8db93":
+"@connexta/ace@git://github.com/connexta/ace.git#88a11a149529c2fe8e5a807c87140d0ba7499b91":
   version "1.0.0"
-  resolved "git://github.com/connexta/ace.git#d48cdcd457289b66a310f2ab7ed4564ce5d8db93"
+  resolved "git://github.com/connexta/ace.git#88a11a149529c2fe8e5a807c87140d0ba7499b91"
   dependencies:
     "@babel/core" "^7.0.0"
     "@connexta/eslint-plugin-connexta" "git://github.com/connexta/eslint-plugin-connexta.git#v0.0.2"
