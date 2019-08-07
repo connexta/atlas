@@ -1,5 +1,6 @@
 # atlas
 
+[![Build Status](https://travis-ci.org/connexta/atlas.svg?branch=master)](https://travis-ci.org/connexta/atlas)
 [![npm package](https://img.shields.io/npm/v/@connexta/atlas/latest.svg)](https://www.npmjs.com/package/@connexta/atlas)
 [![npm downloads](https://img.shields.io/npm/dm/@connexta/atlas.svg)](https://www.npmjs.com/package/@connexta/atlas)
 ![Code style](https://img.shields.io/badge/code_style-prettier-ff69b4.svg)
