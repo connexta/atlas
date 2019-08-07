@@ -14,6 +14,7 @@ const Root = styled.div`
   border-radius: 8px;
   padding: 10px;
   z-index: 1;
+  pointer-events: none;
 `
 
 const Message = styled.span`
