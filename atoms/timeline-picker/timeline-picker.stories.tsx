@@ -7,7 +7,7 @@ import TimelinePicker from './index'
 //@ts-ignore
 import moment from 'moment-timezone'
 
-import { test_data as data } from './util'
+import { test_data as _data } from './util'
 
 const DATE_FORMAT = 'MM/DD/YYYY h:mm a'
 const TIMEZONE = 'America/New_York'

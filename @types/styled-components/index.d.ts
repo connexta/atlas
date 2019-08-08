@@ -1,14 +1,8 @@
-/// <reference types="node" />
+// import original module declarations
+import 'styled-components'
+import { ThemeInterface } from '../../styled'
 
+// and extend them!
 declare module 'styled-components' {
-  export type ThemedStyledComponentsModule<ThemeInterface> = {
-    default: any
-    ThemeProvider: any
-    keyframes: any
-    withTheme: any
-    createGlobalStyle: any
-    css: any
-  }
-  export type ThemeProps<ThemeInterface> = {}
-  export type FlattenInterpolation<ThemeProps> = {}
+  export interface DefaultTheme extends ThemeInterface {}
 }

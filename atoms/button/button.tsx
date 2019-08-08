@@ -1,7 +1,8 @@
 import { default as OriginalButton } from '@material-ui/core/Button'
 import * as React from 'react'
 import { ButtonProps } from '@material-ui/core/Button'
-import { withTheme, ThemeInterface } from '../../styled'
+import { ThemeInterface } from '../../styled'
+import { withTheme } from 'styled-components'
 import { Omit } from '../../typescript'
 
 type Emphasis = 'low' | 'medium' | 'high'
@@ -70,11 +71,13 @@ const mapThemeToMUI = (_theme: ThemeInterface) => {
   return {}
 }
 
-export const Button = withTheme((props: OurProps) => {
-  const MUIProps = {
-    ...mapPropsToMUI(props),
+export const Button: React.ComponentClass<any> = withTheme(
+  (props: OurProps) => {
+    const MUIProps = {
+      ...mapPropsToMUI(props),
+    }
+    return <OriginalButton {...MUIProps} />
   }
-  return <OriginalButton {...MUIProps} />
-})
+)
 
 export default Button

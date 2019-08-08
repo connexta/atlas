@@ -12,9 +12,8 @@
 import * as React from 'react'
 const throttle = require('lodash.throttle')
 import { uuid } from '../../functions'
-
+import { ThemeProvider } from 'styled-components'
 import {
-  ThemeProvider,
   ThemeInterface,
   SpecificSizingInterface,
   ThemeColorInterface,

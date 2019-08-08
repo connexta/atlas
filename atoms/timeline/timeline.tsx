@@ -1,7 +1,7 @@
 import * as React from 'react'
 import * as d3 from 'd3'
 import Button from '../button'
-import styled from '../../styled'
+import styled from 'styled-components'
 
 const clustering = require('density-clustering')
 
@@ -395,7 +395,7 @@ class Timeline extends React.Component<Props, State> {
   render() {
     const width = this.state.width - margin.left - margin.right
     const height = SVG_HEIGHT - margin.top - margin.bottom
-    const { Tooltip = (points: Point[]) => <div /> } = this.props
+    const { Tooltip = (_points: Point[]) => <div /> } = this.props
 
     return (
       <Root style={this.props.style} className={this.props.className}>
@@ -416,7 +416,7 @@ class Timeline extends React.Component<Props, State> {
                 position: 'fixed',
                 left: (this as any).state.tooltip.x,
                 top: (this as any).state.tooltip.y + 50,
-                pointerEvent: 'none',
+                pointerEvents: 'none',
               }}
             >
               <Tooltip
