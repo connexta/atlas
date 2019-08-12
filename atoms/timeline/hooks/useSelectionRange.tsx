@@ -1,10 +1,22 @@
 import { useState } from 'react'
 
-const setSelectionRange = () => {}
+type Timescale = d3.ScaleTime<number, number>
 
-export default function(defaultValue: Date[]) {
-  const [value, setValue] = useState<Date[]>(defaultValue)
-  console.log('Value: ', value)
+const withinTimeScale = (newValues: Date[], timescale: Timescale) => {
+  const domain = timescale.domain()
+  return domain[0] < newValues[0] && newValues[1] < domain[1]
+}
 
-  return [value, setValue]
+export default function(
+  defaultValues: Date[],
+  timescale: Timescale
+): [Date[], (newValue: Date[]) => void] {
+  const [values, setValues] = useState<Date[]>(defaultValues)
+  const setSelectionRange = (newValues: Date[]) => {
+    if (newValues.length == 0 || withinTimeScale(newValues, timescale)) {
+      setValues(newValues)
+    }
+  }
+
+  return [values, setSelectionRange]
 }
