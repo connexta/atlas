@@ -99,6 +99,9 @@ const Root = styled.div`
   .axis {
     color: ${TEXT_COLOR};
     font-size: 0.9rem;
+    :hover {
+      cursor: ew-resize;
+    }
   }
 
   .selected {
@@ -166,7 +169,7 @@ interface TimelineProps {
    */
   dateAttribute?: string
 
-  onDone?: () => void
+  onDone?: (selectionRange: Date[]) => void
 
   onSelect?: (ids: string[]) => void
 
@@ -454,51 +457,61 @@ export const Timeline = (props: TimelineProps) => {
     return d3
       .drag()
       .on('start', () => {
-        setIsDragging(true)
-        hideElement(d3.select(hoverLineRef.current))
-        dragStart = d3.event.sourceEvent.timeStamp
         clickStart = d3.event.x
         const newLeftDate = convertDateToTimezoneDate(
           xScale.invert(clickStart),
           props.timezone
         )
-        setSelectionRange([newLeftDate])
+
+        if (props.mode === 'single') {
+          console.log('Setting selection range - ', newLeftDate)
+          setSelectionRange([newLeftDate])
+        } else {
+          setIsDragging(true)
+          hideElement(d3.select(hoverLineRef.current))
+          dragStart = d3.event.sourceEvent.timeStamp
+          setSelectionRange([newLeftDate])
+        }
       })
       .on('end', () => {
-        showElement(d3.select(hoverLineRef.current))
-        setIsDragging(false)
-        const sourceEvent = d3.event.sourceEvent
-        if (sourceEvent.timeStamp - dragStart < CLICK_TIMEOUT_MS) {
-          const nodeName = sourceEvent.srcElement.nodeName
-          if (nodeName === 'rect' || nodeName === 'line') {
-            const x = d3.event.x
-            const bucket = currentDataBuckets.find(b => b.x1 < x && x <= b.x2)
-            const idsToSelect = bucket!.data.map(d => d.id)
-            setSelectionRange([])
-            props.onSelect && props.onSelect(idsToSelect)
-            console.debug(
-              `Drag event under ${CLICK_TIMEOUT_MS}ms detected, registering as synthetic click and clearing selection to empty array`
-            )
+        if (props.mode !== 'single') {
+          showElement(d3.select(hoverLineRef.current))
+          setIsDragging(false)
+          const sourceEvent = d3.event.sourceEvent
+          if (sourceEvent.timeStamp - dragStart < CLICK_TIMEOUT_MS) {
+            const nodeName = sourceEvent.srcElement.nodeName
+            if (nodeName === 'rect' || nodeName === 'line') {
+              const x = d3.event.x
+              const bucket = currentDataBuckets.find(b => b.x1 < x && x <= b.x2)
+              const idsToSelect = bucket!.data.map(d => d.id)
+              setSelectionRange([])
+              props.onSelect && props.onSelect(idsToSelect)
+              console.debug(
+                `Drag event under ${CLICK_TIMEOUT_MS}ms detected, registering as synthetic click and clearing selection to empty array`
+              )
+            }
           }
         }
       })
       .on('drag', () => {
-        const diff = d3.event.x - d3.event.subject.x
-        let dragCurrent = clickStart + diff
-        const initialDate = convertDateToTimezoneDate(
-          xScale.invert(clickStart),
-          props.timezone
-        )
+        if (props.mode !== 'single') {
+          const diff = d3.event.x - d3.event.subject.x
+          let dragCurrent = clickStart + diff
+          const initialDate = convertDateToTimezoneDate(
+            xScale.invert(clickStart),
+            props.timezone
+          )
 
-        const dragDate = convertDateToTimezoneDate(
-          xScale.invert(dragCurrent),
-          props.timezone
-        )
+          const dragDate = convertDateToTimezoneDate(
+            xScale.invert(dragCurrent),
+            props.timezone
+          )
 
-        if (diff > 0) {
-          setSelectionRange([initialDate, dragDate])
-        } else {
-          setSelectionRange([dragDate, initialDate])
+          if (diff > 0) {
+            setSelectionRange([initialDate, dragDate])
+          } else {
+            setSelectionRange([dragDate, initialDate])
+          }
         }
       })
   }
@@ -713,7 +726,7 @@ export const Timeline = (props: TimelineProps) => {
       const rightMarker = d3.select(rightMarkerRef.current)
       const areaMarker = d3.select(areaMarkerRef.current)
 
-      if (selectionRange.length == 2) {
+      if (selectionRange.length == 2 && props.mode !== 'single') {
         const [leftValue, rightValue] = selectionRange
         const leftUtc = toUtc(leftValue)
         const rightUtc = toUtc(rightValue)
@@ -731,12 +744,12 @@ export const Timeline = (props: TimelineProps) => {
           .attr('width', xScale(rightUtc) - xScale(leftUtc))
           .attr('height', '50')
           .attr('style', 'display: block')
-        // } else if (leftMarkerRef.current) {
-        //   const leftMarker = d3.select(leftMarkerRef.current)
-        //   const leftUtc = toUtc(selectionRange[0])
-        //   leftMarker
-        //     .attr('transform', `translate(${xScale(leftUtc)}, ${markerHeight})`)
-        //     .attr('style', 'display: block')
+      } else if (selectionRange.length === 1 && props.mode === 'single') {
+        const leftMarker = d3.select(leftMarkerRef.current)
+        const leftUtc = toUtc(selectionRange[0])
+        leftMarker
+          .attr('transform', `translate(${xScale(leftUtc)}, ${markerHeight})`)
+          .attr('style', 'display: block')
       } else {
         hideElement(leftMarker)
         hideElement(rightMarker)
@@ -836,7 +849,12 @@ export const Timeline = (props: TimelineProps) => {
 
         {/* X Axis Placeholder */}
         <g className="axis axis--x" id="axis">
-          <rect width={width} height={AXIS_HEIGHT + 20} fillOpacity="0" />
+          <rect
+            width={width}
+            height={AXIS_HEIGHT + 20}
+            fillOpacity="0"
+            fill="black" // Fill must be set so that the element is created in the dom so it can be used for zoooming/hover styling
+          />
         </g>
       </SVG>
       <ContextRow>
@@ -849,7 +867,13 @@ export const Timeline = (props: TimelineProps) => {
             +
           </Button>
           {props.onDone && (
-            <Button color="primary" onClick={props.onDone}>
+            <Button
+              color="primary"
+              onClick={() => {
+                props.onDone && props.onDone(selectionRange)
+                setSelectionRange([])
+              }}
+            >
               Done
             </Button>
           )}
