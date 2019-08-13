@@ -20,7 +20,7 @@ stories.addDecorator((Story: any) => <Story />)
 
 stories.add('Timeline', () => {
   const modeKnob = select(
-    'Mode',
+    'Initial Mode',
     {
       Single: 'single',
       Range: 'range',
@@ -51,7 +51,7 @@ stories.add('Timeline with Data', () => {
   const testData = createTestData(numDataPoints)
 
   const modeKnob = select(
-    'Mode',
+    'Initial Mode',
     {
       Selection: null,
       Single: 'single',

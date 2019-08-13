@@ -620,9 +620,9 @@ export const Timeline = (props: TimelineProps) => {
       })
       .on('click', function() {
         //@ts-ignore
-        const id = d3.select(this).node().id
-        setSelectionRange([])
-        props.onSelect && props.onSelect(dataBuckets[id].data.map(d => d.id))
+        // const id = d3.select(this).node().id
+        // setSelectionRange([])
+        // props.onSelect && props.onSelect(dataBuckets[id].data.map(d => d.id))
       })
       .on('mousemove', function() {
         // @ts-ignore
