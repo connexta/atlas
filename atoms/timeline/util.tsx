@@ -66,3 +66,6 @@ export const convertDateToTimezoneDate = (
   time: Date,
   timezone: string = ''
 ): Date => moment.tz(time, timezone).toDate()
+
+export const formatDate = (value: Date) =>
+  moment(value).format('DD MMMM YYYY h:mm a Z')

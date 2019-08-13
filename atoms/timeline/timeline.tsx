@@ -2,7 +2,13 @@ import * as d3 from 'd3'
 import * as React from 'react'
 import { useEffect, useRef, useState } from 'react'
 import { Tooltip } from './tooltip'
-import { convertDateToTimezoneDate, Data, range, toUtc } from './util'
+import {
+  convertDateToTimezoneDate,
+  Data,
+  range,
+  toUtc,
+  formatDate,
+} from './util'
 import styled from '../../styled'
 import useSelectionRange from './hooks/useSelectionRange'
 import moment = require('moment-timezone')
@@ -201,9 +207,6 @@ const generateTooltipMessage = (data: string[]) => {
     </React.Fragment>
   )
 }
-
-const formatDate = (value: Date) =>
-  moment(value).format('DD MMMM YYYY h:mm a Z')
 
 /**
  * Given a d3 selection, set the display to none.
@@ -533,23 +536,13 @@ export const Timeline = (props: TimelineProps) => {
       d3.select(hoverLineRef.current)
         .attr('transform', `translate(${coord[0]}, ${markerHeight})`)
         .attr('style', 'display: block')
-
-      if (props.onHover) {
-        const hoverValue = xScale.invert(coord[0])
-        const convertedHoverValue = convertDateToTimezoneDate(
-          hoverValue,
-          props.timezone
-        )
-        // props.onHover(convertedHoverValue) // This line is causing performance issues because it triggers re-renders for some reason.
-      }
     })
 
     // When the d3Container mouseleave event triggers, set the hoverValue to null and hide the hoverLine line
     d3.select(d3ContainerRef.current).on('mouseleave', function() {
-      props.onHover && props.onHover(null)
       hideElement(d3.select(hoverLineRef.current))
     })
-  }, [xScale, props.timezone, props.onHover])
+  }, [xScale, props.timezone])
 
   // Render rectangles
   useEffect(() => {
