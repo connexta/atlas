@@ -1,6 +1,5 @@
 import { useState } from 'react'
-
-type Timescale = d3.ScaleTime<number, number>
+import { Timescale } from '../timeline'
 
 const withinTimeScale = (newValues: Date[], timescale: Timescale) => {
   const domain = timescale.domain()

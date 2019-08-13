@@ -139,25 +139,12 @@ const Message = styled.span`
 
 // Types
 interface TimelineProps {
-  /**
-   * onChange handler that gets called when making a selection on the TimelinePicker
-   */
-  onChange: (v: Date[]) => void
-
-  /**
-   * Range of dates
-   */
-  // selectionRange: Date[]
+  mode?: 'single' | 'range' | undefined
 
   /**
    * Timezone to use when displaying times
    */
   timezone?: string
-
-  /**
-   * onHover handler that gets called when hovering over the TimelinePicker
-   */
-  onHover?: (v: Date | null) => void
 
   /**
    * Data points
@@ -172,8 +159,6 @@ interface TimelineProps {
   onDone?: (selectionRange: Date[]) => void
 
   onSelect?: (ids: string[]) => void
-
-  mode?: 'single' | 'range'
 }
 
 type Bucket = {
@@ -188,6 +173,8 @@ type Tooltip = {
   y: number
   message: string | any
 }
+
+export type Timescale = d3.ScaleTime<number, number>
 
 // Helper Methods
 const generateTooltipMessage = (data: string[]) => {
@@ -242,16 +229,6 @@ const getInitialTimeScale = (width: number) => {
   timeScale.range([AXIS_MARGIN, width - AXIS_MARGIN])
 
   return timeScale
-}
-
-/**
- * Determine if a number is between 2 other numbers (used for highlighting)
- *
- * @param date
- * @param selectionRange
- */
-const inSelectionRange = (date: number, selectionRange: number[]) => {
-  return selectionRange[0] < date && date < selectionRange[1]
 }
 
 /*
@@ -474,7 +451,7 @@ export const Timeline = (props: TimelineProps) => {
         }
       })
       .on('end', () => {
-        if (props.mode !== 'single') {
+        if (!props.mode) {
           showElement(d3.select(hoverLineRef.current))
           setIsDragging(false)
           const sourceEvent = d3.event.sourceEvent
@@ -631,13 +608,6 @@ export const Timeline = (props: TimelineProps) => {
           .attr('id', i)
           .attr('transform', `translate(${x}, ${y})`)
           .append('rect')
-
-        // .on('mouseenter', function(d, i) {
-        //   const id = d3.select(this).node().id
-        //   console.log('Data Elements in hovered item:', dataBuckets[id].data)
-        //   // console.log('d: ', d)
-        //   // console.log('i: ', i)
-        // })
       })
     }
   }, [props.data, xScale, props.dateAttribute])
@@ -701,7 +671,7 @@ export const Timeline = (props: TimelineProps) => {
 
   useEffect(() => {
     d3.select(d3ContainerRef.current).call(getSelectionDrag(dataBuckets) as any)
-  }, [dataBuckets, selectionRange])
+  }, [dataBuckets, selectionRange, xScale])
 
   // When the selection range is changed or the scale changes, update the markers and drag behaviors
   useEffect(() => {
@@ -866,7 +836,7 @@ export const Timeline = (props: TimelineProps) => {
           <Button color="secondary" onClick={() => zoomIn()} icon>
             +
           </Button>
-          {props.onDone && (
+          {props.onDone && props.mode && (
             <Button
               color="primary"
               onClick={() => {
