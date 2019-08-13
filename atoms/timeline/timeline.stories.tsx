@@ -30,7 +30,7 @@ const renderDates = (dates: Date[]) => {
   } else if (dates.length == 1) {
     return formatDate(dates[0])
   } else if (dates.length == 2) {
-    return `${formatDate(dates[0]) - formatDate(dates[1])}`
+    return `${formatDate(dates[0])} ---------- ${formatDate(dates[1])}`
   }
 }
 
@@ -101,18 +101,7 @@ stories.add('Timeline with Data', () => {
     modeKnob as any
   )
 
-  const dateAttributeKnob = select(
-    'Date Attribute',
-    {
-      Created: 'created',
-      Modified: 'modified',
-      Published: 'published',
-    },
-    'created'
-  )
-
   const [data, setData] = useState(testData)
-  const [dateAttribute] = useState(dateAttributeKnob)
 
   return (
     <div style={{ backgroundColor: BACKGROUND_COLOR }}>
@@ -120,7 +109,6 @@ stories.add('Timeline with Data', () => {
         mode={mode}
         timezone={TIMEZONE}
         data={data}
-        dateAttribute={dateAttribute}
         onSelect={(ids: string[]) => {
           action('onSelect')(ids)
           const newData = data.map(d => {

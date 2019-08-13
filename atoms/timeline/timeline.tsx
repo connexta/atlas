@@ -8,11 +8,12 @@ import {
   range,
   toUtc,
   formatDate,
+  dateWithinRange,
 } from './util'
 import styled from '../../styled'
 import useSelectionRange from './hooks/useSelectionRange'
-import moment = require('moment-timezone')
 import _ = require('lodash')
+import { Mode, Timescale, TooltipProps, Bucket } from './types'
 
 // Constants
 const AXIS_MARGIN = 20
@@ -72,6 +73,16 @@ const Button = styled.button`
   }
 `
 
+const DateAttributeSelect = styled.select`
+  display: inline-block;
+  width: auto;
+  margin: 10px;
+  color: white;
+  background-color: transparent;
+  border: none;
+  font-size: 16px;
+`
+
 const ButtonArea = styled.div`
   margin: 10px;
   display: flex;
@@ -88,7 +99,7 @@ const Root = styled.div`
   flex-direction: column;
   width: ${(props: any) => props.width}px;
 
-  .areaMarker {
+  .brushBar {
     fill: #30a6ad;
     opacity: 0.1;
     display: none;
@@ -116,7 +127,7 @@ const Root = styled.div`
 
   .data {
     fill: #3a4a54;
-    fill-opacity: 0.5;
+    fill-opacity: 0.7;
     :hover {
       stroke-width: 2px;
       stroke: ${PRIMARY_COLOR};
@@ -145,7 +156,7 @@ const Message = styled.span`
 
 // Types
 interface TimelineProps {
-  mode?: 'single' | 'range' | undefined
+  mode?: Mode
 
   /**
    * Timezone to use when displaying times
@@ -166,21 +177,6 @@ interface TimelineProps {
 
   onSelect?: (ids: string[]) => void
 }
-
-type Bucket = {
-  x1: number
-  x2: number
-  selected: boolean
-  data: Data[]
-}
-
-type Tooltip = {
-  x: number
-  y: number
-  message: string | any
-}
-
-export type Timescale = d3.ScaleTime<number, number>
 
 // Helper Methods
 const generateTooltipMessage = (data: string[]) => {
@@ -220,7 +216,7 @@ const showElement = (element: d3.Selection<null, unknown, null, undefined>) =>
 /**
  * Domain is the minimum and maximum values that the scale contains.
  */
-const getInitialTimeScale = (width: number) => {
+const getInitialTimeScale = (width: number): Timescale => {
   const min = new Date('1980-01-01:00:00.000z')
   // const max = new Date("1980-01-02:00:00.000z"); // Uncomment to easily test timezones
   const max = new Date()
@@ -234,13 +230,21 @@ const getInitialTimeScale = (width: number) => {
   return timeScale
 }
 
+const getPossibleDateAttributes = (data: Data[]): string[] => {
+  return Array.from(
+    new Set(
+      [].concat.apply([], data.map(d => d.attributes).map(o => Object.keys(o)))
+    )
+  )
+}
+
 /*
  * TODOS
  * --------------------
  *
- * 2. All x/y position translations should be dynamic based on height/width
+ * 1. All x/y position translations should be dynamic based on height/width
  *
- * 4. On hover should work when the on hover is behind the area marker.
+ * 2. On hover should work when the on hover is behind the area marker.
  */
 
 // Please see https://alignedleft.com/tutorials/d3/scales for more information about d3 scales.
@@ -254,17 +258,22 @@ export const Timeline = (props: TimelineProps) => {
   const hoverLineRef = useRef(null)
   const leftMarkerRef = useRef(null)
   const rightMarkerRef = useRef(null)
-  const areaMarkerRef = useRef(null)
+  const brushBarRef = useRef(null)
 
   const [width] = useState(1425)
   const [height] = useState(300)
 
   const [dataBuckets, setDataBuckets] = useState<Bucket[]>([])
-  const [tooltip, setTooltip] = useState<Tooltip | null>()
+  const [tooltip, setTooltip] = useState<TooltipProps | null>()
   const [selectionRange, setSelectionRange] = useSelectionRange(
     [],
     getInitialTimeScale(width)
   )
+
+  const possibleDateAttributes = getPossibleDateAttributes(props.data || [])
+  const [selectedDateAttribute, setSelectedDateAttribute] = useState<
+    string | undefined
+  >(possibleDateAttributes[0] || undefined)
 
   const [isDragging, setIsDragging] = useState(false)
 
@@ -420,83 +429,6 @@ export const Timeline = (props: TimelineProps) => {
       })
 
   /**
-   *
-   * Selection Drag does two things:
-   * 1. When the user drags across the timeline, a range selection will be created.
-   * 2. If the drag event is only 150ms or less from start to finish AND ends on a rect object,
-   * assume that the user meant to click instead of drag, and properly trigger a click action on the rect.
-   *
-   * @param currentDataBuckets
-   */
-  const getSelectionDrag = (currentDataBuckets: Bucket[]) => {
-    let dragStart: number
-    const CLICK_TIMEOUT_MS = 150
-
-    let clickStart: number
-
-    return d3
-      .drag()
-      .on('start', () => {
-        clickStart = d3.event.x
-        const newLeftDate = convertDateToTimezoneDate(
-          xScale.invert(clickStart),
-          props.timezone
-        )
-
-        if (props.mode === 'single') {
-          console.log('Setting selection range - ', newLeftDate)
-          setSelectionRange([newLeftDate])
-        } else {
-          setIsDragging(true)
-          hideElement(d3.select(hoverLineRef.current))
-          dragStart = d3.event.sourceEvent.timeStamp
-          setSelectionRange([newLeftDate])
-        }
-      })
-      .on('end', () => {
-        if (!props.mode) {
-          showElement(d3.select(hoverLineRef.current))
-          setIsDragging(false)
-          const sourceEvent = d3.event.sourceEvent
-          if (sourceEvent.timeStamp - dragStart < CLICK_TIMEOUT_MS) {
-            const nodeName = sourceEvent.srcElement.nodeName
-            if (nodeName === 'rect' || nodeName === 'line') {
-              const x = d3.event.x
-              const bucket = currentDataBuckets.find(b => b.x1 < x && x <= b.x2)
-              const idsToSelect = bucket!.data.map(d => d.id)
-              setSelectionRange([])
-              props.onSelect && props.onSelect(idsToSelect)
-              console.debug(
-                `Drag event under ${CLICK_TIMEOUT_MS}ms detected, registering as synthetic click and clearing selection to empty array`
-              )
-            }
-          }
-        }
-      })
-      .on('drag', () => {
-        if (props.mode !== 'single') {
-          const diff = d3.event.x - d3.event.subject.x
-          let dragCurrent = clickStart + diff
-          const initialDate = convertDateToTimezoneDate(
-            xScale.invert(clickStart),
-            props.timezone
-          )
-
-          const dragDate = convertDateToTimezoneDate(
-            xScale.invert(dragCurrent),
-            props.timezone
-          )
-
-          if (diff > 0) {
-            setSelectionRange([initialDate, dragDate])
-          } else {
-            setSelectionRange([dragDate, initialDate])
-          }
-        }
-      })
-  }
-
-  /**
    * Range is the range of possible output values used in display.
    * Domain maps to Range
    * i.e. Dates map to Pixels
@@ -520,13 +452,9 @@ export const Timeline = (props: TimelineProps) => {
       const container = d3.select(d3ContainerRef.current)
 
       //@ts-ignore
-      // container.call(zoomBehavior).on('mousedown.zoom', () => null) // Remove mousedown.zoom trigger to disable panning so we can create a drag behavior
-      container.call(zoomBehavior) // Remove mousedown.zoom trigger to disable panning so we can create a drag behavior
+      container.call(zoomBehavior)
     }
   }, [])
-
-  const dateWithinRange = (date: Date, selectionRange: Date[]) =>
-    selectionRange[0] < date && date < selectionRange[1]
 
   // Add mouse handlers to listen to d3 mouse events
   useEffect(() => {
@@ -559,12 +487,12 @@ export const Timeline = (props: TimelineProps) => {
       selected: false,
     }))
 
-    if (props.data && props.dateAttribute !== undefined) {
+    if (props.data && selectedDateAttribute !== undefined) {
       d3.selectAll('.data').remove()
 
       const rectangleWidth = bucketWidth
       props.data.forEach(d => {
-        const date = d.attributes[props.dateAttribute!]
+        const date = d.attributes[selectedDateAttribute!]
         if (date == null) {
           return
         }
@@ -603,7 +531,7 @@ export const Timeline = (props: TimelineProps) => {
           .append('rect')
       })
     }
-  }, [props.data, xScale, props.dateAttribute])
+  }, [props.data, xScale, selectedDateAttribute])
 
   useEffect(() => {
     d3.select('.data-holder')
@@ -634,7 +562,12 @@ export const Timeline = (props: TimelineProps) => {
   // If dragging is finished, update selected results.
   // Check if selection range is empty array
   useEffect(() => {
-    if (!isDragging && props.data && props.dateAttribute !== undefined) {
+    if (
+      !isDragging &&
+      props.data &&
+      selectedDateAttribute !== undefined &&
+      !props.mode
+    ) {
       if (selectionRange.length == 2) {
         const x1 = xScale(selectionRange[0])
         const x2 = xScale(selectionRange[1])
@@ -653,7 +586,10 @@ export const Timeline = (props: TimelineProps) => {
           (b: Bucket) => b.data
         )
           .filter((d: Data) =>
-            dateWithinRange(d.attributes[props.dateAttribute!], selectionRange)
+            dateWithinRange(
+              d.attributes[selectedDateAttribute!],
+              selectionRange
+            )
           )
           .map((d: Data) => d.id)
 
@@ -663,7 +599,10 @@ export const Timeline = (props: TimelineProps) => {
   }, [isDragging])
 
   useEffect(() => {
-    d3.select(d3ContainerRef.current).call(getSelectionDrag(dataBuckets) as any)
+    d3.select(d3ContainerRef.current).call(getSelectionDrag(
+      dataBuckets,
+      xScale
+    ) as any)
   }, [dataBuckets, selectionRange, xScale])
 
   // When the selection range is changed or the scale changes, update the markers and drag behaviors
@@ -678,16 +617,16 @@ export const Timeline = (props: TimelineProps) => {
       selectionRange
     ) as any)
 
-    d3.select(areaMarkerRef.current).call(getBrushDrag(selectionRange) as any)
+    d3.select(brushBarRef.current).call(getBrushDrag(selectionRange) as any)
 
     if (
       leftMarkerRef.current &&
       rightMarkerRef.current &&
-      areaMarkerRef.current
+      brushBarRef.current
     ) {
       const leftMarker = d3.select(leftMarkerRef.current)
       const rightMarker = d3.select(rightMarkerRef.current)
-      const areaMarker = d3.select(areaMarkerRef.current)
+      const brushBar = d3.select(brushBarRef.current)
 
       if (selectionRange.length == 2 && props.mode !== 'single') {
         const [leftValue, rightValue] = selectionRange
@@ -702,7 +641,7 @@ export const Timeline = (props: TimelineProps) => {
           .attr('transform', `translate(${xScale(rightUtc)}, ${markerHeight})`)
           .attr('style', 'display: block')
 
-        areaMarker
+        brushBar
           .attr('transform', `translate(${xScale(leftUtc)},${markerHeight})`)
           .attr('width', xScale(rightUtc) - xScale(leftUtc))
           .attr('height', '50')
@@ -716,31 +655,53 @@ export const Timeline = (props: TimelineProps) => {
       } else {
         hideElement(leftMarker)
         hideElement(rightMarker)
-        hideElement(areaMarker)
+        hideElement(brushBar)
       }
     }
   }, [xScale, selectionRange])
 
   const renderContext = () => {
+    // Single States - Empty, Single Time
     if (props.mode === 'single') {
       if (!selectionRange[0]) {
         return (
           <Message>Click to select a time. Zoom with the scroll wheel.</Message>
         )
-      } else {
-        return (
-          <TimeText>
-            <b>Time</b>
-            <br />
-            <span>{selectionRange[0] && formatDate(selectionRange[0])}</span>
-          </TimeText>
-        )
       }
+      return (
+        <TimeText>
+          <b>Time</b>
+          <br />
+          <span>{selectionRange[0] && formatDate(selectionRange[0])}</span>
+        </TimeText>
+      )
+      // Range States - Empty, Range of Times
     } else if (props.mode === 'range') {
       if (!selectionRange[0]) {
         return (
+          <Message>Drag to select a range. Zoom with the scroll wheel.</Message>
+        )
+      }
+      return (
+        <React.Fragment>
+          <TimeText>
+            <b>Start</b>
+            <br />
+            <span>{selectionRange[0] && formatDate(selectionRange[0])}</span>
+          </TimeText>
+          <TimeText>
+            <b>End</b>
+            <br />
+            <span>{selectionRange[1] && formatDate(selectionRange[1])}</span>
+          </TimeText>
+        </React.Fragment>
+      )
+      // Selection States - Empty, <Start, <End>>
+    } else {
+      if (!selectionRange[0]) {
+        return (
           <Message>
-            Click to select a start time. Zoom with the scroll wheel.
+            Click to select a cluster of results. Zoom with the scroll wheel.
           </Message>
         )
       }
@@ -758,33 +719,24 @@ export const Timeline = (props: TimelineProps) => {
           </TimeText>
         </React.Fragment>
       )
-    } else if (selectionRange.length === 0) {
-      return (
-        <Message>
-          Click to select a cluster of results. Zoom with the scroll wheel.
-        </Message>
-      )
-    } else {
-      return (
-        <React.Fragment>
-          <TimeText>
-            <b>Start</b>
-            <br />
-            <span>{formatDate(selectionRange[0])}</span>
-          </TimeText>
-          <TimeText>
-            <b>End</b>
-            <br />
-            <span>{formatDate(selectionRange[1])}</span>
-          </TimeText>
-        </React.Fragment>
-      )
     }
   }
 
   return (
     <Root width={width}>
-      <ButtonArea />
+      {props.data && (
+        <div>
+          <DateAttributeSelect
+            onChange={(e: any) => setSelectedDateAttribute(e.target.value)}
+            value={selectedDateAttribute}
+          >
+            {/* TODO: Make this take in a list of objects with displayName in addition to value */}
+            {possibleDateAttributes.map((dateAttribute: string) => (
+              <option value={dateAttribute}>{dateAttribute}</option>
+            ))}
+          </DateAttributeSelect>
+        </div>
+      )}
 
       {tooltip && (
         <Tooltip message={tooltip.message} x={tooltip.x} y={tooltip.y} />
@@ -793,7 +745,7 @@ export const Timeline = (props: TimelineProps) => {
       <SVG ref={d3ContainerRef}>
         <g className="data-holder" />
 
-        <rect ref={areaMarkerRef} className="areaMarker" />
+        <rect ref={brushBarRef} className="brushBar" />
 
         {/* Vertical line showing the current hover position */}
         <g ref={hoverLineRef} style={{ display: 'none' }}>
