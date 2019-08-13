@@ -7,6 +7,7 @@ import Timeline from './index'
 import styled from '../../styled'
 
 import { createTestData, formatDate } from './util'
+import { Data } from './timeline'
 
 const TIMEZONE = 'America/New_York'
 const BACKGROUND_COLOR = '#233540'
@@ -34,7 +35,56 @@ const renderDates = (dates: Date[]) => {
   }
 }
 
-stories.add('Timeline', () => {
+stories.add('Timeline with Data', () => {
+  const numDataPoints = number('Number of spaced data points to render', 500)
+  const testData = createTestData(numDataPoints)
+
+  const modeKnob = select(
+    'Initial Mode',
+    {
+      Selection: null,
+      Single: 'single',
+      Range: 'range',
+    },
+    null
+  )
+
+  const [mode, setMode] = useState<'single' | 'range' | undefined>(
+    modeKnob as any
+  )
+
+  const [data, setData] = useState(testData)
+
+  return (
+    <div style={{ backgroundColor: BACKGROUND_COLOR }}>
+      <Timeline
+        mode={mode}
+        timezone={TIMEZONE}
+        data={data}
+        dateAttributeAliases={{
+          created: 'Created',
+          modified: 'Modified',
+          published_date: 'Published',
+        }}
+        onSelect={(selectedData: Data[]) => {
+          action('onSelect')(selectedData)
+          const selectedIds = selectedData.map(d => d.id)
+          const newData = data.map(d => {
+            d.selected = selectedIds.indexOf(d.id) !== -1
+            return d
+          })
+          setData(newData)
+        }}
+        onDone={(selectionRange: Date[]) => {
+          action('clicked onDone')(selectionRange)
+          setMode(undefined)
+        }}
+      />
+    </div>
+  )
+})
+
+stories.add('Conditional Render', () => {
   const modeKnob = select(
     'Initial Mode',
     {
@@ -79,49 +129,6 @@ stories.add('Timeline', () => {
           />
         </div>
       )}
-    </div>
-  )
-})
-
-stories.add('Timeline with Data', () => {
-  const numDataPoints = number('Number of spaced data points to render', 500)
-  const testData = createTestData(numDataPoints)
-
-  const modeKnob = select(
-    'Initial Mode',
-    {
-      Selection: null,
-      Single: 'single',
-      Range: 'range',
-    },
-    null
-  )
-
-  const [mode, setMode] = useState<'single' | 'range' | undefined>(
-    modeKnob as any
-  )
-
-  const [data, setData] = useState(testData)
-
-  return (
-    <div style={{ backgroundColor: BACKGROUND_COLOR }}>
-      <Timeline
-        mode={mode}
-        timezone={TIMEZONE}
-        data={data}
-        onSelect={(ids: string[]) => {
-          action('onSelect')(ids)
-          const newData = data.map(d => {
-            d.selected = ids.indexOf(d.id) !== -1
-            return d
-          })
-          setData(newData)
-        }}
-        onDone={(selectionRange: Date[]) => {
-          action('clicked onDone')(selectionRange)
-          setMode(undefined)
-        }}
-      />
     </div>
   )
 })

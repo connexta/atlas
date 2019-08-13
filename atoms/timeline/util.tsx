@@ -1,13 +1,6 @@
 //@ts-ignore
 import moment from 'moment-timezone'
-
-export type Data = {
-  id: string
-  selected: boolean
-  attributes: {
-    [key: string]: Date
-  }
-}
+import { Data } from './timeline'
 
 /** Python's "range" function */
 export const range = (n: number) => Array.from(Array(n).keys())
@@ -33,7 +26,7 @@ const getDataPoint = (
 
       modified: moment(new Date(modifiedYear + year, 0, 1)).toDate(),
 
-      published: moment(new Date(publishedYear + year, 0, 1))
+      published_date: moment(new Date(publishedYear + year, 0, 1))
         .add(day, 'days')
         .toDate(),
     },

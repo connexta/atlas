@@ -1,5 +1,6 @@
 import * as React from 'react'
 import styled from '../../styled'
+import { TooltipProps } from './timeline'
 
 const Root = styled.div`
   position: absolute;
@@ -21,7 +22,13 @@ const Message = styled.span`
   /* opacity: 1 !important; */
 `
 
-export const Tooltip = (props: any) => {
+export type TooltipProps = {
+  x: number
+  y: number
+  message: string | any
+}
+
+export const Tooltip = (props: TooltipProps) => {
   const { x, y, message } = props
   return (
     <Root pos={{ x, y }}>
