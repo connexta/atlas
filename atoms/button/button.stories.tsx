@@ -1,12 +1,16 @@
 import * as React from 'react'
 import { storiesOf } from '@connexta/ace/@storybook/react'
-import { withKnobs, select, boolean } from '@connexta/ace/@storybook/addon-knobs'
+import {
+  withKnobs,
+  select,
+  boolean,
+} from '@connexta/ace/@storybook/addon-knobs'
 import Button from './button'
 
-storiesOf('Button', module)
+storiesOf('Components|Button', module)
   .addDecorator(withKnobs)
   .add('playground', () => {
-    const emphasis = select('Emphasis', ['low', 'medium', 'high'], 'low')
+    const emphasis = select('Emphasis', ['low', 'medium', 'high'], 'high')
     const color = select(
       'Color',
       ['neutral', 'primary', 'secondary'],
@@ -22,7 +26,7 @@ storiesOf('Button', module)
         }}
         disabled={disabled}
       >
-        Playground
+        Click Me
       </Button>
     )
   })

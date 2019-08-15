@@ -1,7 +1,7 @@
 import * as React from 'react'
 import { storiesOf } from '@connexta/ace/@storybook/react'
 import { withKnobs } from '@connexta/ace/@storybook/addon-knobs'
-import Timeline, { Point } from './timeline'
+import Timeline, { Point } from './timeline-circles'
 
 const randomDate = (start: Date, end: Date) =>
   new Date(start.getTime() + Math.random() * (end.getTime() - start.getTime()))
@@ -99,6 +99,6 @@ class TimelineExample extends React.Component<any, State> {
     )
   }
 }
-storiesOf('Timeline (Deprecated)', module)
+storiesOf('Deprecated|Timeline (Circles)', module)
   .addDecorator(withKnobs)
   .add('playground', () => <TimelineExample />)

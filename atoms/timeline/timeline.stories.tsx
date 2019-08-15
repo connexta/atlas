@@ -12,13 +12,13 @@ import { Data } from './timeline'
 const TIMEZONE = 'America/New_York'
 const BACKGROUND_COLOR = '#233540'
 
-const stories = storiesOf('Timeline', module).addParameters({
+const stories = storiesOf('Components|Timeline', module).addParameters({
   info: `The TimelinePicker is a controlled component that can be used to select a time range. The TimelinePicker utilizies d3.js,
   and supports zooming and dragging as well as translation between timezones.`,
 })
 
 const TimelineButton = styled.button`
-  background-color: darkblue;
+  background-color: #31a6ad;
   color: white;
 `
 

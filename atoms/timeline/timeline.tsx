@@ -95,8 +95,6 @@ const ButtonArea = styled.div`
 const Root = styled.div`
   display: flex;
   flex-direction: column;
-  min-width: 400px;
-  min-height: 100px;
 
   .brushBar {
     /* This will let you select/hover records behind area, but can't brush-drag area if it's set. */
@@ -157,6 +155,71 @@ const Message = styled.span`
   color: ${TEXT_COLOR};
 `
 
+// Helper Methods
+const generateTooltipMessage = (data: string[]) => {
+  const titles = data.slice(0, 5).map(d => {
+    return (
+      <React.Fragment>
+        <span>{d}</span>
+        <br />
+      </React.Fragment>
+    )
+  })
+
+  const otherResults = (
+    <React.Fragment>
+      <br />
+      {`+${data.length - 5} other results`}
+    </React.Fragment>
+  )
+
+  return (
+    <React.Fragment>
+      {titles}
+      {data.length > 5 && otherResults}
+    </React.Fragment>
+  )
+}
+
+/**
+ * Given a d3 selection, set the display to none.
+ */
+const hideElement = (element: d3.Selection<null, unknown, null, undefined>) =>
+  element.attr('style', 'display: none')
+
+/**
+ * Given a d3 selection, set the display to block.
+ */
+const showElement = (element: d3.Selection<null, unknown, null, undefined>) =>
+  element.attr('style', 'display: block')
+
+/**
+ * Domain is the minimum and maximum values that the scale contains.
+ */
+const getTimescaleFromWidth = (width: number): Timescale => {
+  const min = new Date('1980-01-01:00:00.000z')
+  // const max = new Date("1980-01-02:00:00.000z"); // Uncomment to easily test timezones
+  const max = new Date()
+  const timeScale = d3
+    .scaleUtc()
+    .domain([min, max])
+    .nice()
+
+  timeScale.range([AXIS_MARGIN, width - AXIS_MARGIN])
+
+  console.log('Returning timescale with range ', timeScale.range())
+
+  return timeScale
+}
+
+const getPossibleDateAttributes = (data: Data[]): string[] => {
+  return _(data)
+    .map(d => d.attributes) //{created: {display: "Created", value: new Date()}}
+    .flatMap(o => Object.keys(o)) //[created]
+    .uniq()
+    .value()
+}
+
 // Types
 export type Data = {
   id: string
@@ -203,68 +266,6 @@ interface TimelineProps {
    */
   onSelect?: (data: Data[]) => void
 }
-// Helper Methods
-const generateTooltipMessage = (data: string[]) => {
-  const titles = data.slice(0, 5).map(d => {
-    return (
-      <React.Fragment>
-        <span>{d}</span>
-        <br />
-      </React.Fragment>
-    )
-  })
-
-  const otherResults = (
-    <React.Fragment>
-      <br />
-      {`+${data.length - 5} other results`}
-    </React.Fragment>
-  )
-
-  return (
-    <React.Fragment>
-      {titles}
-      {data.length > 5 && otherResults}
-    </React.Fragment>
-  )
-}
-
-/**
- * Given a d3 selection, set the display to none.
- */
-const hideElement = (element: d3.Selection<null, unknown, null, undefined>) =>
-  element.attr('style', 'display: none')
-
-/**
- * Given a d3 selection, set the display to block.
- */
-const showElement = (element: d3.Selection<null, unknown, null, undefined>) =>
-  element.attr('style', 'display: block')
-
-/**
- * Domain is the minimum and maximum values that the scale contains.
- */
-const getInitialTimeScale = (width: number): Timescale => {
-  const min = new Date('1980-01-01:00:00.000z')
-  // const max = new Date("1980-01-02:00:00.000z"); // Uncomment to easily test timezones
-  const max = new Date()
-  const timeScale = d3
-    .scaleUtc()
-    .domain([min, max])
-    .nice()
-
-  timeScale.range([AXIS_MARGIN, width - AXIS_MARGIN])
-
-  return timeScale
-}
-
-const getPossibleDateAttributes = (data: Data[]): string[] => {
-  return _(data)
-    .map(d => d.attributes) //{created: {display: "Created", value: new Date()}}
-    .flatMap(o => Object.keys(o)) //[created]
-    .uniq()
-    .value()
-}
 
 /*
  * TODOS
@@ -289,19 +290,72 @@ export const Timeline = (props: TimelineProps) => {
   const rightMarkerRef = useRef(null)
   const brushBarRef = useRef(null)
 
-  const [width, setWidth] = useState(400)
-  const [height, setHeight] = useState(100)
+  const [width, setWidth] = useState(0)
+  const [height, setHeight] = useState(0)
 
-  console.log('Width: ', width)
-  console.log('Height: ', height)
+  // const [k, setK] = useState(1)
+  const [xScale, setXScale] = useState(() => getTimescaleFromWidth(width))
+  const [xAxis, setXAxis] = useState(() =>
+    d3.axisBottom(xScale).tickSize(AXIS_HEIGHT)
+  )
+
+  useEffect(() => {
+    if (width != 0) {
+      console.log(`Width updated to ${width}`)
+      setXScale(() => getTimescaleFromWidth(width))
+    }
+  }, [width])
+
+  useEffect(() => {
+    console.log(`xScale updated to ${xScale.range()}`)
+    const [left, right] = xScale.range()
+
+    if (left < right) {
+      const newXAxis = xAxis.scale(xScale)
+
+      setXAxis(() => newXAxis)
+      d3.select('.axis--x').call(newXAxis)
+    }
+  }, [xScale])
 
   useEffect(() => {
     if (rootRef.current) {
       const rect = rootRef.current.getBoundingClientRect()
       setHeight(rect.height)
       setWidth(rect.width)
+      console.log('Initial Width: ', rect.width)
+
+      // TODO: Why is the bounding client rect height so low
     }
   }, [rootRef])
+
+  /**
+   * Every second, poll to see the new rect width.
+   * If the new rect width is different than current width, update the width.
+   */
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (rootRef.current) {
+        const rect = rootRef.current.getBoundingClientRect()
+
+        if (rect.width !== width) {
+          setWidth(rect.width)
+          clearInterval(interval)
+          console.log('Setting width and clearing interval')
+          console.log('Scaling to', 1)
+          zoomBehavior.scaleTo(
+            // @ts-ignore
+            d3
+              .select(d3ContainerRef.current)
+              .transition()
+              .duration(0),
+            1
+          )
+        }
+      }
+    }, 100)
+  }, [rootRef, width])
 
   const [dataBuckets, setDataBuckets] = useState<Bucket[]>([])
   const [tooltip, setTooltip] = useState<TooltipProps | null>()
@@ -313,29 +367,11 @@ export const Timeline = (props: TimelineProps) => {
 
   const [isDragging, setIsDragging] = useState(false)
 
-  const initialTimeScale = getInitialTimeScale(width)
-
   const [selectionRange, setSelectionRange] = useSelectionRange(
     [],
-    initialTimeScale
+    getTimescaleFromWidth(width)
   )
-  const [xScale, setXScale] = useState(() => initialTimeScale)
-  const [xAxis, setXAxis] = useState(() =>
-    d3.axisBottom(xScale).tickSize(AXIS_HEIGHT)
-  )
-
   const markerHeight = height - 70 - AXIS_HEIGHT
-
-  useEffect(() => {
-    setXScale(() => initialTimeScale)
-  }, [width])
-
-  useEffect(() => {
-    const newXAxis = xAxis.scale(xScale)
-    setXAxis(() => newXAxis)
-    d3.select('.axis--x').call(newXAxis)
-  }, [xScale])
-
   /**
    * When a zoom event is triggered, use the transform event to create a new xScale,
    * then create a new xAxis using the scale and update existing xAxis
@@ -345,16 +381,20 @@ export const Timeline = (props: TimelineProps) => {
     setTooltip(null)
 
     const transform = d3.event.transform
+    console.log(d3.event.transform)
+    // setK(d3.event.transform.k)
 
-    // Returns a copy of the continuous scale x whose domain is transformed.
-    const newXScale = transform.rescaleX(initialTimeScale)
-    setXScale(() => newXScale)
+    if (width != 0) {
+      // Returns a copy of the continuous scale x whose domain is transformed.
+      const newXScale = transform.rescaleX(getTimescaleFromWidth(width))
+      setXScale(() => newXScale)
 
-    const newXAxis = xAxis.scale(newXScale)
-    setXAxis(() => newXAxis)
+      const newXAxis = xAxis.scale(newXScale)
+      setXAxis(() => newXAxis)
 
-    // Apply the new xAxis
-    d3.select('.axis--x').call(xAxis)
+      // Apply the new xAxis
+      d3.select('.axis--x').call(xAxis)
+    }
   }
 
   const zoomBehavior = d3
