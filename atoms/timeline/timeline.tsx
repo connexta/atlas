@@ -10,8 +10,9 @@ import {
   dateWithinRange,
 } from './util'
 import styled from '../../styled'
-import useSelectionRange from './hooks/useSelectionRange'
+import { useSelectionRange } from './hooks'
 import _ = require('lodash')
+import { Timescale } from './types'
 
 // Constants
 const AXIS_MARGIN = 20
@@ -94,7 +95,8 @@ const ButtonArea = styled.div`
 const Root = styled.div`
   display: flex;
   flex-direction: column;
-  width: ${(props: any) => props.width}px;
+  min-width: 400px;
+  min-height: 100px;
 
   .brushBar {
     /* This will let you select/hover records behind area, but can't brush-drag area if it's set. */
@@ -170,9 +172,6 @@ type Bucket = {
   selected: boolean
   data: Data[]
 }
-
-export type Timescale = d3.ScaleTime<number, number>
-
 interface TimelineProps {
   /**
    * Mode that the timeline should be in.
@@ -283,14 +282,26 @@ export const Timeline = (props: TimelineProps) => {
    * passes. In this case it will hold our component's SVG DOM element. It's
    * initialized null and React will assign it later (see the return statement)
    */
+  const rootRef = useRef(null)
   const d3ContainerRef = useRef(null)
   const hoverLineRef = useRef(null)
   const leftMarkerRef = useRef(null)
   const rightMarkerRef = useRef(null)
   const brushBarRef = useRef(null)
 
-  const [width] = useState(1425)
-  const [height] = useState(300)
+  const [width, setWidth] = useState(400)
+  const [height, setHeight] = useState(100)
+
+  console.log('Width: ', width)
+  console.log('Height: ', height)
+
+  useEffect(() => {
+    if (rootRef.current) {
+      const rect = rootRef.current.getBoundingClientRect()
+      setHeight(rect.height)
+      setWidth(rect.width)
+    }
+  }, [rootRef])
 
   const [dataBuckets, setDataBuckets] = useState<Bucket[]>([])
   const [tooltip, setTooltip] = useState<TooltipProps | null>()
@@ -314,6 +325,16 @@ export const Timeline = (props: TimelineProps) => {
   )
 
   const markerHeight = height - 70 - AXIS_HEIGHT
+
+  useEffect(() => {
+    setXScale(() => initialTimeScale)
+  }, [width])
+
+  useEffect(() => {
+    const newXAxis = xAxis.scale(xScale)
+    setXAxis(() => newXAxis)
+    d3.select('.axis--x').call(newXAxis)
+  }, [xScale])
 
   /**
    * When a zoom event is triggered, use the transform event to create a new xScale,
@@ -379,24 +400,24 @@ export const Timeline = (props: TimelineProps) => {
     )
   }
 
-  /**
-   * Range is the range of possible output values used in display.
-   * Domain maps to Range
-   * i.e. Dates map to Pixels
-   */
-  const renderInitialXAxis = () => {
-    const svg = d3
-      .select(d3ContainerRef.current)
-      .attr('width', width)
-      .attr('height', height)
-
-    svg
-      .select('.axis--x')
-      .attr('transform', `translate(0 ${height - 20 - AXIS_HEIGHT})`)
-      .call(xAxis)
-  }
-
   useEffect(() => {
+    /**
+     * Range is the range of possible output values used in display.
+     * Domain maps to Range
+     * i.e. Dates map to Pixels
+     */
+    const renderInitialXAxis = () => {
+      const svg = d3
+        .select(d3ContainerRef.current)
+        .attr('width', width)
+        .attr('height', height)
+
+      svg
+        .select('.axis--x')
+        .attr('transform', `translate(0 ${height - 20 - AXIS_HEIGHT})`)
+        .call(xAxis)
+    }
+
     if (d3ContainerRef.current) {
       renderInitialXAxis()
 
@@ -405,7 +426,7 @@ export const Timeline = (props: TimelineProps) => {
       //@ts-ignore
       container.call(zoomBehavior)
     }
-  }, [])
+  }, [height, width])
 
   // Add mouse handlers to listen to d3 mouse events
   useEffect(() => {
@@ -482,7 +503,7 @@ export const Timeline = (props: TimelineProps) => {
           .append('rect')
       })
     }
-  }, [props.data, xScale, selectedDateAttribute])
+  }, [props.data, xScale, selectedDateAttribute, width, height])
 
   useEffect(() => {
     d3.select('.data-holder')
@@ -821,7 +842,7 @@ export const Timeline = (props: TimelineProps) => {
   }
 
   return (
-    <Root width={width}>
+    <Root ref={rootRef} width={width}>
       {props.data && (
         <div>
           <DateAttributeSelect
@@ -869,6 +890,7 @@ export const Timeline = (props: TimelineProps) => {
           />
         </g>
       </svg>
+
       <ContextRow>
         {renderContext()}
         <ButtonArea>

@@ -71,5 +71,12 @@
       "pre-commit": "pretty-quick --staged"
     }
   },
-  "typings": "./@types/density-clustering/index.d.ts"
+  "typings": "./@types/density-clustering/index.d.ts",
+  "resolutions": {
+    "backbone": "1.1.2",
+    "jquery": "3.2.1",
+    "react": "16.8.6",
+    "react-dom": "16.8.6",
+    "styled-components": "4.3.2"
+  }
 }

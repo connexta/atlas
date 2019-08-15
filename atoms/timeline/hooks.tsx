@@ -1,5 +1,6 @@
-import { useState } from 'react'
-import { Timescale } from '../timeline'
+import { isEqual } from 'lodash'
+import { useState, useEffect } from 'react'
+import { Timescale } from './types'
 
 const withinTimeScale = (newValues: Date[], timescale: Timescale) => {
   const domain = timescale.domain()
@@ -15,10 +16,10 @@ const withinTimeScale = (newValues: Date[], timescale: Timescale) => {
   }
 }
 
-export default function(
+export const useSelectionRange = (
   defaultValues: Date[],
   timescale: Timescale
-): [Date[], (newValue: Date[]) => void] {
+): [Date[], (newValue: Date[]) => void] => {
   const [values, setValues] = useState<Date[]>(defaultValues)
   const setSelectionRange = (newValues: Date[]) => {
     if (withinTimeScale(newValues, timescale)) {
@@ -27,4 +28,33 @@ export default function(
   }
 
   return [values, setSelectionRange]
+}
+
+export const usePoller = (fn: () => any) => {
+  const [state, setState] = useState(fn())
+
+  useEffect(() => {
+    let id: any = null
+    let value: any = state
+
+    const loop = () => {
+      const nextValue = fn()
+      if (!isEqual(value, nextValue)) {
+        value = nextValue
+        setState(nextValue)
+      }
+
+      id = window.requestAnimationFrame(loop)
+    }
+
+    id = window.requestAnimationFrame(loop)
+
+    return () => {
+      if (id !== null) {
+        window.cancelAnimationFrame(id)
+      }
+    }
+  }, [])
+
+  return state
 }

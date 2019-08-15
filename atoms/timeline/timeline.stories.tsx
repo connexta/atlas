@@ -106,7 +106,7 @@ stories.add('Conditional Render', () => {
       Launch Time Picker: &nbsp;
       <TimelineButton
         onClick={() => {
-          setShowTimeline(true)
+          setShowTimeline(!showTimeline)
           setMode(modeKnob as any)
         }}
       >
