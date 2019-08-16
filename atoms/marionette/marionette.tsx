@@ -11,7 +11,7 @@
  **/
 import * as React from 'react'
 import * as Marionette from 'backbone.marionette'
-import styled from '../../styled'
+import styled from 'styled-components'
 const intervalToCheck = 20
 
 type Props = {
@@ -95,7 +95,7 @@ export default class MarionetteRegionContainer extends React.Component<
     return (
       <RegionContainer
         className={`marionette-region-container ${className ? className : ''}`}
-        innerRef={this.regionRef as any}
+        ref={this.regionRef as any}
         style={style as any}
         {...otherProps as JSX.IntrinsicAttributes}
       />

@@ -1,7 +1,7 @@
 import * as d3 from 'd3'
 import * as React from 'react'
 import { useEffect, useRef, useState } from 'react'
-import styled from '../../styled'
+import styled from 'styled-components'
 
 // @ts-ignore
 import moment from 'moment-timezone'
