@@ -1,1 +1,1 @@
-export { default } from './theme'
+export { Provider as ThemeProvider } from './provider'

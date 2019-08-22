@@ -1,1 +1,1 @@
-export { default } from './button'
+export { WrappedButton as Button } from './button'

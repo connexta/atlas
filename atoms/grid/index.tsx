@@ -1,1 +1,1 @@
-export { default } from './grid'
+export { WrappedGrid as Grid, WrappedCardGrid as CardGrid } from './grid'

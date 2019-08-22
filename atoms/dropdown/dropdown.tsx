@@ -1,0 +1,64 @@
+import * as React from 'react'
+import { Popper } from '../popper'
+import { PopperProps } from '@material-ui/core/Popper'
+import ClickAwayListener from '@material-ui/core/ClickAwayListener'
+import Paper, { PaperProps } from '@material-ui/core/Paper'
+import { DropdownContext, DropdownContextType } from './dropdown.context'
+import { Subtract } from '../../typescript'
+
+type DropdownProps = {
+  children: ({
+    handleClick,
+  }: {
+    handleClick: (event: React.MouseEvent<any, MouseEvent>) => void
+  }) => React.ReactElement
+  content: (dropdownContext: DropdownContextType) => React.ReactElement
+  paperProps?: PaperProps
+  popperProps?: Subtract<
+    PopperProps,
+    {
+      children: PopperProps['children']
+      open: PopperProps['open']
+      anchorEl: PopperProps['anchorEl']
+    }
+  >
+}
+
+export const Dropdown = ({
+  children,
+  content,
+  paperProps,
+  popperProps,
+}: DropdownProps) => {
+  const dropdownContext = React.useContext(DropdownContext)
+  const [anchorEl, setAnchorEl] = React.useState(null)
+
+  function handleClick(event: React.MouseEvent<any, MouseEvent>) {
+    // @ts-ignore
+    setAnchorEl(anchorEl ? null : event.currentTarget)
+  }
+  const close = () => setAnchorEl(null)
+  const open = Boolean(anchorEl)
+
+  return (
+    <DropdownContext.Provider
+      value={{
+        close: close,
+        closeAndRefocus: close,
+        parent: () => dropdownContext,
+        parentOpen: open,
+        deepCloseAndRefocus: dropdownContext.deepCloseAndRefocus,
+        depthCloseAndRefocus: dropdownContext.depthCloseAndRefocus,
+      }}
+    >
+      {children({ handleClick })}
+      <Popper open={open} anchorEl={anchorEl} {...popperProps}>
+        <ClickAwayListener onClickAway={close}>
+          <Paper elevation={24} {...paperProps}>
+            <DropdownContext.Consumer>{content}</DropdownContext.Consumer>
+          </Paper>
+        </ClickAwayListener>
+      </Popper>
+    </DropdownContext.Provider>
+  )
+}

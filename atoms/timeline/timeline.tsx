@@ -1,6 +1,6 @@
 import * as React from 'react'
 import * as d3 from 'd3'
-import Button from '../button'
+import { Button } from '../button'
 import styled from 'styled-components'
 
 const clustering = require('density-clustering')
@@ -400,12 +400,8 @@ class Timeline extends React.Component<Props, State> {
     return (
       <Root style={this.props.style} className={this.props.className}>
         <ZoomArea>
-          <Button onClick={this.zoomIn} emphasis="medium">
-            +
-          </Button>
-          <Button onClick={this.zoomOut} emphasis="medium">
-            -
-          </Button>
+          <Button onClick={this.zoomIn}>+</Button>
+          <Button onClick={this.zoomOut}>-</Button>
         </ZoomArea>
         <div style={{ flexDirection: 'column' }}>
           {(this as any).state.tooltip !== undefined ? (
