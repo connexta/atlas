@@ -3,8 +3,8 @@ import Grid, { GridProps } from '@material-ui/core/Grid'
 import styled from 'styled-components'
 
 export const WrappedGrid = styled(
-  React.forwardRef((props: GridProps, ref: React.Ref<any>) => {
-    return <Grid {...props} ref={ref} />
+  React.forwardRef((props: GridProps, ref) => {
+    return <Grid {...props} ref={(ref as unknown) as undefined} />
   })
 )<GridProps>``
 

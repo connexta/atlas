@@ -11,29 +11,33 @@ type ExtraProps = {
 }
 
 export const WrappedSnackbar = styled(
-  React.forwardRef((props: SnackbarProps & ExtraProps, ref: React.Ref<any>) => {
-    return <Snackbar {...props} ref={ref} />
+  React.forwardRef((props: SnackbarProps & ExtraProps, ref) => {
+    return <Snackbar {...props} ref={(ref as unknown) as undefined} />
   })
 )<SnackbarProps>``
 
 export const WrappedSnackbarContent = styled(
-  React.forwardRef(
-    (props: SnackbarContentProps & ExtraProps, ref: React.Ref<any>) => {
-      const theme = useTheme()
-      const { variant = 'error', ...baseProps } = props
-      let style = {}
-      if (variant === 'error') {
-        style = {
-          background: theme.palette.error.dark,
-          color: theme.palette.error.contrastText,
-        }
-      } else if (variant === 'success') {
-        style = {
-          background: theme.palette.primary.dark,
-          color: theme.palette.primary.contrastText,
-        }
+  React.forwardRef((props: SnackbarContentProps & ExtraProps, ref) => {
+    const theme = useTheme()
+    const { variant = 'error', ...baseProps } = props
+    let style = {}
+    if (variant === 'error') {
+      style = {
+        background: theme.palette.error.dark,
+        color: theme.palette.error.contrastText,
       }
-      return <SnackbarContent {...baseProps} ref={ref} style={style} />
+    } else if (variant === 'success') {
+      style = {
+        background: theme.palette.primary.dark,
+        color: theme.palette.primary.contrastText,
+      }
     }
-  )
+    return (
+      <SnackbarContent
+        {...baseProps}
+        ref={(ref as unknown) as undefined}
+        style={style}
+      />
+    )
+  })
 )<SnackbarContentProps>``

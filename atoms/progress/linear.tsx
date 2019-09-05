@@ -5,7 +5,7 @@ import LinearProgress, {
 import styled from 'styled-components'
 
 export const WrappedLinearProgress = styled(
-  React.forwardRef((props: LinearProgressProps, ref: React.Ref<any>) => {
-    return <LinearProgress {...props} ref={ref} />
+  React.forwardRef((props: LinearProgressProps, ref) => {
+    return <LinearProgress {...props} ref={(ref as unknown) as undefined} />
   })
 )<LinearProgressProps>``

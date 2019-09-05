@@ -5,7 +5,7 @@ import CircularProgress, {
 import styled from 'styled-components'
 
 export const WrappedCircularProgress = styled(
-  React.forwardRef((props: CircularProgressProps, ref: React.Ref<any>) => {
-    return <CircularProgress {...props} ref={ref} />
+  React.forwardRef((props: CircularProgressProps, ref) => {
+    return <CircularProgress {...props} ref={(ref as unknown) as undefined} />
   })
 )<CircularProgressProps>``

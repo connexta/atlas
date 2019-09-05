@@ -4,13 +4,13 @@ import RadioGroup, { RadioGroupProps } from '@material-ui/core/RadioGroup'
 import styled from 'styled-components'
 
 export const WrappedRadio = styled(
-  React.forwardRef((props: RadioProps, ref: React.Ref<any>) => {
-    return <Radio {...props} ref={ref} />
+  React.forwardRef((props: RadioProps, ref) => {
+    return <Radio {...props} ref={(ref as unknown) as undefined} />
   })
 )<RadioProps>``
 
 export const WrappedRadioGroup = styled(
-  React.forwardRef((props: RadioGroupProps, ref: React.Ref<any>) => {
-    return <RadioGroup {...props} ref={ref} />
+  React.forwardRef((props: RadioGroupProps, ref) => {
+    return <RadioGroup {...props} ref={(ref as unknown) as undefined} />
   })
 )<RadioGroupProps>``

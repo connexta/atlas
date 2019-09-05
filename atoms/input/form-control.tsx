@@ -12,31 +12,31 @@ import FormLabel, { FormLabelProps } from '@material-ui/core/FormLabel'
 import styled from 'styled-components'
 
 export const WrappedFormControl = styled(
-  React.forwardRef((props: FormControlProps, ref: React.Ref<any>) => {
-    return <FormControl {...props} ref={ref} />
+  React.forwardRef((props: FormControlProps, ref) => {
+    return <FormControl {...props} ref={(ref as unknown) as undefined} />
   })
 )<FormControlProps>``
 
 export const WrappedFormControlLabel = styled(
-  React.forwardRef((props: FormControlLabelProps, ref: React.Ref<any>) => {
-    return <FormControlLabel {...props} ref={ref} />
+  React.forwardRef((props: FormControlLabelProps, ref) => {
+    return <FormControlLabel {...props} ref={(ref as unknown) as undefined} />
   })
 )<FormControlLabelProps>``
 
 export const WrappedFormGroup = styled(
-  React.forwardRef((props: FormGroupProps, ref: React.Ref<any>) => {
-    return <FormGroup {...props} ref={ref} />
+  React.forwardRef((props: FormGroupProps, ref) => {
+    return <FormGroup {...props} ref={(ref as unknown) as undefined} />
   })
 )<FormGroupProps>``
 
 export const WrappedFormHelperText = styled(
-  React.forwardRef((props: FormHelperTextProps, ref: React.Ref<any>) => {
-    return <FormHelperText {...props} ref={ref} />
+  React.forwardRef((props: FormHelperTextProps, ref) => {
+    return <FormHelperText {...props} ref={(ref as unknown) as undefined} />
   })
 )<FormHelperTextProps>``
 
 export const WrappedFormLabel = styled(
-  React.forwardRef((props: FormLabelProps, ref: React.Ref<any>) => {
-    return <FormLabel {...props} ref={ref} />
+  React.forwardRef((props: FormLabelProps, ref) => {
+    return <FormLabel {...props} ref={(ref as unknown) as undefined} />
   })
 )<FormLabelProps>``

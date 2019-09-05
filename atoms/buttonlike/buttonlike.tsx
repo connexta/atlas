@@ -64,7 +64,7 @@ const render: React.ComponentType<
     const { children, onClick, className, style, ...otherAttr } = props
     return (
       <Root
-        innerRef={ref}
+        innerref={(ref as unknown) as undefined}
         onKeyDown={handleKeyDown}
         onKeyUp={handleKeyUp}
         tabIndex={0}

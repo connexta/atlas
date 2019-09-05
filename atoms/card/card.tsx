@@ -11,32 +11,32 @@ import styled from 'styled-components'
 import CreateIcon from '@material-ui/icons/AddBox'
 
 export const WrappedHeader = styled(
-  React.forwardRef((props: CardHeaderProps, ref: React.Ref<any>) => {
-    return <CardHeader {...props} ref={ref} />
+  React.forwardRef((props: CardHeaderProps, ref) => {
+    return <CardHeader {...props} ref={(ref as unknown) as undefined} />
   })
 )<CardHeaderProps>``
 
 export const WrappedCard = styled(
-  React.forwardRef((props: CardProps, ref: React.Ref<any>) => {
-    return <Card {...props} ref={ref} />
+  React.forwardRef((props: CardProps, ref) => {
+    return <Card {...props} ref={(ref as unknown) as undefined} />
   })
 )<CardProps>``
 
 export const WrappedCardActions = styled(
-  React.forwardRef((props: CardActionsProps, ref: React.Ref<any>) => {
-    return <CardActions {...props} ref={ref} />
+  React.forwardRef((props: CardActionsProps, ref) => {
+    return <CardActions {...props} ref={(ref as unknown) as undefined} />
   })
 )<CardActionsProps>``
 
 export const WrappedCardContent = styled(
-  React.forwardRef((props: CardContentProps, ref: React.Ref<any>) => {
-    return <CardContent {...props} ref={ref} />
+  React.forwardRef((props: CardContentProps, ref) => {
+    return <CardContent {...props} ref={(ref as unknown) as undefined} />
   })
 )<CardContentProps>``
 
 export const WrappedCardContentLabel = styled(
-  React.forwardRef((props: TypographyProps, ref: React.Ref<any>) => {
-    return <Typography {...props} ref={ref} noWrap />
+  React.forwardRef((props: TypographyProps, ref) => {
+    return <Typography {...props} ref={(ref as unknown) as undefined} noWrap />
   })
 )<TypographyProps>`
   && {
@@ -45,14 +45,15 @@ export const WrappedCardContentLabel = styled(
 `
 
 export const WrappedCardContentValue = styled(
-  React.forwardRef((props: TypographyProps, ref: React.Ref<any>) => {
-    return <Typography {...props} ref={ref} noWrap />
+  React.forwardRef((props: TypographyProps, ref) => {
+    return <Typography {...props} ref={(ref as unknown) as undefined} noWrap />
   })
 )<TypographyProps>``
 
 export const WrappedCardActionArea = styled(
   React.forwardRef((props: CardActionAreaProps, ref: React.Ref<any>) => {
-    return <CardActionArea {...props} buttonRef={ref} />
+    // @ts-ignore
+    return <CardActionArea {...props} buttonref={ref} />
   })
 )<CardActionAreaProps>``
 
@@ -62,9 +63,9 @@ type CreateCardProps = {
 }
 
 export const CreateCard = styled(
-  React.forwardRef((props: CreateCardProps, ref: React.Ref<any>) => {
+  React.forwardRef((props: CreateCardProps, ref) => {
     return (
-      <WrappedCard {...props.cardProps} ref={ref}>
+      <WrappedCard {...props.cardProps} ref={(ref as unknown) as undefined}>
         <WrappedCardActionArea
           style={{
             height: '100%',

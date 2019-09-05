@@ -9,8 +9,8 @@ import { Grid } from '../grid'
 import styled from 'styled-components'
 
 export const WrappedModal = styled(
-  React.forwardRef((props: ModalProps, ref: React.Ref<any>) => {
-    return <Modal {...props} ref={ref} />
+  React.forwardRef((props: ModalProps, ref) => {
+    return <Modal {...props} ref={(ref as unknown) as undefined} />
   })
 )<ModalProps>``
 

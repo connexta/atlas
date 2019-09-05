@@ -6,26 +6,26 @@ import ListItemText, { ListItemTextProps } from '@material-ui/core/ListItemText'
 import styled from 'styled-components'
 
 export const WrappedList = styled(
-  React.forwardRef((props: ListProps, ref: React.Ref<any>) => {
-    return <List {...props} ref={ref} />
+  React.forwardRef((props: ListProps, ref) => {
+    return <List {...props} ref={(ref as unknown) as undefined} />
   })
 )<ListProps>``
 
 export const WrappedListItem = styled(
-  React.forwardRef((props: ListItemProps, ref: React.Ref<any>) => {
+  React.forwardRef((props: ListItemProps, ref) => {
     // @ts-ignore
-    return <ListItem {...props} ref={ref} />
+    return <ListItem {...props} ref={(ref as unknown) as undefined} />
   })
 )<ListItemProps>``
 
 export const WrappedListItemIcon = styled(
-  React.forwardRef((props: ListItemIconProps, ref: React.Ref<any>) => {
-    return <ListItemIcon {...props} ref={ref} />
+  React.forwardRef((props: ListItemIconProps, ref) => {
+    return <ListItemIcon {...props} ref={(ref as unknown) as undefined} />
   })
 )<ListItemIconProps>``
 
 export const WrappedListItemText = styled(
-  React.forwardRef((props: ListItemTextProps, ref: React.Ref<any>) => {
-    return <ListItemText {...props} ref={ref} />
+  React.forwardRef((props: ListItemTextProps, ref) => {
+    return <ListItemText {...props} ref={(ref as unknown) as undefined} />
   })
 )<ListItemTextProps>``
