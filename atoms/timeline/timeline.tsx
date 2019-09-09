@@ -484,6 +484,7 @@ export const Timeline = (props: TimelineProps) => {
   useEffect(() => {
     // When the d3Container mousemove event triggers, show the hover line
     d3.select(d3ContainerRef.current).on('mousemove', function() {
+      setTooltip(null)
       const coord = d3.mouse(this as any)
       d3.select(hoverLineRef.current)
         .attr('transform', `translate(${coord[0]}, ${markerHeight})`)
@@ -869,6 +870,8 @@ export const Timeline = (props: TimelineProps) => {
       return attribute
     }
   }
+
+  console.log("Width: ", width)
 
   return (
     <Root ref={rootRef}>
