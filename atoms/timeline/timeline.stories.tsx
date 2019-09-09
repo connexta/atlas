@@ -1,104 +1,131 @@
 import * as React from 'react'
+import { useState } from 'react'
+import { action } from '@connexta/ace/@storybook/addon-actions'
+import { select, number } from '@connexta/ace/@storybook/addon-knobs'
 import { storiesOf } from '../../storybook'
-import { withKnobs } from '@connexta/ace/@storybook/addon-knobs'
-import Timeline, { Point } from './timeline'
+import Timeline from './index'
+import styled from 'styled-components'
 
-const randomDate = (start: Date, end: Date) =>
-  new Date(start.getTime() + Math.random() * (end.getTime() - start.getTime()))
+import { createTestData, formatDate } from './util'
+import { TimelineItem } from './timeline'
 
-function uuidv4() {
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-    var r = (Math.random() * 16) | 0,
-      v = c == 'x' ? r : (r & 0x3) | 0x8
-    return v.toString(16)
-  })
+const TIMEZONE = 'America/New_York'
+const BACKGROUND_COLOR = '#233540'
+
+const stories = storiesOf('Components|Timeline', module).addParameters({
+  info: `The TimelinePicker is a controlled component that can be used to select a time range. The TimelinePicker utilizies d3.js,
+  and supports zooming and dragging as well as translation between timezones.`,
+})
+
+const TimelineButton = styled.button`
+  background-color: #31a6ad;
+  color: white;
+`
+
+const renderDates = (dates: Date[]) => {
+  if (dates.length == 0) {
+    return null
+  } else if (dates.length == 1) {
+    return formatDate(dates[0])
+  } else if (dates.length == 2) {
+    return `${formatDate(dates[0])} ---------- ${formatDate(dates[1])}`
+  }
 }
 
-const createRandomData = (start: Date, sampleSize: number): Point[] => {
-  let samples = []
-  for (let i = 0; i < sampleSize; i++) {
-    const date = randomDate(start, new Date())
-    const id = uuidv4()
-    samples.push({
-      date,
-      data: {
-        id,
-        title: 'title - ' + id,
-      },
-      selected: false,
-      id: id,
-    })
-  }
+stories.add('Timeline with Data', () => {
+  const numDataPoints = number('Number of spaced data points to render', 100)
+  const testData = createTestData(numDataPoints)
 
-  return samples
-}
+  const modeKnob = select(
+    'Initial Mode',
+    {
+      Selection: null,
+      Single: 'single',
+      Range: 'range',
+    },
+    null
+  )
 
-const createDuplicateData = (date: Date, sampleSize: number): Point[] => {
-  let samples = []
-  for (let i = 0; i < sampleSize; i++) {
-    const id = uuidv4()
-    samples.push({
-      date,
-      data: {
-        id,
-        title: 'title - ' + id,
-      },
-      selected: false,
-      id: id,
-    })
-  }
+  const [mode, setMode] = useState<'single' | 'range' | undefined>(
+    modeKnob as any
+  )
 
-  return samples
-}
+  const [data, setData] = useState(testData)
 
-type State = {
-  points: Point[]
-}
-
-class TimelineExample extends React.Component<any, State> {
-  constructor(props: any) {
-    super(props)
-    const points = createRandomData(new Date(1990, 0, 1), 100).concat(
-      createDuplicateData(new Date(1980, 0, 1), 20)
-    )
-
-    this.state = {
-      points,
-    }
-  }
-
-  Tooltip = (points: Point[]) => {
-    return <pre>{JSON.stringify(points, null, 2)}</pre>
-  }
-
-  onClick = (toMatch: Point[]) => {
-    var newPoints = this.state.points.map(p => {
-      if (toMatch.some(match => match.id === p.id)) {
-        p.selected = !p.selected
-      }
-
-      return p
-    })
-
-    this.setState({ points: newPoints })
-    alert('ON CLICK: \n' + JSON.stringify(toMatch))
-  }
-
-  render() {
-    return (
+  return (
+    <div style={{ backgroundColor: BACKGROUND_COLOR }}>
       <Timeline
-        value={this.state.points}
-        onClick={this.onClick}
-        style={{
-          border: '1px solid grey',
+        mode={mode}
+        timezone={TIMEZONE}
+        data={data}
+        dateAttributeAliases={{
+          created: 'Created',
+          modified: 'Modified',
+          published_date: 'Published',
         }}
-        Tooltip={this.Tooltip}
+        onSelect={(selectedData: TimelineItem[]) => {
+          action('onSelect')(selectedData)
+          const selectedIds = selectedData.map(d => d.id)
+          const newData = data.map(d => {
+            d.selected = selectedIds.indexOf(d.id) !== -1
+            return d
+          })
+          setData(newData)
+        }}
+        onDone={(selectionRange: Date[]) => {
+          action('clicked onDone')(selectionRange)
+          setMode(undefined)
+        }}
+      />
+    </div>
+  )
+})
+
+stories.add('Conditional Render', () => {
+  const modeKnob = select(
+    'Initial Mode',
+    {
+      Single: 'single',
+      Range: 'range',
+    },
+    'single'
+  )
+
+  const [mode, setMode] = useState<'single' | 'range' | undefined>(
+    modeKnob as any
+  )
+
+  const [showTimeline, setShowTimeline] = useState(false)
+  const [timePicked, setTimePicked] = useState<Date[]>([])
+
+  return (
+    <div>
+      Launch Time Picker: &nbsp;
+      <TimelineButton
+        onClick={() => {
+          setShowTimeline(!showTimeline)
+          setMode(modeKnob as any)
+        }}
       >
-        Playground
-      </Timeline>
-    )
-  }
-}
-storiesOf('Timeline', module)
-  .addDecorator(withKnobs)
-  .add('playground', () => <TimelineExample />)
+        T
+      </TimelineButton>
+      <br />
+      <br />
+      {renderDates(timePicked)}
+      {showTimeline && (
+        <div style={{ backgroundColor: BACKGROUND_COLOR }}>
+          <Timeline
+            mode={mode}
+            timezone={TIMEZONE}
+            onDone={(selectionRange: Date[]) => {
+              setShowTimeline(false)
+              action('clicked onDone')(selectionRange)
+              setTimePicked(selectionRange)
+              setMode(undefined)
+            }}
+          />
+        </div>
+      )}
+    </div>
+  )
+})
