@@ -17,9 +17,6 @@ const stories = storiesOf('Timeline Picker', module).addParameters({
   and supports zooming and dragging as well as translation between timezones.`,
 })
 
-// Hack to make hooks work with storybook. Real fix available in https://github.com/storybookjs/storybook/releases/tag/v5.2.0-beta.10
-stories.addDecorator((Story: any) => <Story />)
-
 const formatDate = (value: Date) => moment(value).format(DATE_FORMAT)
 
 const renderValues = (value: Date[]) => {

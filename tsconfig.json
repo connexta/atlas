@@ -15,7 +15,7 @@
     "target": "es2015",
     "declaration": true,
     "outDir": "./dist",
-    "allowSyntheticDefaultImports": false,
+    "allowSyntheticDefaultImports": true,
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true
   },

@@ -238,12 +238,12 @@ export const TimelinePicker = (props: TimelinePickerProps) => {
           const lower = moment(
             convertedTimezoneValue,
             INTERNAL_DATE_FORMAT
-          ).subtract(365, 'days')
+          ).subtract(365, 'days') as any
 
           const higher = moment(
             convertedTimezoneValue,
             INTERNAL_DATE_FORMAT
-          ).add(365, 'days')
+          ).add(365, 'days') as any
 
           props.onChange([lower, higher])
         } else {
