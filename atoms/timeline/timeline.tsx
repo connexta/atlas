@@ -874,7 +874,7 @@ export const Timeline = (props: TimelineProps) => {
     <Root ref={rootRef}>
       <div>
         <DateAttributeSelect
-          visible={props.data !== null && props.data!.length > 0}
+          visible={props.data && props.data!.length > 0}
           variant="outlined"
           onChange={(e: any) => setSelectedDateAttribute(e.target.value)}
           value={selectedDateAttribute}
