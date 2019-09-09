@@ -1,6 +1,11 @@
 export { WrappedTextField as TextField } from './text'
-export { WrappedSelect as Select, WrappedMenuItem as MenuItem } from './select'
+export {
+  WrappedSelect as Select,
+  WrappedMenuItem as MenuItem,
+  OutlinedSelect,
+} from './select'
 export { WrappedInputLabel as InputLabel } from './label'
+export { WrappedOutlinedInput as OutlinedInput } from './input'
 export {
   WrappedFormControl as FormControl,
   WrappedFormControlLabel as FormControlLabel,

@@ -14,14 +14,15 @@ export const WrappedModal = styled(
   })
 )<ModalProps>``
 
-const CustomPaper = styled(Paper)`
-  max-width: 70vw;
+//@ts-ignore
+const CustomPaper = styled<{ width: number }, 'Paper'>(Paper)`
   min-width: 20vw;
   margin: 100px auto auto auto;
   padding: 10px;
   max-height: calc(100% - 200px);
   overflow: auto;
   position: relative;
+  max-width: ${(props: any) => (props.width ? props.width : '70vw')};
 `
 
 const HeaderTitle = styled(Typography)`
@@ -57,7 +58,7 @@ export const ModalHeader = ({ children }: { children?: React.ReactNode }) => {
           </Button>
         </Grid>
         <Grid item style={{ width: '100%' }}>
-          <HeaderTitle variant="h4" align="center">
+          <HeaderTitle variant="h5" align="center">
             {children}
           </HeaderTitle>
         </Grid>
@@ -71,13 +72,17 @@ export const ModalHeader = ({ children }: { children?: React.ReactNode }) => {
           </Button>
         </Grid>
       </Grid>
-      <Divider style={{ marginBottom: '20px' }} />
+      <Divider style={{ margin: '0px -10px 20px -10px' }} />
     </>
   )
 }
 
 type setType<T> = React.Dispatch<React.SetStateAction<T>>
 type Props = {
+  /**
+   * CSS Width to use for the modal. i.e. 100%, 10px, 40vw
+   */
+  width?: string
   children: ({ setOpen }: { setOpen: setType<boolean> }) => React.ReactElement
   modalChildren: ({
     setOpen,
@@ -86,7 +91,7 @@ type Props = {
   }) => React.ReactElement
 }
 
-export const ControlledModal = ({ children, modalChildren }: Props) => {
+export const ControlledModal = ({ children, modalChildren, width }: Props) => {
   const [open, setOpen] = React.useState(false)
 
   return (
@@ -104,7 +109,9 @@ export const ControlledModal = ({ children, modalChildren }: Props) => {
           }}
         >
           <>
-            <CustomPaper>{modalChildren({ setOpen })}</CustomPaper>
+            <CustomPaper width={width}>
+              {modalChildren({ setOpen })}
+            </CustomPaper>
           </>
         </Modal>
       </ModalContext.Provider>

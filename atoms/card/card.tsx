@@ -58,7 +58,7 @@ export const WrappedCardActionArea = styled(
 
 type CreateCardProps = {
   text: string
-  cardProps: CardProps
+  cardProps?: CardProps
 }
 
 export const CreateCard = styled(
