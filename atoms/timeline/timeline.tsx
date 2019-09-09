@@ -18,6 +18,7 @@ import { Select, MenuItem } from '../input'
 // Constants
 const AXIS_MARGIN = 20
 const AXIS_HEIGHT = 15
+const HEIGHT_OFFSET = 250
 
 // Color Theme
 const TEXT_COLOR = '#d6d6d8'
@@ -238,6 +239,11 @@ type Bucket = {
 }
 interface TimelineProps {
   /**
+   * Height in pixels.
+   */
+  height: number
+
+  /**
    * Mode that the timeline should be in.
    */
   mode?: 'single' | 'range'
@@ -295,7 +301,7 @@ export const Timeline = (props: TimelineProps) => {
   const brushBarRef = useRef(null)
 
   const [width, setWidth] = useState(0)
-  const [height, setHeight] = useState(0)
+  const height = props.height
 
   const possibleDateAttributes = getPossibleDateAttributes(props.data || [])
 
@@ -347,7 +353,6 @@ export const Timeline = (props: TimelineProps) => {
     if (rootRef.current) {
       // @ts-ignore
       const rect = rootRef.current.getBoundingClientRect()
-      setHeight(rect.height)
       setWidth(rect.width)
     }
   }, [rootRef])
@@ -362,24 +367,32 @@ export const Timeline = (props: TimelineProps) => {
       if (rootRef.current) {
         //@ts-ignore
         const rect = rootRef.current.getBoundingClientRect()
+        console.debug(
+          `Rect: x: ${rect.x}, y: ${rect.y}, height: ${rect.height}, width: ${
+            rect.width
+          }, top: ${rect.top}, bottom: ${rect.bottom}`
+        )
 
         if (rect.width !== width) {
           setWidth(rect.width)
           clearInterval(interval)
-          zoomBehavior.scaleTo(
-            // @ts-ignore
-            d3
-              .select(d3ContainerRef.current)
-              .transition()
-              .duration(0),
-            1
-          )
         }
       }
     }, 100)
   }, [rootRef, width])
 
-  const markerHeight = height - 70 - AXIS_HEIGHT
+  useEffect(() => {
+    zoomBehavior.scaleTo(
+      // @ts-ignore
+      d3
+        .select(d3ContainerRef.current)
+        .transition()
+        .duration(0),
+      1
+    )
+  }, [width])
+
+  const markerHeight = height - 70 - AXIS_HEIGHT - HEIGHT_OFFSET
   /**
    * When a zoom event is triggered, use the transform event to create a new xScale,
    * then create a new xAxis using the scale and update existing xAxis
@@ -409,10 +422,11 @@ export const Timeline = (props: TimelineProps) => {
     .extent([[0, 0], [width, height]])
     .filter(() => {
       // If event triggered below xAxis, let default zoom behavior handle it (allows panning by dragging on axis)
-      console.log('Event: ', d3.event)
-      console.log('Height: : ', height)
-      // console.log("Height + 10: : ", height + 13)
-      if (d3.event.layerY > height + AXIS_MARGIN - AXIS_HEIGHT + 10) {
+      console.debug('Click/Drag Event: ', d3.event)
+      if (
+        d3.event.layerY >
+        height + AXIS_MARGIN - AXIS_HEIGHT + 50 - HEIGHT_OFFSET
+      ) {
         console.debug('Drag below xAxis, ignore')
         return true
       } else {
@@ -465,7 +479,7 @@ export const Timeline = (props: TimelineProps) => {
         .select('.axis--x')
         .attr(
           'transform',
-          `translate(0 ${height - (AXIS_MARGIN + AXIS_HEIGHT)})`
+          `translate(0 ${height - (AXIS_MARGIN + AXIS_HEIGHT + HEIGHT_OFFSET)})`
         )
         .call(xAxis)
     }
@@ -495,7 +509,7 @@ export const Timeline = (props: TimelineProps) => {
     d3.select(d3ContainerRef.current).on('mouseleave', function() {
       hideElement(d3.select(hoverLineRef.current))
     })
-  }, [xScale, props.timezone])
+  }, [xScale, props.timezone, props.height])
 
   // Render rectangles
   useEffect(() => {
@@ -541,7 +555,8 @@ export const Timeline = (props: TimelineProps) => {
         const rectangleHeight = b.items.length * 10
         const x = (b.x1 + b.x2) / 2 - 15
 
-        const y = height - rectangleHeight - (AXIS_MARGIN + AXIS_HEIGHT)
+        const y =
+          height - rectangleHeight - (AXIS_MARGIN + AXIS_HEIGHT + HEIGHT_OFFSET)
 
         d3.select('.data-holder')
           .append('rect')
@@ -809,7 +824,7 @@ export const Timeline = (props: TimelineProps) => {
         hideElement(brushBar)
       }
     }
-  }, [xScale, selectionRange, props.mode])
+  }, [xScale, selectionRange, props.mode, props.height])
 
   const renderContext = () => {
     const renderStartAndEnd = () => (
@@ -871,10 +886,8 @@ export const Timeline = (props: TimelineProps) => {
     }
   }
 
-  console.log("Width: ", width)
-
   return (
-    <Root ref={rootRef}>
+    <Root ref={rootRef} style={{ height: '100%' }}>
       <div>
         <DateAttributeSelect
           visible={props.data && props.data!.length > 0}

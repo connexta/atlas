@@ -53,8 +53,9 @@ stories.add('Timeline with Data', () => {
   const [data, setData] = useState(testData)
 
   return (
-    <div style={{ backgroundColor: BACKGROUND_COLOR }}>
+    <div style={{ backgroundColor: BACKGROUND_COLOR, height: '100%' }}>
       <Timeline
+        height={300}
         mode={mode}
         timezone={TIMEZONE}
         data={data}
@@ -113,8 +114,9 @@ stories.add('Conditional Render', () => {
       <br />
       {renderDates(timePicked)}
       {showTimeline && (
-        <div style={{ backgroundColor: BACKGROUND_COLOR }}>
+        <div style={{ backgroundColor: BACKGROUND_COLOR, height: '100%' }}>
           <Timeline
+            height={300}
             mode={mode}
             timezone={TIMEZONE}
             onDone={(selectionRange: Date[]) => {
