@@ -18,7 +18,7 @@ const dark: Theme = {
 }
 
 const light: Theme = {
-  primary: blue[700],
+  primary: '#3c6dd5',
 }
 
 export const Provider = ({ children }: { children: any }) => {
