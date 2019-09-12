@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { storiesOf } from '@connexta/ace/@storybook/react'
+import { storiesOf } from '../../storybook'
 import { CircularProgress, LinearProgress } from './'
 import { select, number } from '@connexta/ace/@storybook/addon-knobs'
 

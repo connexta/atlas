@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { storiesOf } from '@connexta/ace/@storybook/react'
+import { storiesOf } from '../../storybook'
 import { CreateCard } from './'
 import styled from 'styled-components'
 

@@ -6,6 +6,20 @@ import {
 } from '@material-ui/core/styles'
 import { ThemeContext } from 'styled-components'
 import { lighten } from 'polished'
+import { blue } from '@material-ui/core/colors'
+
+type Theme = {
+  primary: string
+  secondary?: string
+}
+
+const dark: Theme = {
+  primary: '#69E1E8',
+}
+
+const light: Theme = {
+  primary: blue[700],
+}
 
 export const Provider = ({ children }: { children: any }) => {
   const styledTheme = React.useContext(ThemeContext)
@@ -13,6 +27,9 @@ export const Provider = ({ children }: { children: any }) => {
   const theme = createMuiTheme({
     palette: {
       type: styledTheme.theme === 'dark' ? 'dark' : 'light',
+      primary: {
+        main: styledTheme.theme === 'dark' ? dark.primary : light.primary,
+      },
       background: {
         paper: paperColor,
       },

@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { storiesOf } from '@connexta/ace/@storybook/react'
+import { storiesOf } from '../../storybook'
 import { Snackbar, SnackbarContent } from './'
 import { select } from '@connexta/ace/@storybook/addon-knobs'
 import { Button } from '../button'

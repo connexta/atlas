@@ -1,23 +1,12 @@
 import { select, text } from '@connexta/ace/@storybook/addon-knobs'
-import { storiesOf } from '@connexta/ace/@storybook/react'
+import { storiesOf } from '../../storybook'
 import * as React from 'react'
-import { ThemeContext } from 'styled-components'
-import { StoryThemeProvider } from '../theme/stories'
 import { KeyboardDateTimePicker } from './'
 
 const stories = storiesOf('Components | Date Time', module)
 
 stories.add('KeyboardDateTimePicker', () => {
   const [value, setValue] = React.useState<Date | null>(null)
-
-  const paletteType = select(
-    'Theme',
-    {
-      Light: 'light',
-      Dark: 'dark',
-    },
-    'dark'
-  ) as 'light' | 'dark'
 
   const variant = select(
     'Variant',
@@ -51,21 +40,16 @@ stories.add('KeyboardDateTimePicker', () => {
 
   const format = text('Date Format', 'DD MMMM YYYY h:mm a Z')
 
-  // const themeContext = React.useContext(ThemeContext)
-  // console.log('Current theme: ', themeContext)
-
   return (
-    <StoryThemeProvider paletteType={paletteType}>
-      <KeyboardDateTimePicker
-        style={{ width: '400px' }}
-        variant={variant}
-        inputVariant={inputVariant}
-        margin={margin}
-        format={format}
-        label="Choose Date"
-        onChange={(v: any) => setValue(v)}
-        value={value}
-      />
-    </StoryThemeProvider>
+    <KeyboardDateTimePicker
+      style={{ width: '400px' }}
+      variant={variant}
+      inputVariant={inputVariant}
+      margin={margin}
+      format={format}
+      label="Choose Date"
+      onChange={(v: any) => setValue(v)}
+      value={value}
+    />
   )
 })

@@ -1,7 +1,7 @@
-import * as React from 'react'
-import { storiesOf } from '@connexta/ace/@storybook/react'
-import { Button } from './'
 import { select } from '@connexta/ace/@storybook/addon-knobs'
+import * as React from 'react'
+import { storiesOf } from '../../storybook'
+import { Button } from './'
 
 const stories = storiesOf('Components|Button', module)
 
