@@ -497,7 +497,6 @@ export const Timeline = (props: TimelineProps) => {
   useEffect(() => {
     // When the d3Container mousemove event triggers, show the hover line
     d3.select(d3ContainerRef.current).on('mousemove', function() {
-      setTooltip(null)
       const coord = d3.mouse(this as any)
       d3.select(hoverLineRef.current)
         .attr('transform', `translate(${coord[0]}, ${markerHeight})`)
@@ -584,7 +583,7 @@ export const Timeline = (props: TimelineProps) => {
         setTooltip({
           // If the tooltip will overflow off the timeline, set x to left of the cursor instead of right.
           x: tooltipInBounds ? x + 25 : x - width * 0.25,
-          y: y - 20,
+          y: y - 20 - HEIGHT_OFFSET,
           message: props.renderTooltip
             ? props.renderTooltip(dataBuckets[id].items)
             : generateTooltipMessage(dataBuckets[id].items.map(d => d.id)),
