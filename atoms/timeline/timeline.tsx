@@ -583,7 +583,7 @@ export const Timeline = (props: TimelineProps) => {
         setTooltip({
           // If the tooltip will overflow off the timeline, set x to left of the cursor instead of right.
           x: tooltipInBounds ? x + 25 : x - width * 0.25,
-          y: y - 20 - HEIGHT_OFFSET,
+          y: y - 20,
           message: props.renderTooltip
             ? props.renderTooltip(dataBuckets[id].items)
             : generateTooltipMessage(dataBuckets[id].items.map(d => d.id)),
