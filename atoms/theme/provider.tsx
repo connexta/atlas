@@ -6,7 +6,6 @@ import {
 } from '@material-ui/core/styles'
 import { ThemeContext } from 'styled-components'
 import { lighten } from 'polished'
-import { blue } from '@material-ui/core/colors'
 
 type Theme = {
   primary: string
