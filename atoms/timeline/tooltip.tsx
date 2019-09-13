@@ -1,7 +1,7 @@
 import * as React from 'react'
 import styled from 'styled-components'
 
-const Root = styled<{ pos: { x: number; y: number } }, 'div'>('div')`
+const Root = styled.div<{ pos: { x: number; y: number } }>`
   position: absolute;
   top: ${(props: any) => props.pos.y}px;
   left: ${(props: any) => props.pos.x}px;

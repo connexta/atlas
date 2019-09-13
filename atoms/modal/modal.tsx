@@ -14,15 +14,14 @@ export const WrappedModal = styled(
   })
 )<ModalProps>``
 
-//@ts-ignore
-const CustomPaper = styled<{ width: number }, 'Paper'>(Paper)`
+const CustomPaper = styled(Paper)<{ width?: string }>`
   min-width: 20vw;
   margin: 100px auto auto auto;
   padding: 10px;
   max-height: calc(100% - 200px);
   overflow: auto;
   position: relative;
-  max-width: ${(props: any) => (props.width ? props.width : '70vw')};
+  max-width: ${({ width }) => (width ? width : '70vw')};
 `
 
 const HeaderTitle = styled(Typography)`

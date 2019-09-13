@@ -43,13 +43,13 @@ const MarkerHover = styled.g`
     cursor: ew-resize;
   }
 `
-const MarkerLine = styled<{ hidden?: boolean }, 'line'>('line')`
+const MarkerLine = styled.line<{ hidden?: boolean }>`
   stroke: ${(props: any) =>
     !props.hidden ? PRIMARY_LIGHT_COLOR : 'rgba(0, 0, 0, 0)'};
   stroke-width: ${(props: any) => (!props.hidden ? 2 : 18)};
 `
 
-const Button = styled<{ icon?: boolean }, 'button'>('button')`
+const Button = styled.button<{ icon?: boolean }>`
   display: flex;
   justify-content: center;
   font-family: 'Open Sans', sans-serif;
@@ -58,13 +58,18 @@ const Button = styled<{ icon?: boolean }, 'button'>('button')`
   height: 3rem;
   border: 1px solid ${BUTTON_BORDER_COLOR};
 
-  background-color: ${(props: any) =>
-    props.color === 'primary' ? PRIMARY_LIGHT_COLOR : BUTTON_SECONDARY_COLOR};
-  font-size: ${(props: any) => (props.icon ? '2rem' : '1rem')};
-  padding: ${(props: any) => (props.icon ? '' : '0px 20px')};
-  margin-left: ${(props: any) => (props.icon ? '' : '15px !important')};
+  background-color: ${({ color }) =>
+    color === 'primary' ? PRIMARY_LIGHT_COLOR : BUTTON_SECONDARY_COLOR};
 
-  :hover {
+  font-size: 2rem;
+
+  ${({ icon }) =>
+    !icon &&
+    `
+      font-size: 1rem;
+      padding: 0px 20px;
+      margin-left: 15px !important;
+    `} :hover {
     border: 1px solid ${PRIMARY_LIGHT_COLOR};
   }
 
@@ -73,15 +78,9 @@ const Button = styled<{ icon?: boolean }, 'button'>('button')`
   }
 `
 
-//@ts-ignore
-const DateAttributeSelect = styled<{ visibile: boolean }, 'Select'>(Select)`
+const DateAttributeSelect = styled(Select)<{ visible?: boolean }>`
   margin: 10px;
   visibility: ${(props: any) => (props.visible ? 'visible' : 'hidden')};
-  /* color: ${PRIMARY_LIGHT_COLOR};
-  opacity: 1;
-  background-color: transparent;
-  border: none;
-  font-size: 16px; */
 `
 
 const ButtonArea = styled.div`
@@ -237,7 +236,7 @@ type Bucket = {
   selected: boolean
   items: TimelineItem[]
 }
-interface TimelineProps {
+export interface TimelineProps {
   /**
    * Height in pixels.
    */
