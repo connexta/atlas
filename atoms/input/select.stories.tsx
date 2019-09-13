@@ -1,5 +1,5 @@
 import { select } from '@connexta/ace/@storybook/addon-knobs'
-import { storiesOf } from '@connexta/ace/@storybook/react'
+import { storiesOf } from '../../storybook'
 import * as React from 'react'
 import { FormControl, MenuItem, OutlinedSelect } from './'
 

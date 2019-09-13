@@ -1,7 +1,7 @@
 import * as React from 'react'
 import { useState } from 'react'
 import { action } from '@connexta/ace/@storybook/addon-actions'
-import { storiesOf } from '@connexta/ace/@storybook/react'
+import { storiesOf } from '../../storybook'
 import TimelinePicker from './index'
 
 //@ts-ignore
