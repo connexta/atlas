@@ -6,6 +6,7 @@ export {
 } from './select'
 export { WrappedInputLabel as InputLabel } from './label'
 export { WrappedOutlinedInput as OutlinedInput } from './input'
+export { WrappedInputBase as InputBase } from './input-base'
 export {
   WrappedFormControl as FormControl,
   WrappedFormControlLabel as FormControlLabel,
