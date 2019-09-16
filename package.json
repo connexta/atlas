@@ -6,6 +6,8 @@
   "private": false,
   "scripts": {
     "copy:package": "cpx package.json dist",
+    "format": "ace format",
+    "test": "yarn format",
     "prebuild": "rimraf dist && yarn copy:package && yarn storybook:build && cpx target/storybook dist",
     "build": "tsc",
     "publish:npm": "yarn build && npm publish dist",
@@ -63,6 +65,7 @@
     "@material-ui/icons": "4.2.1",
     "@material-ui/pickers": "3.2.2",
     "html-react-parser": "0.6.1",
+    "lodash": "4.17.4",
     "polished": "3.4.1",
     "react-select": "3.0.4",
     "styled-components": "4.3.2",
