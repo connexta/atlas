@@ -1,5 +1,4 @@
-import { isEqual } from 'lodash'
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Timescale } from './types'
 
 const withinTimeScale = (newValues: Date[], timescale: Timescale) => {

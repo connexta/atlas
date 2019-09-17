@@ -396,7 +396,7 @@ class Timeline extends React.Component<Props, State> {
   render() {
     const width = this.state.width - margin.left - margin.right
     const height = SVG_HEIGHT - margin.top - margin.bottom
-    const { Tooltip = (points: Point[]) => <div /> } = this.props
+    const { Tooltip = () => <div /> } = this.props
 
     return (
       <Root style={this.props.style} className={this.props.className}>
