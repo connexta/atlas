@@ -17,8 +17,8 @@ const stories = storiesOf('Components|Timeline', module).addParameters({
   and supports zooming and dragging as well as translation between timezones.`,
 })
 
-const TimelineButton = styled.button`
-  background-color: #31a6ad;
+const ShowTimelineButton = styled.button`
+  background-color: ${({ theme }) => theme.primaryColor};
   color: white;
 `
 
@@ -53,32 +53,30 @@ stories.add('Timeline with Data', () => {
   const [data, setData] = useState(testData)
 
   return (
-    <div style={{ backgroundColor: BACKGROUND_COLOR, height: '100%' }}>
-      <Timeline
-        height={300}
-        mode={mode}
-        timezone={TIMEZONE}
-        data={data}
-        dateAttributeAliases={{
-          created: 'Created',
-          modified: 'Modified',
-          published_date: 'Published',
-        }}
-        onSelect={(selectedData: TimelineItem[]) => {
-          action('onSelect')(selectedData)
-          const selectedIds = selectedData.map(d => d.id)
-          const newData = data.map(d => {
-            d.selected = selectedIds.indexOf(d.id) !== -1
-            return d
-          })
-          setData(newData)
-        }}
-        onDone={(selectionRange: Date[]) => {
-          action('clicked onDone')(selectionRange)
-          setMode(undefined)
-        }}
-      />
-    </div>
+    <Timeline
+      height={300}
+      mode={mode}
+      timezone={TIMEZONE}
+      data={data}
+      dateAttributeAliases={{
+        created: 'Created',
+        modified: 'Modified',
+        published_date: 'Published',
+      }}
+      onSelect={(selectedData: TimelineItem[]) => {
+        action('onSelect')(selectedData)
+        const selectedIds = selectedData.map(d => d.id)
+        const newData = data.map(d => {
+          d.selected = selectedIds.indexOf(d.id) !== -1
+          return d
+        })
+        setData(newData)
+      }}
+      onDone={(selectionRange: Date[]) => {
+        action('clicked onDone')(selectionRange)
+        setMode(undefined)
+      }}
+    />
   )
 })
 
@@ -102,31 +100,29 @@ stories.add('Conditional Render', () => {
   return (
     <div>
       Launch Time Picker: &nbsp;
-      <TimelineButton
+      <ShowTimelineButton
         onClick={() => {
           setShowTimeline(!showTimeline)
           setMode(modeKnob as any)
         }}
       >
         T
-      </TimelineButton>
+      </ShowTimelineButton>
       <br />
       <br />
       {renderDates(timePicked)}
       {showTimeline && (
-        <div style={{ backgroundColor: BACKGROUND_COLOR, height: '100%' }}>
-          <Timeline
-            height={300}
-            mode={mode}
-            timezone={TIMEZONE}
-            onDone={(selectionRange: Date[]) => {
-              setShowTimeline(false)
-              action('clicked onDone')(selectionRange)
-              setTimePicked(selectionRange)
-              setMode(undefined)
-            }}
-          />
-        </div>
+        <Timeline
+          height={300}
+          mode={mode}
+          timezone={TIMEZONE}
+          onDone={(selectionRange: Date[]) => {
+            setShowTimeline(false)
+            action('clicked onDone')(selectionRange)
+            setTimePicked(selectionRange)
+            setMode(undefined)
+          }}
+        />
       )}
     </div>
   )

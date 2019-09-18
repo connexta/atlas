@@ -2,7 +2,7 @@ import * as React from 'react'
 import {
   createMuiTheme,
   createStyles,
-  MuiThemeProvider as ThemeProvider,
+  MuiThemeProvider,
 } from '@material-ui/core/styles'
 import { ThemeContext } from 'styled-components'
 import { lighten } from 'polished'
@@ -54,5 +54,5 @@ export const Provider = ({ children }: { children: any }) => {
       }),
     },
   })
-  return <ThemeProvider theme={theme}>{children}</ThemeProvider>
+  return <MuiThemeProvider theme={theme}>{children}</MuiThemeProvider>
 }

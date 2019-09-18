@@ -72,7 +72,7 @@ type Current = {
   background: string
 }
 
-type ThemeName = {
+export type ThemeName = {
   theme: string
 }
 
