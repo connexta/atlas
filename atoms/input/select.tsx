@@ -8,14 +8,14 @@ export const WrappedSelect = styled(
   React.forwardRef((props: SelectProps, ref: React.Ref<any>) => {
     return <Select {...props} ref={ref} />
   })
-)<SelectProps>``
+)<SelectProps>`` as React.ComponentType<SelectProps>
 
 export const WrappedMenuItem = styled(
   React.forwardRef((props: MenuItemProps, ref: React.Ref<any>) => {
     //@ts-ignore
     return <MenuItem {...props} ref={ref} />
   })
-)<MenuItemProps>``
+)<MenuItemProps>`` as React.ComponentType<MenuItemProps>
 
 export const OutlinedSelect = styled(
   React.forwardRef(
@@ -41,4 +41,6 @@ export const OutlinedSelect = styled(
       )
     }
   )
-)<SelectProps & { label: string }>``
+)<SelectProps & { label: string }>`` as React.ComponentType<
+  SelectProps & { label: string }
+>

@@ -6,4 +6,4 @@ export const WrappedTypography = styled(
   React.forwardRef((props: TypographyProps, ref: React.Ref<any>) => {
     return <Typography {...props} ref={ref} />
   })
-)<TypographyProps>``
+)<TypographyProps>`` as React.ComponentType<TypographyProps>

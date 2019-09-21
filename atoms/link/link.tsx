@@ -6,4 +6,4 @@ export const WrappedLink = styled(
   React.forwardRef((props: LinkProps, ref: React.Ref<any>) => {
     return <Link {...props} ref={ref} />
   })
-)<LinkProps>``
+)<LinkProps>`` as React.ComponentType<LinkProps>

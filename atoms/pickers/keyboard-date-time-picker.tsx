@@ -23,4 +23,6 @@ export const WrappedKeyboardDateTimePicker = styled(
       )
     }
   )
-)<KeyboardDateTimePickerProps>``
+)<KeyboardDateTimePickerProps>`` as React.ComponentType<
+  KeyboardDateTimePickerProps
+>

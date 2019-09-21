@@ -8,4 +8,4 @@ export const WrappedLinearProgress = styled(
   React.forwardRef((props: LinearProgressProps, ref: React.Ref<any>) => {
     return <LinearProgress {...props} ref={ref} />
   })
-)<LinearProgressProps>``
+)<LinearProgressProps>`` as React.ComponentType<LinearProgressProps>

@@ -16,28 +16,28 @@ export const WrappedDialog = styled(
   React.forwardRef((props: DialogProps, ref: React.Ref<any>) => {
     return <Dialog {...props} ref={ref} />
   })
-)<DialogProps>``
+)<DialogProps>`` as React.ComponentType<DialogProps>
 
 export const WrappedDialogActions = styled(
   React.forwardRef((props: DialogActionsProps, ref: React.Ref<any>) => {
     return <DialogActions {...props} ref={ref} />
   })
-)<DialogActionsProps>``
+)<DialogActionsProps>`` as React.ComponentType<DialogActionsProps>
 
 export const WrappedDialogContent = styled(
   React.forwardRef((props: DialogContentProps, ref: React.Ref<any>) => {
     return <DialogContent {...props} ref={ref} />
   })
-)<DialogContentProps>``
+)<DialogContentProps>`` as React.ComponentType<DialogContentProps>
 
 export const WrappedDialogContentText = styled(
   React.forwardRef((props: DialogContentTextProps, ref: React.Ref<any>) => {
     return <DialogContentText {...props} ref={ref} />
   })
-)<DialogContentTextProps>``
+)<DialogContentTextProps>`` as React.ComponentType<DialogContentTextProps>
 
 export const WrappedDialogTitle = styled(
   React.forwardRef((props: DialogTitleProps, ref: React.Ref<any>) => {
     return <DialogTitle {...props} ref={ref} />
   })
-)<DialogTitleProps>``
+)<DialogTitleProps>`` as React.ComponentType<DialogTitleProps>

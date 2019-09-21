@@ -4,4 +4,4 @@ import styled from 'styled-components'
 
 export const WrappedTooltip = styled((props: TooltipProps) => {
   return <Tooltip {...props} />
-})<TooltipProps>``
+})<TooltipProps>`` as React.ComponentType<TooltipProps>

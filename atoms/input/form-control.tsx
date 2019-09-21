@@ -15,28 +15,28 @@ export const WrappedFormControl = styled(
   React.forwardRef((props: FormControlProps, ref: React.Ref<any>) => {
     return <FormControl {...props} ref={ref} />
   })
-)<FormControlProps>``
+)<FormControlProps>`` as React.ComponentType<FormControlProps>
 
 export const WrappedFormControlLabel = styled(
   React.forwardRef((props: FormControlLabelProps, ref: React.Ref<any>) => {
     return <FormControlLabel {...props} ref={ref} />
   })
-)<FormControlLabelProps>``
+)<FormControlLabelProps>`` as React.ComponentType<FormControlLabelProps>
 
 export const WrappedFormGroup = styled(
   React.forwardRef((props: FormGroupProps, ref: React.Ref<any>) => {
     return <FormGroup {...props} ref={ref} />
   })
-)<FormGroupProps>``
+)<FormGroupProps>`` as React.ComponentType<FormGroupProps>
 
 export const WrappedFormHelperText = styled(
   React.forwardRef((props: FormHelperTextProps, ref: React.Ref<any>) => {
     return <FormHelperText {...props} ref={ref} />
   })
-)<FormHelperTextProps>``
+)<FormHelperTextProps>`` as React.ComponentType<FormHelperTextProps>
 
 export const WrappedFormLabel = styled(
   React.forwardRef((props: FormLabelProps, ref: React.Ref<any>) => {
     return <FormLabel {...props} ref={ref} />
   })
-)<FormLabelProps>``
+)<FormLabelProps>`` as React.ComponentType<FormLabelProps>

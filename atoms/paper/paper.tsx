@@ -6,4 +6,4 @@ export const WrappedPaper = styled(
   React.forwardRef((props: PaperProps, ref: React.Ref<any>) => {
     return <Paper {...props} ref={ref} />
   })
-)<PaperProps>``
+)<PaperProps>`` as React.ComponentType<PaperProps>

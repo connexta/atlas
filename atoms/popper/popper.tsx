@@ -6,4 +6,4 @@ export const WrappedPopper = styled(
   React.forwardRef((props: PopperProps, ref: React.Ref<any>) => {
     return <Popper {...props} popperRef={ref} />
   })
-)<PopperProps>``
+)<PopperProps>`` as React.ComponentType<PopperProps>

@@ -6,4 +6,4 @@ export const WrappedCheckbox = styled(
   React.forwardRef((props: CheckboxProps, ref: React.Ref<any>) => {
     return <Checkbox {...props} ref={ref} />
   })
-)<CheckboxProps>``
+)<CheckboxProps>`` as React.ComponentType<CheckboxProps>
