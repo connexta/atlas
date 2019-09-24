@@ -118,7 +118,7 @@ const Root = styled.div`
   }
 
   .axis {
-    color: ${({ theme }) => readableColor(theme.backgroundContent)}
+    color: ${({ theme }) => readableColor(theme.backgroundContent)};
     font-size: 0.9rem;
     :hover {
       cursor: ew-resize;
@@ -140,11 +140,13 @@ const Root = styled.div`
 `
 
 const TimeText = styled.div`
-  color: white;
+  /* color: ${({ theme }) => readableColor(theme.backgroundContent)}; */
   margin: 10px;
   font-family: 'Open Sans', sans-serif;
-  span {
-    color: ${({ theme }) => readableColor(theme.backgroundContent)};
+  text-align: center;
+  span,
+  b {
+    /* color: ${({ theme }) => readableColor(theme.backgroundContent)}; */
   }
 
   br {
@@ -282,6 +284,11 @@ export interface TimelineProps {
    * Height offset to combat issues with dynamic heights when rendering the timeline.
    */
   heightOffset?: number
+
+  /**
+   * Called when a date is copied to the clipboard.
+   */
+  onCopy?: (copiedValue: string) => void
 }
 
 /*
@@ -832,18 +839,41 @@ export const Timeline = (props: TimelineProps) => {
     }
   }, [xScale, selectionRange, props.mode, props.height])
 
+  const renderCopyableDate = (date: Date) => {
+    const formattedDate = formatDate(date)
+    return (
+      <>
+        <br />
+        <Button
+          variant="contained"
+          style={{}}
+          onClick={() => {
+            const hiddenTextArea = document.createElement('textarea')
+            const clipboardText = new Date(formattedDate).toISOString()
+            hiddenTextArea.innerText = clipboardText
+            document.body.appendChild(hiddenTextArea)
+            hiddenTextArea.select()
+            document.execCommand('copy')
+            document.body.removeChild(hiddenTextArea)
+            props.onCopy && props.onCopy(clipboardText)
+          }}
+        >
+          {formattedDate}
+        </Button>
+      </>
+    )
+  }
+
   const renderContext = () => {
     const renderStartAndEnd = () => (
       <React.Fragment>
         <TimeText>
           <b>Start</b>
-          <br />
-          <span>{selectionRange[0] && formatDate(selectionRange[0])}</span>
+          {selectionRange[0] && renderCopyableDate(selectionRange[0])}
         </TimeText>
         <TimeText>
           <b>End</b>
-          <br />
-          <span>{selectionRange[1] && formatDate(selectionRange[1])}</span>
+          {selectionRange[1] && renderCopyableDate(selectionRange[1])}
         </TimeText>
       </React.Fragment>
     )
@@ -858,8 +888,7 @@ export const Timeline = (props: TimelineProps) => {
       return (
         <TimeText>
           <b>Time</b>
-          <br />
-          <span>{selectionRange[0] && formatDate(selectionRange[0])}</span>
+          {selectionRange[0] && renderCopyableDate(selectionRange[0])}
         </TimeText>
       )
       // Range States - Empty, Range of Times
