@@ -416,11 +416,8 @@ export const Timeline = (props: TimelineProps) => {
     .filter(() => {
       // If event triggered below xAxis, let default zoom behavior handle it (allows panning by dragging on axis)
       console.debug('Click/Drag Event: ', d3.event)
-      const axisOffset = heightOffset ? heightOffset - 20 : 20
-      if (
-        d3.event.layerY >
-        height + AXIS_MARGIN - AXIS_HEIGHT - axisOffset + 30
-      ) {
+      const axisOffset = heightOffset ? heightOffset - 50 : -10
+      if (d3.event.layerY > height + AXIS_MARGIN - AXIS_HEIGHT - axisOffset) {
         console.debug('Drag below xAxis, ignore')
         return true
       } else {
