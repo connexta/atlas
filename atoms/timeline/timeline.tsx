@@ -366,12 +366,6 @@ export const Timeline = (props: TimelineProps) => {
       if (rootRef.current) {
         //@ts-ignore
         const rect = rootRef.current.getBoundingClientRect()
-        console.debug(
-          `Rect: x: ${rect.x}, y: ${rect.y}, height: ${rect.height}, width: ${
-            rect.width
-          }, top: ${rect.top}, bottom: ${rect.bottom}`
-        )
-
         if (rect.width !== width) {
           setWidth(rect.width)
           clearInterval(interval)
@@ -424,7 +418,7 @@ export const Timeline = (props: TimelineProps) => {
       console.debug('Click/Drag Event: ', d3.event)
       if (
         d3.event.layerY >
-        height + AXIS_MARGIN - AXIS_HEIGHT + 50 - heightOffset
+        height + AXIS_MARGIN - AXIS_HEIGHT + 10 - heightOffset
       ) {
         console.debug('Drag below xAxis, ignore')
         return true
