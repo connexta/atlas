@@ -828,16 +828,14 @@ export const Timeline = (props: TimelineProps) => {
         <br />
         <Button
           variant="contained"
-          style={{}}
           onClick={() => {
             const hiddenTextArea = document.createElement('textarea')
-            const clipboardText = new Date(formattedDate).toISOString()
-            hiddenTextArea.innerText = clipboardText
+            hiddenTextArea.innerText = formattedDate
             document.body.appendChild(hiddenTextArea)
             hiddenTextArea.select()
             document.execCommand('copy')
             document.body.removeChild(hiddenTextArea)
-            props.onCopy && props.onCopy(clipboardText)
+            props.onCopy && props.onCopy(formattedDate)
           }}
         >
           {formattedDate}

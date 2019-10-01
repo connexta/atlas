@@ -57,7 +57,11 @@ export const toUtc = (value: Date, timezone: string = '') =>
 export const convertDateToTimezoneDate = (
   time: Date,
   timezone: string = ''
-): Date => moment.tz(time, timezone).toDate()
+): Date => {
+  const newDate = moment.tz(time, timezone).toDate()
+  console.debug(`${time} using ${timezone} is converted to \n${newDate}}`)
+  return newDate
+}
 
 export const formatDate = (
   value: Date,
