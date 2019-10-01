@@ -238,12 +238,12 @@ export interface TimelineProps {
   /**
    * Timezone to use when displaying times.
    */
-  timezone?: string
+  timezone: string
 
   /**
    * Date format to use when displaying times.
    */
-  format?: string
+  format: string
 
   /**
    * TimelineItem points
@@ -638,6 +638,7 @@ export const Timeline = (props: TimelineProps) => {
           clickStart = d3.event.x
           const newLeftDate = convertDateToTimezoneDate(
             xScale.invert(clickStart),
+            props.format,
             props.timezone
           )
 
@@ -674,12 +675,14 @@ export const Timeline = (props: TimelineProps) => {
 
             const initialDate = convertDateToTimezoneDate(
               xScale.invert(clickStart),
+              props.format,
               props.timezone
             )
 
             let dragCurrent = clickStart + diff
             const dragDate = convertDateToTimezoneDate(
               xScale.invert(dragCurrent),
+              props.format,
               props.timezone
             )
 
@@ -718,6 +721,7 @@ export const Timeline = (props: TimelineProps) => {
 
           const dateWithTimezone = convertDateToTimezoneDate(
             dragValue,
+            props.format,
             props.timezone
           )
           const BUFFER = 10 // Buffer in pixels to keep sliders from overlapping/crossing
@@ -764,11 +768,13 @@ export const Timeline = (props: TimelineProps) => {
 
           const newLeftDate = convertDateToTimezoneDate(
             xScale.invert(newLeft),
+            props.format,
             props.timezone
           )
 
           const newRightDate = convertDateToTimezoneDate(
             xScale.invert(newRight),
+            props.format,
             props.timezone
           )
 
@@ -791,14 +797,14 @@ export const Timeline = (props: TimelineProps) => {
 
       if (props.mode === 'single' && selectionRange.length === 1) {
         const leftMarker = d3.select(leftMarkerRef.current)
-        const leftUtc = toUtc(selectionRange[0])
+        const leftUtc = toUtc(selectionRange[0], props.format, props.timezone)
         leftMarker
           .attr('transform', `translate(${xScale(leftUtc)}, ${markerHeight})`)
           .attr('style', 'display: block')
       } else if (props.mode !== 'single' && selectionRange.length == 2) {
         const [leftValue, rightValue] = selectionRange
-        const leftUtc = toUtc(leftValue)
-        const rightUtc = toUtc(rightValue)
+        const leftUtc = toUtc(leftValue, props.format, props.timezone)
+        const rightUtc = toUtc(rightValue, props.format, props.timezone)
 
         leftMarker
           .attr('transform', `translate(${xScale(leftUtc)}, ${markerHeight})`)
@@ -819,10 +825,10 @@ export const Timeline = (props: TimelineProps) => {
         hideElement(brushBar)
       }
     }
-  }, [xScale, selectionRange, props.mode, props.height])
+  }, [xScale, selectionRange, props.mode, props.height, props.timezone])
 
   const renderCopyableDate = (date: Date) => {
-    const formattedDate = formatDate(date, props.format)
+    const formattedDate = formatDate(date, props.format, props.timezone)
     return (
       <>
         <br />

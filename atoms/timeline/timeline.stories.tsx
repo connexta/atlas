@@ -50,15 +50,15 @@ stories.add('Timeline with Data', () => {
     modeKnob as any
   )
 
-  // const timezoneKnob = select(
-  //   'Timezone',
-  //   {
-  //     UTC: 'Etc/UTC',
-  //     '+7:00': 'Etc/GMT-7',
-  //     '-12:00': 'Etc/GMT+12',
-  //   },
-  //   'Etc/UTC'
-  // )
+  const timezoneKnob = select(
+    'Timezone',
+    {
+      UTC: 'Etc/UTC',
+      '+7:00': 'Etc/GMT-7',
+      '-12:00': 'Etc/GMT+12',
+    },
+    'Etc/UTC'
+  )
 
   const dateFormatKnob = select(
     'Date Format',
@@ -77,6 +77,7 @@ stories.add('Timeline with Data', () => {
       height={300}
       mode={mode}
       format={dateFormatKnob}
+      timezone={timezoneKnob}
       data={data}
       dateAttributeAliases={{
         created: 'Created',
@@ -115,18 +116,20 @@ stories.add('Conditional Render', () => {
     modeKnob as any
   )
 
-  const [showTimeline, setShowTimeline] = useState(false)
+  const [showTimeline, setShowTimeline] = useState(true)
   const [timePicked, setTimePicked] = useState<Date[]>([])
 
-  // const timezoneKnob = select(
-  //   'Timezone',
-  //   {
-  //     UTC: 'Etc/UTC',
-  //     '+7:00': 'Etc/GMT-7',
-  //     '-12:00': 'Etc/GMT+12',
-  //   },
-  //   'Etc/UTC'
-  // )
+  const timezoneKnob = select(
+    'Timezone',
+    {
+      UTC: 'Etc/UTC',
+      '+5:00': 'Etc/GMT-5',
+      '+7:00': 'Etc/GMT-7',
+      '-7:00': 'Etc/GMT+7',
+      '-12:00': 'Etc/GMT+12',
+    },
+    'Etc/GMT+7'
+  )
 
   const dateFormatKnob = select(
     'Date Format',
@@ -155,6 +158,7 @@ stories.add('Conditional Render', () => {
         <Timeline
           height={300}
           mode={mode}
+          timezone={timezoneKnob}
           format={dateFormatKnob}
           heightOffset={100}
           onCopy={(copiedValue: string) =>

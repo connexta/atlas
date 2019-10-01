@@ -46,8 +46,13 @@ export const createTestData = (n: number): TimelineItem[] => {
  * @param value Moment time object.
  * @param timezone Timezone the incoming value is in.
  */
-export const toUtc = (value: Date, timezone: string = '') =>
-  moment.tz(value, timezone).toDate()
+// TODO: Make this use the timezone
+export const toUtc = (value: Date, format: string, timezone: string = '') => {
+  const momentValue = moment.tz(value, timezone)
+  const utcOffsetMinutes = momentValue.utcOffset()
+  momentValue.add(utcOffsetMinutes, 'minutes').format(format)
+  return momentValue.toDate()
+}
 
 /**
  *
@@ -56,17 +61,19 @@ export const toUtc = (value: Date, timezone: string = '') =>
  */
 export const convertDateToTimezoneDate = (
   time: Date,
-  timezone: string = ''
+  format: string,
+  timezone: string
 ): Date => {
-  const newDate = moment.tz(time, timezone).toDate()
-  console.debug(`${time} using ${timezone} is converted to \n${newDate}}`)
-  return newDate
+  // console.log("Internal Date Clicked: ", moment(time).format(format))
+  const momentValue = moment.tz(time, timezone)
+  const utcOffsetMinutes = momentValue.utcOffset()
+  momentValue.subtract(utcOffsetMinutes, 'minutes').format(format)
+  console.log('New Date: ', momentValue)
+  return momentValue.toDate()
 }
 
-export const formatDate = (
-  value: Date,
-  format: string = 'DD MMMM YYYY h:mm a Z'
-) => moment(value).format(format)
+export const formatDate = (value: Date, format: string, timezone: string) =>
+  moment.tz(value, format, timezone).format(format)
 
 export const dateWithinRange = (date: Date, range: Date[]) =>
   range[0] < date && date < range[1]
