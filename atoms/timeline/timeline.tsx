@@ -119,14 +119,8 @@ const Root = styled.div`
   }
 
   .data {
-    fill: ${({ theme }) => {
-      console.log(theme)
-      if (theme.theme == 'dark') {
-        return lighten(0.7, 'black')
-      } else {
-        return lighten(0.3, 'black')
-      }
-    }};
+    fill: ${({ theme: { theme } }) =>
+      theme === 'dark' ? lighten(0.7, 'black') : lighten(0.3, 'black')};
     fill-opacity: 0.7;
     :hover {
       stroke-width: 2px;
