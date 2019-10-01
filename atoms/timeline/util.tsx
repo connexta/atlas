@@ -59,8 +59,10 @@ export const convertDateToTimezoneDate = (
   timezone: string = ''
 ): Date => moment.tz(time, timezone).toDate()
 
-export const formatDate = (value: Date) =>
-  moment(value).format('DD MMMM YYYY h:mm a Z')
+export const formatDate = (
+  value: Date,
+  format: string = 'DD MMMM YYYY h:mm a Z'
+) => moment(value).format(format)
 
 export const dateWithinRange = (date: Date, range: Date[]) =>
   range[0] < date && date < range[1]

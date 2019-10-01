@@ -14,7 +14,7 @@ import _ = require('lodash')
 import { Timescale } from './types'
 import styled from 'styled-components'
 import { Select, MenuItem } from '../input'
-import { lighten, darken } from 'polished'
+import { lighten } from 'polished'
 import { Button } from '../button'
 import { readableColor } from 'polished'
 
@@ -239,6 +239,11 @@ export interface TimelineProps {
    * Timezone to use when displaying times.
    */
   timezone?: string
+
+  /**
+   * Date format to use when displaying times.
+   */
+  format?: string
 
   /**
    * TimelineItem points
@@ -817,7 +822,7 @@ export const Timeline = (props: TimelineProps) => {
   }, [xScale, selectionRange, props.mode, props.height])
 
   const renderCopyableDate = (date: Date) => {
-    const formattedDate = formatDate(date)
+    const formattedDate = formatDate(date, props.format)
     return (
       <>
         <br />

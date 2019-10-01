@@ -9,8 +9,6 @@ import styled from 'styled-components'
 import { createTestData, formatDate } from './util'
 import { TimelineItem } from './timeline'
 
-const TIMEZONE = 'America/New_York'
-
 const stories = storiesOf('Components|Timeline', module).addParameters({
   info: `The TimelinePicker is a controlled component that can be used to select a time range. The TimelinePicker utilizies d3.js,
   and supports zooming and dragging as well as translation between timezones.`,
@@ -21,13 +19,16 @@ const ShowTimelineButton = styled.button`
   color: white;
 `
 
-const renderDates = (dates: Date[]) => {
+const renderDates = (dates: Date[], format: string) => {
   if (dates.length == 0) {
     return null
   } else if (dates.length == 1) {
-    return formatDate(dates[0])
+    return formatDate(dates[0], format)
   } else if (dates.length == 2) {
-    return `${formatDate(dates[0])} ---------- ${formatDate(dates[1])}`
+    return `${formatDate(dates[0], format)} ---------- ${formatDate(
+      dates[1],
+      format
+    )}`
   }
 }
 
@@ -49,13 +50,33 @@ stories.add('Timeline with Data', () => {
     modeKnob as any
   )
 
+  // const timezoneKnob = select(
+  //   'Timezone',
+  //   {
+  //     UTC: 'Etc/UTC',
+  //     '+7:00': 'Etc/GMT-7',
+  //     '-12:00': 'Etc/GMT+12',
+  //   },
+  //   'Etc/UTC'
+  // )
+
+  const dateFormatKnob = select(
+    'Date Format',
+    {
+      ISO: 'YYYY-MM-DD[T]HH:mm:ss.SSSZ',
+      '24 Hour Standard': 'DD MMM YYYY HH:mm:ss.SSS Z',
+      '12 Hour Standard': 'DD MMM YYYY h:mm:ss.SSS a Z',
+    },
+    'YYYY-MM-DD[T]HH:mm:ss.SSSZ'
+  )
+
   const [data, setData] = useState(testData)
 
   return (
     <Timeline
       height={300}
       mode={mode}
-      timezone={TIMEZONE}
+      format={dateFormatKnob}
       data={data}
       dateAttributeAliases={{
         created: 'Created',
@@ -97,6 +118,25 @@ stories.add('Conditional Render', () => {
   const [showTimeline, setShowTimeline] = useState(false)
   const [timePicked, setTimePicked] = useState<Date[]>([])
 
+  // const timezoneKnob = select(
+  //   'Timezone',
+  //   {
+  //     UTC: 'Etc/UTC',
+  //     '+7:00': 'Etc/GMT-7',
+  //     '-12:00': 'Etc/GMT+12',
+  //   },
+  //   'Etc/UTC'
+  // )
+
+  const dateFormatKnob = select(
+    'Date Format',
+    {
+      ISO: 'YYYY-MM-DD[T]HH:mm:ss.SSSZ',
+      '24 Hour Standard': 'DD MMM YYYY HH:mm:ss.SSS Z',
+      '12 Hour Standard': 'DD MMM YYYY h:mm:ss.SSS a Z',
+    },
+    'YYYY-MM-DD[T]HH:mm:ss.SSSZ'
+  )
   return (
     <div>
       Launch Time Picker: &nbsp;
@@ -110,12 +150,13 @@ stories.add('Conditional Render', () => {
       </ShowTimelineButton>
       <br />
       <br />
-      {renderDates(timePicked)}
+      {renderDates(timePicked, dateFormatKnob)}
       {showTimeline && (
         <Timeline
           height={300}
           mode={mode}
-          timezone={TIMEZONE}
+          format={dateFormatKnob}
+          heightOffset={100}
           onCopy={(copiedValue: string) =>
             action('clicked onCopy')(copiedValue)
           }
