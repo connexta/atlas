@@ -696,7 +696,7 @@ export const Timeline = (props: TimelineProps) => {
     }
 
     d3.select(d3ContainerRef.current).call(getSelectionDrag())
-  }, [dataBuckets, selectionRange, xScale])
+  }, [dataBuckets, selectionRange, xScale, props.timezone])
 
   useEffect(() => {
     /**
@@ -741,7 +741,7 @@ export const Timeline = (props: TimelineProps) => {
 
     d3.select(leftMarkerRef.current).call(getEdgeDrag('LEFT'))
     d3.select(rightMarkerRef.current).call(getEdgeDrag('RIGHT'))
-  }, [xScale, selectionRange])
+  }, [xScale, selectionRange, props.timezone])
 
   useEffect(() => {
     /**
@@ -782,7 +782,7 @@ export const Timeline = (props: TimelineProps) => {
         }) as any
 
     d3.select(brushBarRef.current).call(getBrushDrag())
-  }, [xScale, selectionRange])
+  }, [xScale, selectionRange, props.timezone])
 
   // When the selection range is changed or the scale changes update the left, right, and brush markers
   useEffect(() => {
