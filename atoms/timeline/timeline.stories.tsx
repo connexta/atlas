@@ -10,7 +10,6 @@ import { createTestData, formatDate } from './util'
 import { TimelineItem } from './timeline'
 
 const TIMEZONE = 'America/New_York'
-const BACKGROUND_COLOR = '#233540'
 
 const stories = storiesOf('Components|Timeline', module).addParameters({
   info: `The TimelinePicker is a controlled component that can be used to select a time range. The TimelinePicker utilizies d3.js,
@@ -63,6 +62,7 @@ stories.add('Timeline with Data', () => {
         modified: 'Modified',
         published_date: 'Published',
       }}
+      onCopy={(copiedValue: string) => action('clicked onCopy')(copiedValue)}
       onSelect={(selectedData: TimelineItem[]) => {
         action('onSelect')(selectedData)
         const selectedIds = selectedData.map(d => d.id)
@@ -116,6 +116,9 @@ stories.add('Conditional Render', () => {
           height={300}
           mode={mode}
           timezone={TIMEZONE}
+          onCopy={(copiedValue: string) =>
+            action('clicked onCopy')(copiedValue)
+          }
           onDone={(selectionRange: Date[]) => {
             setShowTimeline(false)
             action('clicked onDone')(selectionRange)

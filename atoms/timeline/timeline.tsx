@@ -23,8 +23,6 @@ const AXIS_MARGIN = 20
 const AXIS_HEIGHT = 15
 
 // Color Theme
-const RECT_COLOR = '#757575'
-
 const ContextRow = styled.div`
   display: flex;
   justify-content: space-between;
@@ -53,17 +51,8 @@ const TimelineButton = styled(Button)<{ icon?: boolean; color?: string }>`
   display: flex;
   justify-content: center;
   font-family: 'Open Sans', sans-serif;
-  /* color: white; */
   min-width: 3rem;
   height: 3rem;
-  /* border: 1px solid ${({ theme }) => darken(0.1, theme.primaryColor)}; */
-
-  /* background-color: ${({ theme, color }) =>
-    color === 'primary'
-      ? lighten(0.1, theme.primaryColor)
-      : darken(0.3, theme.primaryColor)}; */
-
-  font-size: 2rem;
 
   ${({ icon }) =>
     !icon &&
@@ -130,7 +119,14 @@ const Root = styled.div`
   }
 
   .data {
-    fill: ${RECT_COLOR};
+    fill: ${({ theme }) => {
+      console.log(theme)
+      if (theme.theme == 'dark') {
+        return lighten(0.7, 'black')
+      } else {
+        return lighten(0.3, 'black')
+      }
+    }};
     fill-opacity: 0.7;
     :hover {
       stroke-width: 2px;
@@ -140,14 +136,9 @@ const Root = styled.div`
 `
 
 const TimeText = styled.div`
-  /* color: ${({ theme }) => readableColor(theme.backgroundContent)}; */
   margin: 10px;
   font-family: 'Open Sans', sans-serif;
   text-align: center;
-  span,
-  b {
-    /* color: ${({ theme }) => readableColor(theme.backgroundContent)}; */
-  }
 
   br {
     line-height: 150%;
