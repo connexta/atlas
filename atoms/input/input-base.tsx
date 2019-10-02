@@ -6,4 +6,4 @@ export const WrappedInputBase = styled(
   React.forwardRef((props: InputBaseProps, ref: React.Ref<any>) => {
     return <InputBase {...props} ref={ref} />
   })
-)<InputBaseProps>``
+)<InputBaseProps>`` as React.ComponentType<InputBaseProps>

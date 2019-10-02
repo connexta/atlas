@@ -6,4 +6,4 @@ export const WrappedInputLabel = styled(
   React.forwardRef((props: InputLabelProps, ref: React.Ref<any>) => {
     return <InputLabel {...props} ref={ref} />
   })
-)<InputLabelProps>``
+)<InputLabelProps>`` as React.ComponentType<InputLabelProps>

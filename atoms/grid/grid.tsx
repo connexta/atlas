@@ -6,7 +6,7 @@ export const WrappedGrid = styled(
   React.forwardRef((props: GridProps, ref: React.Ref<any>) => {
     return <Grid {...props} ref={ref} />
   })
-)<GridProps>``
+)<GridProps>`` as React.ComponentType<GridProps>
 
 const GridItem = styled(WrappedGrid)`
   > * {
@@ -47,4 +47,4 @@ export const WrappedCardGrid = styled(
       </WrappedGrid>
     )
   }
-)<CardGridProps>``
+)<CardGridProps>`` as React.ComponentType<CardGridProps>
