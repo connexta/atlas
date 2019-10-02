@@ -10,6 +10,16 @@ import MenuItem from '@material-ui/core/MenuItem'
 import CancelIcon from '@material-ui/icons/Cancel'
 import { Props as CreatableProps } from 'react-select/src/Creatable'
 
+export type Option = {
+  label: string
+  value: any
+}
+
+export type GroupOptions = {
+  label: string
+  options: Option[]
+}
+
 const useStyles = makeStyles(theme => ({
   input: {
     display: 'flex',
@@ -184,6 +194,16 @@ const components = {
   ValueContainer,
 }
 
+/**
+ * Very important note when using async options: Because `onInputChange` for some reason is an 'interceptor' rather than a handler that ignores
+ * the callback's return value (https://github.com/JedWatson/react-select/issues/1760), if you inline the method like
+ * <CreatableSelect onInputChange={(value) => handleValue(value)}
+ * and handleValue is an asynchronous function, it will attempt to alter the input value with the return value of handleValue, which will
+ * immediately be a promise, causing CreatableSelect to throw an error (in my case `str.replace is not a function`)
+ *
+ * TLDR: You must not use the shorthand arrow syntax to auto return.
+ * <CreatableSelect onInputChange={(value) => {handleValue(value)}} would work without issues.
+ */
 export const WrappedCreatableSelect = (props: CreatableProps<any>) => {
   const classes = useStyles()
   const theme = useTheme()
