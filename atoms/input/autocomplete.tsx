@@ -263,14 +263,11 @@ export const WrappedAsyncCreatableSelect = (props: AsyncCreateableProps) => {
   }
   const { label, styles, loadOptions, debounce = 0, ...baseProps } = props
 
-  const debouncedLoadOptions = _.debounce(
-    (input: any, callback: any) => loadOptions(input, callback),
-    debounce
-  )
+  const debouncedLoadOptions = _.debounce(loadOptions, debounce)
 
   return (
     <AsyncCreateableSelect
-      loadOptions={(input, callback) => debouncedLoadOptions(input, callback)}
+      loadOptions={debouncedLoadOptions}
       components={components}
       classes={classes}
       styles={{
