@@ -1,6 +1,7 @@
 import * as React from 'react'
 import clsx from 'clsx'
 import CreateableSelect from 'react-select/creatable'
+import AsyncCreateableSelect from 'react-select/async-creatable'
 import { emphasize, makeStyles, useTheme } from '@material-ui/core/styles'
 import Typography from '@material-ui/core/Typography'
 import TextField from '@material-ui/core/TextField'
@@ -9,6 +10,8 @@ import Chip from '@material-ui/core/Chip'
 import MenuItem from '@material-ui/core/MenuItem'
 import CancelIcon from '@material-ui/icons/Cancel'
 import { Props as CreatableProps } from 'react-select/src/Creatable'
+import { AsyncProps } from 'react-select/src/Async'
+const _debounce = require('lodash.debounce')
 
 export type Option = {
   label: string
@@ -220,6 +223,49 @@ export const WrappedCreatableSelect = (props: CreatableProps<any>) => {
 
   return (
     <CreateableSelect
+      components={components}
+      classes={classes}
+      styles={{
+        ...selectStyles,
+      }}
+      TextFieldProps={{
+        label,
+        InputLabelProps: {
+          htmlFor: 'react-select-multiple',
+          shrink: true,
+        },
+      }}
+      {...baseProps}
+    />
+  )
+}
+
+export const WrappedAsyncCreatableSelect = (
+  props: CreatableProps<any> & AsyncProps<any> & { debounce: number }
+) => {
+  const classes = useStyles()
+  const theme = useTheme()
+  const selectStyles = {
+    input: (base: any) => ({
+      ...base,
+      color: theme.palette.text.primary,
+      '& input': {
+        font: 'inherit',
+      },
+    }),
+  }
+  const { label, styles, loadOptions, debounce, ...baseProps } = props
+
+  return (
+    <AsyncCreateableSelect
+      loadOptions={(input, callback) => {
+        if (!input) {
+          console.log('Empty input, returning empty options array.')
+          return Promise.resolve({ options: [] })
+        }
+
+        return _debounce(loadOptions(input, callback), debounce)
+      }}
       components={components}
       classes={classes}
       styles={{
