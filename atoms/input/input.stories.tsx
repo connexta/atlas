@@ -2,15 +2,14 @@ import { storiesOf } from '../../storybook'
 import * as React from 'react'
 import { CreatableSelect, AsyncCreatableSelect } from './'
 import { GroupOptions } from './autocomplete'
-const debounce = require('lodash.debounce')
+import { number } from '@connexta/ace/@storybook/addon-knobs'
+import { action } from '@connexta/ace/@storybook/addon-actions'
 
 const stories = storiesOf('Components | Input', module)
 
 stories.add('AutoComplete', () => {
   const [selectValues, setSelectValues] = React.useState([])
   const [suggestions, setSuggestions] = React.useState<GroupOptions[]>([])
-
-  console.log('Suggestions: ', suggestions)
 
   return (
     <div style={{ maxWidth: '30%' }}>
@@ -39,8 +38,10 @@ stories.add('AutoComplete', () => {
 stories.add('AutoComplete (Async)', () => {
   const [selectValues, setSelectValues] = React.useState([])
 
+  const debounceInMsKnob = number('Debounce (ms)', 500)
+  const networkInMs = number('Network Time (ms)', 1000)
+
   const getOptions = (input: any, callback: any) => {
-    debugger
     const suggestions = [
       {
         label: 'Group 1',
@@ -53,10 +54,11 @@ stories.add('AutoComplete (Async)', () => {
     ]
 
     new Promise(resolve => {
+      action('Making Network Request')()
       setTimeout(() => {
-        console.log('Making Network Request')
+        action('Network Request Resolved with: ')(suggestions)
         resolve(suggestions)
-      }, 1000)
+      }, networkInMs)
     }).then(result => callback(result))
   }
 
@@ -67,6 +69,7 @@ stories.add('AutoComplete (Async)', () => {
         value={selectValues}
         onChange={(values: any) => setSelectValues(values)}
         loadOptions={getOptions}
+        debounce={debounceInMsKnob}
       />
     </div>
   )
