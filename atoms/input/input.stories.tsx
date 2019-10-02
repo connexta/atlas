@@ -51,6 +51,10 @@ stories.add('AutoComplete (Async)', () => {
         label: 'Group 2',
         options: [{ label: 'Person 2', value: 'value 2' }],
       },
+      {
+        label: 'Group 3',
+        options: [{ label: 'Person 2', value: 'value 2' }],
+      },
     ]
 
     new Promise(resolve => {
