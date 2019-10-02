@@ -240,9 +240,15 @@ export const WrappedCreatableSelect = (props: CreatableProps<any>) => {
   )
 }
 
-export const WrappedAsyncCreatableSelect = (
-  props: CreatableProps<any> & AsyncProps<any> & { debounce: number }
-) => {
+type AsyncCreateableProps = {
+  /**
+   * Time in ms to debounce load options call.
+   */
+  debounce?: number
+} & CreatableProps<any> &
+  AsyncProps<any>
+
+export const WrappedAsyncCreatableSelect = (props: AsyncCreateableProps) => {
   const classes = useStyles()
   const theme = useTheme()
   const selectStyles = {
@@ -254,7 +260,7 @@ export const WrappedAsyncCreatableSelect = (
       },
     }),
   }
-  const { label, styles, loadOptions, debounce, ...baseProps } = props
+  const { label, styles, loadOptions, debounce = 0, ...baseProps } = props
 
   return (
     <AsyncCreateableSelect
@@ -264,7 +270,7 @@ export const WrappedAsyncCreatableSelect = (
           return Promise.resolve({ options: [] })
         }
 
-        return _debounce(loadOptions(input, callback), debounce)
+        return _debounce(() => loadOptions(input, callback), debounce)
       }}
       components={components}
       classes={classes}

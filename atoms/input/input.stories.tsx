@@ -36,31 +36,28 @@ stories.add('AutoComplete', () => {
   )
 })
 
-const debouncedFetch = debounce((searchTerm: any, callback: any) => {
-  const suggestions = [
-    {
-      label: 'Group 1',
-      options: [{ label: 'Person 1', value: 'value 1' }],
-    },
-    {
-      label: 'Group 2',
-      options: [{ label: 'Person 2', value: 'value 2' }],
-    },
-  ]
-
-  new Promise(resolve => {
-    setTimeout(() => {
-      console.log('Making Network Request')
-      resolve(suggestions)
-    }, 1000)
-  }).then(result => callback(result))
-}, 500)
-
 stories.add('AutoComplete (Async)', () => {
   const [selectValues, setSelectValues] = React.useState([])
 
   const getOptions = (input: any, callback: any) => {
-    return debouncedFetch(input, callback)
+    debugger
+    const suggestions = [
+      {
+        label: 'Group 1',
+        options: [{ label: 'Person 1', value: 'value 1' }],
+      },
+      {
+        label: 'Group 2',
+        options: [{ label: 'Person 2', value: 'value 2' }],
+      },
+    ]
+
+    new Promise(resolve => {
+      setTimeout(() => {
+        console.log('Making Network Request')
+        resolve(suggestions)
+      }, 1000)
+    }).then(result => callback(result))
   }
 
   return (
