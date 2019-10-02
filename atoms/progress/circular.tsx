@@ -8,4 +8,4 @@ export const WrappedCircularProgress = styled(
   React.forwardRef((props: CircularProgressProps, ref: React.Ref<any>) => {
     return <CircularProgress {...props} ref={ref} />
   })
-)<CircularProgressProps>``
+)<CircularProgressProps>`` as React.ComponentType<CircularProgressProps>

@@ -9,23 +9,19 @@ export const WrappedList = styled(
   React.forwardRef((props: ListProps, ref: React.Ref<any>) => {
     return <List {...props} ref={ref} />
   })
-)<ListProps>``
+)<ListProps>`` as React.ComponentType<ListProps>
 
 export const WrappedListItem = styled(
   React.forwardRef((props: ListItemProps, ref: React.Ref<any>) => {
     // @ts-ignore
     return <ListItem {...props} ref={ref} />
   })
-)<ListItemProps>``
+)<ListItemProps>`` as React.ComponentType<ListItemProps>
 
-export const WrappedListItemIcon = styled(
-  React.forwardRef((props: ListItemIconProps, ref: React.Ref<any>) => {
-    return <ListItemIcon {...props} ref={ref} />
-  })
-)<ListItemIconProps>``
+export const WrappedListItemIcon = ListItemIcon
 
 export const WrappedListItemText = styled(
   React.forwardRef((props: ListItemTextProps, ref: React.Ref<any>) => {
     return <ListItemText {...props} ref={ref} />
   })
-)<ListItemTextProps>``
+)<ListItemTextProps>`` as React.ComponentType<ListItemTextProps>
