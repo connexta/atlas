@@ -7,7 +7,7 @@ const Root = styled.div<{ pos: { x: number; y: number } }>`
   left: ${(props: any) => props.pos.x}px;
   color: white;
   background-color: rgba(0, 0, 0, 0.7);
-  max-width: 20%;
+  max-width: 30%;
   border-radius: 8px;
   padding: 10px;
   z-index: 1;

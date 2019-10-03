@@ -14,19 +14,15 @@ import _ = require('lodash')
 import { Timescale } from './types'
 import styled from 'styled-components'
 import { Select, MenuItem } from '../input'
+import { lighten } from 'polished'
+import { Button } from '../button'
+import { readableColor } from 'polished'
 
 // Constants
 const AXIS_MARGIN = 20
 const AXIS_HEIGHT = 15
-const HEIGHT_OFFSET = 250
 
 // Color Theme
-const TEXT_COLOR = '#d6d6d8'
-const PRIMARY_COLOR = '#2a616a'
-const PRIMARY_LIGHT_COLOR = '#31a6ad'
-const BUTTON_SECONDARY_COLOR = '#25404a'
-const BUTTON_BORDER_COLOR = '#2e5860'
-
 const ContextRow = styled.div`
   display: flex;
   justify-content: space-between;
@@ -34,7 +30,7 @@ const ContextRow = styled.div`
 `
 
 const HoverLine = styled.line`
-  stroke: ${PRIMARY_LIGHT_COLOR};
+  stroke: ${({ theme }) => theme.primaryColor};
   stroke-width: 3;
   pointer-events: none;
 `
@@ -45,23 +41,18 @@ const MarkerHover = styled.g`
 `
 const MarkerLine = styled.line<{ hidden?: boolean }>`
   stroke: ${(props: any) =>
-    !props.hidden ? PRIMARY_LIGHT_COLOR : 'rgba(0, 0, 0, 0)'};
+    !props.hidden
+      ? lighten(0.1, props.theme.primaryColor)
+      : 'rgba(0, 0, 0, 0)'};
   stroke-width: ${(props: any) => (!props.hidden ? 2 : 18)};
 `
 
-const Button = styled.button<{ icon?: boolean }>`
+const TimelineButton = styled(Button)<{ icon?: boolean; color?: string }>`
   display: flex;
   justify-content: center;
   font-family: 'Open Sans', sans-serif;
-  color: white;
   min-width: 3rem;
   height: 3rem;
-  border: 1px solid ${BUTTON_BORDER_COLOR};
-
-  background-color: ${({ color }) =>
-    color === 'primary' ? PRIMARY_LIGHT_COLOR : BUTTON_SECONDARY_COLOR};
-
-  font-size: 2rem;
 
   ${({ icon }) =>
     !icon &&
@@ -70,7 +61,6 @@ const Button = styled.button<{ icon?: boolean }>`
       padding: 0px 20px;
       margin-left: 15px !important;
     `} :hover {
-    border: 1px solid ${PRIMARY_LIGHT_COLOR};
   }
 
   :focus {
@@ -106,18 +96,18 @@ const Root = styled.div`
     /* If it's discovered that brush dragging is wanted more than hovering behind the highlighted brush area, 
     simply comment the above lines and uncomment this opacity */
     /* opacity: 0.1; */
-    fill: ${PRIMARY_LIGHT_COLOR};
+    fill: ${({ theme }) => theme.primaryColor};
     display: none;
 
     :hover {
       cursor: move;
-      fill: ${PRIMARY_LIGHT_COLOR};
+      fill: ${({ theme }) => theme.primaryColor};
       opacity: 0.5;
     }
   }
 
   .axis {
-    color: ${TEXT_COLOR};
+    color: ${({ theme }) => readableColor(theme.backgroundContent)};
     font-size: 0.9rem;
     :hover {
       cursor: ew-resize;
@@ -125,26 +115,24 @@ const Root = styled.div`
   }
 
   .selected {
-    fill: ${PRIMARY_LIGHT_COLOR} !important;
+    fill: ${({ theme }) => theme.primaryColor} !important;
   }
 
   .data {
-    fill: #3a4a54;
+    fill: ${({ theme: { theme } }) =>
+      theme === 'dark' ? lighten(0.7, 'black') : lighten(0.3, 'black')};
     fill-opacity: 0.7;
     :hover {
       stroke-width: 2px;
-      stroke: ${PRIMARY_COLOR};
+      stroke: ${({ theme }) => theme.primaryColor};
     }
   }
 `
 
 const TimeText = styled.div`
-  color: white;
   margin: 10px;
   font-family: 'Open Sans', sans-serif;
-  span {
-    color: ${TEXT_COLOR};
-  }
+  text-align: center;
 
   br {
     line-height: 150%;
@@ -154,7 +142,7 @@ const TimeText = styled.div`
 const Message = styled.span`
   font-family: 'Open Sans', sans-serif;
   margin: 10px;
-  color: ${TEXT_COLOR};
+  color: ${({ theme }) => readableColor(theme.backgroundContent)};
 `
 
 // Helper Methods
@@ -250,7 +238,12 @@ export interface TimelineProps {
   /**
    * Timezone to use when displaying times.
    */
-  timezone?: string
+  timezone: string
+
+  /**
+   * Date format to use when displaying times.
+   */
+  format: string
 
   /**
    * TimelineItem points
@@ -276,6 +269,16 @@ export interface TimelineProps {
    * Render function for tooltips
    */
   renderTooltip?: (data: TimelineItem[]) => any
+
+  /**
+   * Height offset to combat issues with dynamic heights when rendering the timeline.
+   */
+  heightOffset?: number
+
+  /**
+   * Called when a date is copied to the clipboard.
+   */
+  onCopy?: (copiedValue: string) => void
 }
 
 /*
@@ -301,6 +304,8 @@ export const Timeline = (props: TimelineProps) => {
 
   const [width, setWidth] = useState(0)
   const height = props.height
+
+  const heightOffset = props.heightOffset ? props.heightOffset : 0
 
   const possibleDateAttributes = getPossibleDateAttributes(props.data || [])
 
@@ -366,12 +371,6 @@ export const Timeline = (props: TimelineProps) => {
       if (rootRef.current) {
         //@ts-ignore
         const rect = rootRef.current.getBoundingClientRect()
-        console.debug(
-          `Rect: x: ${rect.x}, y: ${rect.y}, height: ${rect.height}, width: ${
-            rect.width
-          }, top: ${rect.top}, bottom: ${rect.bottom}`
-        )
-
         if (rect.width !== width) {
           setWidth(rect.width)
           clearInterval(interval)
@@ -391,7 +390,7 @@ export const Timeline = (props: TimelineProps) => {
     )
   }, [width])
 
-  const markerHeight = height - 70 - AXIS_HEIGHT - HEIGHT_OFFSET
+  const markerHeight = height - 70 - AXIS_HEIGHT - heightOffset
   /**
    * When a zoom event is triggered, use the transform event to create a new xScale,
    * then create a new xAxis using the scale and update existing xAxis
@@ -422,10 +421,8 @@ export const Timeline = (props: TimelineProps) => {
     .filter(() => {
       // If event triggered below xAxis, let default zoom behavior handle it (allows panning by dragging on axis)
       console.debug('Click/Drag Event: ', d3.event)
-      if (
-        d3.event.layerY >
-        height + AXIS_MARGIN - AXIS_HEIGHT + 50 - HEIGHT_OFFSET
-      ) {
+      const axisOffset = heightOffset ? heightOffset - 50 : -10
+      if (d3.event.layerY > height + AXIS_MARGIN - AXIS_HEIGHT - axisOffset) {
         console.debug('Drag below xAxis, ignore')
         return true
       } else {
@@ -478,7 +475,7 @@ export const Timeline = (props: TimelineProps) => {
         .select('.axis--x')
         .attr(
           'transform',
-          `translate(0 ${height - (AXIS_MARGIN + AXIS_HEIGHT + HEIGHT_OFFSET)})`
+          `translate(0 ${height - (AXIS_MARGIN + AXIS_HEIGHT + heightOffset)})`
         )
         .call(xAxis)
     }
@@ -554,7 +551,7 @@ export const Timeline = (props: TimelineProps) => {
         const x = (b.x1 + b.x2) / 2 - 15
 
         const y =
-          height - rectangleHeight - (AXIS_MARGIN + AXIS_HEIGHT + HEIGHT_OFFSET)
+          height - rectangleHeight - (AXIS_MARGIN + AXIS_HEIGHT + heightOffset)
 
         d3.select('.data-holder')
           .append('rect')
@@ -641,6 +638,7 @@ export const Timeline = (props: TimelineProps) => {
           clickStart = d3.event.x
           const newLeftDate = convertDateToTimezoneDate(
             xScale.invert(clickStart),
+            props.format,
             props.timezone
           )
 
@@ -677,12 +675,14 @@ export const Timeline = (props: TimelineProps) => {
 
             const initialDate = convertDateToTimezoneDate(
               xScale.invert(clickStart),
+              props.format,
               props.timezone
             )
 
             let dragCurrent = clickStart + diff
             const dragDate = convertDateToTimezoneDate(
               xScale.invert(dragCurrent),
+              props.format,
               props.timezone
             )
 
@@ -696,7 +696,7 @@ export const Timeline = (props: TimelineProps) => {
     }
 
     d3.select(d3ContainerRef.current).call(getSelectionDrag())
-  }, [dataBuckets, selectionRange, xScale])
+  }, [dataBuckets, selectionRange, xScale, props.timezone])
 
   useEffect(() => {
     /**
@@ -721,6 +721,7 @@ export const Timeline = (props: TimelineProps) => {
 
           const dateWithTimezone = convertDateToTimezoneDate(
             dragValue,
+            props.format,
             props.timezone
           )
           const BUFFER = 10 // Buffer in pixels to keep sliders from overlapping/crossing
@@ -740,7 +741,7 @@ export const Timeline = (props: TimelineProps) => {
 
     d3.select(leftMarkerRef.current).call(getEdgeDrag('LEFT'))
     d3.select(rightMarkerRef.current).call(getEdgeDrag('RIGHT'))
-  }, [xScale, selectionRange])
+  }, [xScale, selectionRange, props.timezone])
 
   useEffect(() => {
     /**
@@ -767,11 +768,13 @@ export const Timeline = (props: TimelineProps) => {
 
           const newLeftDate = convertDateToTimezoneDate(
             xScale.invert(newLeft),
+            props.format,
             props.timezone
           )
 
           const newRightDate = convertDateToTimezoneDate(
             xScale.invert(newRight),
+            props.format,
             props.timezone
           )
 
@@ -779,7 +782,7 @@ export const Timeline = (props: TimelineProps) => {
         }) as any
 
     d3.select(brushBarRef.current).call(getBrushDrag())
-  }, [xScale, selectionRange])
+  }, [xScale, selectionRange, props.timezone])
 
   // When the selection range is changed or the scale changes update the left, right, and brush markers
   useEffect(() => {
@@ -794,14 +797,14 @@ export const Timeline = (props: TimelineProps) => {
 
       if (props.mode === 'single' && selectionRange.length === 1) {
         const leftMarker = d3.select(leftMarkerRef.current)
-        const leftUtc = toUtc(selectionRange[0])
+        const leftUtc = toUtc(selectionRange[0], props.format, props.timezone)
         leftMarker
           .attr('transform', `translate(${xScale(leftUtc)}, ${markerHeight})`)
           .attr('style', 'display: block')
       } else if (props.mode !== 'single' && selectionRange.length == 2) {
         const [leftValue, rightValue] = selectionRange
-        const leftUtc = toUtc(leftValue)
-        const rightUtc = toUtc(rightValue)
+        const leftUtc = toUtc(leftValue, props.format, props.timezone)
+        const rightUtc = toUtc(rightValue, props.format, props.timezone)
 
         leftMarker
           .attr('transform', `translate(${xScale(leftUtc)}, ${markerHeight})`)
@@ -822,20 +825,41 @@ export const Timeline = (props: TimelineProps) => {
         hideElement(brushBar)
       }
     }
-  }, [xScale, selectionRange, props.mode, props.height])
+  }, [xScale, selectionRange, props.mode, props.height, props.timezone])
+
+  const renderCopyableDate = (date: Date) => {
+    const formattedDate = formatDate(date, props.format, props.timezone)
+    return (
+      <>
+        <br />
+        <Button
+          variant="contained"
+          onClick={() => {
+            const hiddenTextArea = document.createElement('textarea')
+            hiddenTextArea.innerText = formattedDate
+            document.body.appendChild(hiddenTextArea)
+            hiddenTextArea.select()
+            document.execCommand('copy')
+            document.body.removeChild(hiddenTextArea)
+            props.onCopy && props.onCopy(formattedDate)
+          }}
+        >
+          {formattedDate}
+        </Button>
+      </>
+    )
+  }
 
   const renderContext = () => {
     const renderStartAndEnd = () => (
       <React.Fragment>
         <TimeText>
           <b>Start</b>
-          <br />
-          <span>{selectionRange[0] && formatDate(selectionRange[0])}</span>
+          {selectionRange[0] && renderCopyableDate(selectionRange[0])}
         </TimeText>
         <TimeText>
           <b>End</b>
-          <br />
-          <span>{selectionRange[1] && formatDate(selectionRange[1])}</span>
+          {selectionRange[1] && renderCopyableDate(selectionRange[1])}
         </TimeText>
       </React.Fragment>
     )
@@ -850,8 +874,7 @@ export const Timeline = (props: TimelineProps) => {
       return (
         <TimeText>
           <b>Time</b>
-          <br />
-          <span>{selectionRange[0] && formatDate(selectionRange[0])}</span>
+          {selectionRange[0] && renderCopyableDate(selectionRange[0])}
         </TimeText>
       )
       // Range States - Empty, Range of Times
@@ -933,22 +956,23 @@ export const Timeline = (props: TimelineProps) => {
       <ContextRow>
         {renderContext()}
         <ButtonArea>
-          <Button color="secondary" onClick={() => zoomOut()} icon>
+          <TimelineButton variant="contained" onClick={() => zoomOut()} icon>
             -
-          </Button>
-          <Button color="secondary" onClick={() => zoomIn()} icon>
+          </TimelineButton>
+          <TimelineButton variant="contained" onClick={() => zoomIn()} icon>
             +
-          </Button>
+          </TimelineButton>
           {props.onDone && props.mode && (
-            <Button
+            <TimelineButton
               color="primary"
+              variant="contained"
               onClick={() => {
                 props.onDone && props.onDone(selectionRange)
                 setSelectionRange([])
               }}
             >
               Done
-            </Button>
+            </TimelineButton>
           )}
         </ButtonArea>
       </ContextRow>
