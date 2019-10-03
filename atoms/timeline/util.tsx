@@ -64,11 +64,9 @@ export const convertDateToTimezoneDate = (
   format: string,
   timezone: string
 ): Date => {
-  // console.log("Internal Date Clicked: ", moment(time).format(format))
   const momentValue = moment.tz(time, timezone)
   const utcOffsetMinutes = momentValue.utcOffset()
   momentValue.subtract(utcOffsetMinutes, 'minutes').format(format)
-  console.log('New Date: ', momentValue)
   return momentValue.toDate()
 }
 

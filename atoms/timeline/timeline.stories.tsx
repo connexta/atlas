@@ -19,15 +19,16 @@ const ShowTimelineButton = styled.button`
   color: white;
 `
 
-const renderDates = (dates: Date[], format: string) => {
+const renderDates = (dates: Date[], format: string, timezone: string) => {
   if (dates.length == 0) {
     return null
   } else if (dates.length == 1) {
-    return formatDate(dates[0], format)
+    return formatDate(dates[0], format, timezone)
   } else if (dates.length == 2) {
-    return `${formatDate(dates[0], format)} ---------- ${formatDate(
+    return `${formatDate(dates[0], format, timezone)} ---------- ${formatDate(
       dates[1],
-      format
+      format,
+      timezone
     )}`
   }
 }
@@ -153,7 +154,7 @@ stories.add('Conditional Render', () => {
       </ShowTimelineButton>
       <br />
       <br />
-      {renderDates(timePicked, dateFormatKnob)}
+      {renderDates(timePicked, dateFormatKnob, timezoneKnob)}
       {showTimeline && (
         <Timeline
           height={300}
