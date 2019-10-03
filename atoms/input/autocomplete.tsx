@@ -1,6 +1,7 @@
 import * as React from 'react'
 import clsx from 'clsx'
 import CreateableSelect from 'react-select/creatable'
+import AsyncCreateableSelect from 'react-select/async-creatable'
 import { emphasize, makeStyles, useTheme } from '@material-ui/core/styles'
 import Typography from '@material-ui/core/Typography'
 import TextField from '@material-ui/core/TextField'
@@ -9,6 +10,19 @@ import Chip from '@material-ui/core/Chip'
 import MenuItem from '@material-ui/core/MenuItem'
 import CancelIcon from '@material-ui/icons/Cancel'
 import { Props as CreatableProps } from 'react-select/src/Creatable'
+import { AsyncProps } from 'react-select/src/Async'
+const _debounce = require('lodash.debounce')
+const _ = require('lodash')
+
+export type Option = {
+  label: string
+  value: any
+}
+
+export type GroupOptions = {
+  label: string
+  options: Option[]
+}
 
 const useStyles = makeStyles(theme => ({
   input: {
@@ -184,6 +198,16 @@ const components = {
   ValueContainer,
 }
 
+/**
+ * Very important note when using async options: Because `onInputChange` for some reason is an 'interceptor' rather than a handler that ignores
+ * the callback's return value (https://github.com/JedWatson/react-select/issues/1760), if you inline the method like
+ * <CreatableSelect onInputChange={(value) => handleValue(value)}
+ * and handleValue is an asynchronous function, it will attempt to alter the input value with the return value of handleValue, which will
+ * immediately be a promise, causing CreatableSelect to throw an error (in my case `str.replace is not a function`)
+ *
+ * TLDR: You must not use the shorthand arrow syntax to auto return.
+ * <CreatableSelect onInputChange={(value) => {handleValue(value)}} would work without issues.
+ */
 export const WrappedCreatableSelect = (props: CreatableProps<any>) => {
   const classes = useStyles()
   const theme = useTheme()
@@ -200,6 +224,50 @@ export const WrappedCreatableSelect = (props: CreatableProps<any>) => {
 
   return (
     <CreateableSelect
+      components={components}
+      classes={classes}
+      styles={{
+        ...selectStyles,
+      }}
+      TextFieldProps={{
+        label,
+        InputLabelProps: {
+          htmlFor: 'react-select-multiple',
+          shrink: true,
+        },
+      }}
+      {...baseProps}
+    />
+  )
+}
+
+type AsyncCreateableProps = {
+  /**
+   * Time in ms to debounce load options call.
+   */
+  debounce?: number
+} & CreatableProps<any> &
+  AsyncProps<any>
+
+export const WrappedAsyncCreatableSelect = (props: AsyncCreateableProps) => {
+  const classes = useStyles()
+  const theme = useTheme()
+  const selectStyles = {
+    input: (base: any) => ({
+      ...base,
+      color: theme.palette.text.primary,
+      '& input': {
+        font: 'inherit',
+      },
+    }),
+  }
+  const { label, styles, loadOptions, debounce = 0, ...baseProps } = props
+
+  const debouncedLoadOptions = _.debounce(loadOptions, debounce)
+
+  return (
+    <AsyncCreateableSelect
+      loadOptions={debouncedLoadOptions}
       components={components}
       classes={classes}
       styles={{
