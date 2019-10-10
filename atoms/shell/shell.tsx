@@ -228,6 +228,7 @@ export const Shell = ({
             item
             style={{
               overflow: 'hidden',
+              width: '100%',
             }}
           >
             <Grid
