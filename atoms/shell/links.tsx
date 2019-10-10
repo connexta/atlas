@@ -26,6 +26,7 @@ type ItemProps = {
   Icon: React.ComponentType<IconProps>
   shortName: string
   name: string
+  onClick: () => void
 }
 
 const Item = ({
@@ -35,9 +36,11 @@ const Item = ({
   name,
   classes,
   open,
+  onClick,
 }: ItemProps & { open: boolean; classes: any }) => {
   return (
     <ListItem
+      onClick={onClick}
       button
       selected={isSelected}
       tabIndex={-1}
@@ -86,7 +89,13 @@ export const Links = ({ items }: LinksProps) => {
       <List>
         {items.map(item => {
           return (
-            <Item key={item.name} {...item} open={open} classes={classes} />
+            <Item
+              key={item.name}
+              {...item}
+              open={open}
+              classes={classes}
+              onClick={item.onClick}
+            />
           )
         })}
       </List>
