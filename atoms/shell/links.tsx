@@ -26,7 +26,8 @@ type ItemProps = {
   Icon: React.ComponentType<IconProps>
   shortName: string
   name: string
-  onClick: () => void
+  wrapperComponentProps: any
+  WrapperComponent: React.ComponentType<unknown>
 }
 
 const Item = ({
@@ -36,45 +37,47 @@ const Item = ({
   name,
   classes,
   open,
-  onClick,
+  WrapperComponent,
+  wrapperComponentProps,
 }: ItemProps & { open: boolean; classes: any }) => {
   return (
-    <ListItem
-      onClick={onClick}
-      button
-      selected={isSelected}
-      tabIndex={-1}
-      style={{ position: 'relative' }}
-    >
-      <ListItemIcon>
-        {Icon ? (
-          <>
-            <Icon
-              className={classes.shortName}
-              style={{
-                transform: open ? 'none' : 'translateY(-6px)',
-              }}
-            />
-            <Typography
-              className={classes.shortName}
-              style={{
-                opacity: open ? 0 : 1,
-                fontSize: '.8rem',
-                position: 'absolute',
-                bottom: '2px',
-                left: '50%',
-                transform: 'translateX(-50%)',
-              }}
-            >
-              {shortName}
-            </Typography>
-          </>
-        ) : (
-          <></>
-        )}
-      </ListItemIcon>
-      <ListItemText primary={name} />
-    </ListItem>
+    <WrapperComponent {...wrapperComponentProps}>
+      <ListItem
+        button
+        selected={isSelected}
+        tabIndex={-1}
+        style={{ position: 'relative' }}
+      >
+        <ListItemIcon>
+          {Icon ? (
+            <>
+              <Icon
+                className={classes.shortName}
+                style={{
+                  transform: open ? 'none' : 'translateY(-6px)',
+                }}
+              />
+              <Typography
+                className={classes.shortName}
+                style={{
+                  opacity: open ? 0 : 1,
+                  fontSize: '.8rem',
+                  position: 'absolute',
+                  bottom: '2px',
+                  left: '50%',
+                  transform: 'translateX(-50%)',
+                }}
+              >
+                {shortName}
+              </Typography>
+            </>
+          ) : (
+            <></>
+          )}
+        </ListItemIcon>
+        <ListItemText primary={name} />
+      </ListItem>
+    </WrapperComponent>
   )
 }
 
@@ -89,13 +92,7 @@ export const Links = ({ items }: LinksProps) => {
       <List>
         {items.map(item => {
           return (
-            <Item
-              key={item.name}
-              {...item}
-              open={open}
-              classes={classes}
-              onClick={item.onClick}
-            />
+            <Item key={item.name} {...item} open={open} classes={classes} />
           )
         })}
       </List>
