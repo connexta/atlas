@@ -41,6 +41,7 @@ export const WrappedCardGrid = styled(
         spacing={3}
         direction="row"
         justify="flex-start"
+        wrap="wrap"
         {...gridProps}
       >
         {children}
