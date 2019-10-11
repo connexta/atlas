@@ -82,6 +82,28 @@ const metacardsByTag = async (ctx, args) => {
   })
 }
 
+const metacardById = async (ctx, args) => {
+  return metacards(ctx, {
+    q: {
+      filterTree: {
+        type: 'AND',
+        filters: [
+          {
+            type: '=',
+            property: 'id',
+            value: args.id,
+          },
+          {
+            type: 'LIKE',
+            property: 'metacard-tags',
+            value: '%',
+          },
+        ],
+      },
+    },
+  })
+}
+
 const user = async () => {
   const res = await fetch('./internal/user')
   return res.json()
@@ -108,6 +130,7 @@ const Query = {
   sources,
   metacards,
   metacardsByTag,
+  metacardById,
   metacardTypes,
   systemProperties,
 }

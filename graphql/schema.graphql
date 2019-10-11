@@ -234,6 +234,7 @@ type Query {
   metacardTypes: [MetacardType]
   metacards(q: QueryRequest): QueryResponse
   metacardsByTag(tag: String!): QueryResponse
+  metacardById(id: ID!): QueryResponse
 }
 
 type MutationResponse {
