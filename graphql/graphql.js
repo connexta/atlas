@@ -4,13 +4,13 @@ import { InMemoryCache } from 'apollo-cache-inmemory'
 import { makeExecutableSchema } from 'graphql-tools'
 import { createTransport } from './transport'
 
+import { rename, undoRename } from './name-convert'
+
 import fetch from './fetch'
 
 /* eslint-disable import/no-unresolved */
 import typeDefs from 'raw-loader!./schema.graphql'
 /* eslint-enable */
-
-const cache = new InMemoryCache()
 
 const getBuildInfo = () => {
   /* eslint-disable */
@@ -42,22 +42,9 @@ const systemProperties = async () => {
 
 const { send } = createTransport()
 
-const toCamelCase = str => {
-  return str
-    .replace(/(\.|-)/g, ' ')
-    .split(' ')
-    .map((word, index) => {
-      if (index == 0) {
-        return word.toLowerCase()
-      }
-      return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
-    })
-    .join('')
-}
-
-const toCamelCaseAttrs = map => {
+const renameAttrs = map => {
   return Object.keys(map).reduce((attrs, attr) => {
-    const name = toCamelCase(attr)
+    const name = rename(attr)
     attrs[name] = map[attr]
     return attrs
   }, {})
@@ -70,7 +57,7 @@ const metacards = async (ctx, args) => {
   const json = await req.json()
 
   const attributes = json.results.map(result =>
-    toCamelCaseAttrs(result.metacard.properties)
+    renameAttrs(result.metacard.properties)
   )
 
   return { attributes, ...json }
@@ -90,7 +77,6 @@ const metacardsByTag = async (ctx, args) => {
 
   return metacards(ctx, {
     q: {
-      src: 'ISRI',
       filterTree: {
         type: '=',
         property: 'metacard-tags',
@@ -148,16 +134,16 @@ const createMetacard = async (parent, args) => {
   })
 
   const id = res.headers.get('id')
-  const metacardCreated = new Date().toISOString()
-  const metacardModified = metacardCreated
+  const created = new Date().toISOString()
+  const modified = created
 
-  return {
-    ...toCamelCaseAttrs(attrs),
+  return renameAttrs({
+    ...attrs,
     id,
-    metacardCreated,
-    metacardModified,
-    metacardOwner: 'You',
-  }
+    'metacard.created': created,
+    'metacard.modified': modified,
+    'metacard.owner': 'You',
+  })
 }
 
 const saveMetacard = async (parent, args) => {
@@ -187,12 +173,12 @@ const saveMetacard = async (parent, args) => {
   })
 
   if (res.ok) {
-    const metacardModified = new Date().toISOString()
-    return {
+    const modified = new Date().toISOString()
+    return renameAttrs({
       id,
-      metacardModified,
-      ...toCamelCaseAttrs(attrs),
-    }
+      'metacard.modified': modified,
+      ...attrs,
+    })
   }
 }
 
@@ -224,7 +210,9 @@ const executableSchema = makeExecutableSchema({
   resolvers,
 })
 
-export const createClient = () => {
+export const createClient = opts => {
+  const cache = new InMemoryCache(opts)
+
   return new ApolloClient({
     link: new SchemaLink({ schema: executableSchema }),
     cache,

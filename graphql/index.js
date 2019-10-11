@@ -5,7 +5,7 @@ import gql from 'graphql-tag'
 import { createClient } from './graphql'
 import 'graphiql/graphiql.css'
 
-const client = createClient()
+const client = createClient({ addTypename: false })
 
 const graphQLFetcher = async graphQLParams => {
   graphQLParams.query = gql(graphQLParams.query)
