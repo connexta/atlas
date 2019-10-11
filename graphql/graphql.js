@@ -66,10 +66,8 @@ const toCamelCaseAttrs = map => {
 const metacards = async (ctx, args) => {
   const { src, ...query } = args.q
 
-  debugger
   const req = send({ src, ...query })
   const json = await req.json()
-  debugger
 
   const attributes = json.results.map(result =>
     toCamelCaseAttrs(result.metacard.properties)
