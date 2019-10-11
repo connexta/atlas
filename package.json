@@ -4,8 +4,6 @@
   "author": "Connexta LLC",
   "version": "0.0.46",
   "private": false,
-  "main": "./graphql",
-  "context-path": "/search/catalog",
   "scripts": {
     "copy:package": "cpx package.json dist",
     "format": "ace format",
@@ -17,7 +15,8 @@
     "storybook:build": "ace storybook --root atoms --static",
     "start": "yarn storybook",
     "watch": "ts-node -P ./tsconfig.json ./dev/index.tsx",
-    "watch:ace": "cpx -w -v \"../ace/{,!(node_modules)/**/}*{.js,.tsx}\" ./node_modules/@connexta/ace/"
+    "watch:ace": "cpx -w -v \"../ace/{,!(node_modules)/**/}*{.js,.tsx}\" ./node_modules/@connexta/ace/",
+    "graphql": "ace start --tsTranspileOnly true --port 8981 --main='./graphql' --contextPath='/search/catalog'"
   },
   "sideEffects": false,
   "repository": {

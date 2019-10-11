@@ -76,7 +76,18 @@ const metacards = async (ctx, args) => {
   return { attributes, ...json }
 }
 
+const fetchQueryTemplates = async () => {
+  const res = await fetch('./internal/forms/query')
+  const json = await res.json()
+  const attributes = json
+  return { attributes }
+}
+
 const metacardsByTag = async (ctx, args) => {
+  if (args.tag === 'query-template') {
+    return fetchQueryTemplates()
+  }
+
   return metacards(ctx, {
     q: {
       src: 'ISRI',

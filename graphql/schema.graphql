@@ -120,6 +120,7 @@ type MetacardAttributes {
   resourceUri: String
   resourceDerivedDownloadUrl: [String]
   resourceDerivedUri: [String]
+  security__access_administrators: [String]
   securityAccessAdministrators: [String]
   securityAccessGroups: [String]
   securityAccessGroupsRead: [String]
@@ -145,7 +146,8 @@ type MetacardAttributes {
   extNoteResultComment: [String]
   facets: [String]
   federation: String
-  filtertree: String
+  filterTree: String
+  filterTemplate: Json
   listBookmarks: [String]
   listCql: String
   listIcon: String

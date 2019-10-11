@@ -7,9 +7,10 @@ import 'graphiql/graphiql.css'
 
 const client = createClient()
 
-const graphQLFetcher = graphQLParams => {
+const graphQLFetcher = async graphQLParams => {
   graphQLParams.query = gql(graphQLParams.query)
-  return client.query(graphQLParams)
+  const { data, error } = await client.query(graphQLParams)
+  return { data, error }
 }
 
 setTimeout(
