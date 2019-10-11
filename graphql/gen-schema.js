@@ -1,14 +1,9 @@
-const path = require('path')
-const fs = require('fs')
-const attributes = require('./attributes')
+import attributes from './attributes'
 
-const rename = name => {
-  return name.replace(/-/g, '_').replace(/\./g, '__')
-}
+import typeDefs from 'raw-loader!./schema.graphql'
 
-const undoRename = name => {
-  return name.replace(/__/g, '.').replace(/_/g, '-')
-}
+export const rename = name => name.replace(/-/g, '_').replace(/\./g, '__')
+export const undoRename = name => name.replace(/__/g, '.').replace(/_/g, '-')
 
 // DDF types -> GraphQL types
 const typeMap = {
@@ -37,22 +32,22 @@ const attrs = attributes
   })
   .join('\n')
 
-const partial = fs.readFileSync(path.join(__dirname, 'partial-schema.graphql'))
+export default () => {
+  return `
+  scalar Json
+  # Binary content embedded as a base64 String
+  scalar Binary
+  # WKT embedded as a String
+  scalar Geometry
+  # XML embedded as a String
+  scalar XML
+  # ISO 8601 Data Time embedded as a String
+  scalar Date
 
-console.log(`
-# Binary content embedded as a base64 String
-scalar Binary
-# WKT embedded as a String
-scalar Geometry
-# XML embedded as a String
-scalar XML
-# ISO 8601 Data Time embedded as a String
-scalar Date
-
-# Common and well known metacard attributes
-type MetacardAttributes {
-${attrs}
-
+  # Common and well known metacard attributes
+  type MetacardAttributes {
+  ${attrs}
+  }
+  ${typeDefs}
+  `
 }
-${partial}
-`)

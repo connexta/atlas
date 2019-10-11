@@ -4,13 +4,9 @@ import { InMemoryCache } from 'apollo-cache-inmemory'
 import { makeExecutableSchema } from 'graphql-tools'
 import { createTransport } from './transport'
 
-import { rename, undoRename } from './name-convert'
-
 import fetch from './fetch'
 
-/* eslint-disable import/no-unresolved */
-import typeDefs from 'raw-loader!./schema.graphql'
-/* eslint-enable */
+import genSchema, { rename, undoRename } from './gen-schema'
 
 const getBuildInfo = () => {
   /* eslint-disable */
@@ -206,12 +202,12 @@ const resolvers = {
 }
 
 const executableSchema = makeExecutableSchema({
-  typeDefs,
+  typeDefs: genSchema(),
   resolvers,
 })
 
-export const createClient = opts => {
-  const cache = new InMemoryCache(opts)
+export const createClient = () => {
+  const cache = new InMemoryCache()
 
   return new ApolloClient({
     link: new SchemaLink({ schema: executableSchema }),

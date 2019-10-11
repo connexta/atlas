@@ -5,19 +5,23 @@ import gql from 'graphql-tag'
 import { createClient } from './graphql'
 import 'graphiql/graphiql.css'
 
-const client = createClient({ addTypename: false })
+const render = createClient => {
+  const client = createClient()
 
-const graphQLFetcher = async graphQLParams => {
-  graphQLParams.query = gql(graphQLParams.query)
-  const { data, error } = await client.query(graphQLParams)
-  return { data, error }
+  const graphQLFetcher = async graphQLParams => {
+    graphQLParams.query = gql(graphQLParams.query)
+    const { data, error } = await client.query(graphQLParams)
+    return { data, error }
+  }
+
+  ReactDOM.render(
+    <GraphiQL fetcher={graphQLFetcher} />,
+    document.getElementById('root')
+  )
 }
 
-setTimeout(
-  () =>
-    ReactDOM.render(
-      <GraphiQL fetcher={graphQLFetcher} />,
-      document.getElementById('root')
-    ),
-  500
-)
+module.hot.accept('./graphql', () => {
+  render(require('./graphql').createClient)
+})
+
+setTimeout(() => render(createClient), 500)
