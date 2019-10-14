@@ -190,6 +190,7 @@ export const Shell = ({
                 style: {
                   position: 'absolute',
                 },
+                elevation: 4,
               }}
               open={open}
             >
@@ -247,7 +248,6 @@ export const Shell = ({
               <Grid
                 item
                 style={{
-                  padding: '20px 40px',
                   flexGrow: 1,
                   overflow: 'hidden',
                 }}
