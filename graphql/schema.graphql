@@ -34,6 +34,11 @@ type MetacardAction {
 
 type QueryResponseResult {
   actions: [MetacardAction]
+  # All known metacard attributes with raw attributes names.
+  # This is intended for views that are interested in:
+  # 1. Using raw attribute names.
+  # 2. Attribute aliasing that require raw attribute names.
+  # 3. Getting all the possible attributes.
   metacard: Json
 }
 
@@ -243,7 +248,7 @@ type MutationResponse {
 }
 
 type Mutation {
-  createMetacard(attrs: Json): MetacardAttributes
-  saveMetacard(attrs: Json): MetacardAttributes
-  deleteMetacard(id: ID): ID
+  createMetacard(attrs: Json!): MetacardAttributes
+  saveMetacard(id: ID!, attrs: Json!): MetacardAttributes
+  deleteMetacard(id: ID!): ID
 }

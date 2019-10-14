@@ -44,7 +44,7 @@ export default () => {
   # ISO 8601 Data Time embedded as a String
   scalar Date
 
-  # Common and well known metacard attributes
+  # Common and well known metacard attributes intended for progrmatic usage
   type MetacardAttributes {
   ${attrs}
   }

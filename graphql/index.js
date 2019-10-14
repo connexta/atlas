@@ -5,12 +5,32 @@ import gql from 'graphql-tag'
 import { createClient } from './graphql'
 import 'graphiql/graphiql.css'
 
+const execQuery = (client, graphQLParams) => {
+  const query = gql(graphQLParams.query)
+  const definitions = query.definitions.filter(d => {
+    if (d.kind === 'FragmentDefinition') {
+      return true
+    }
+    return d.name.value === graphQLParams.operationName
+  })
+  const operation = definitions[0].operation
+  const q = {
+    ...graphQLParams,
+    [operation]: { ...query, definitions },
+  }
+
+  if (operation === 'query') {
+    return client.query(q)
+  } else {
+    return client.mutate(q)
+  }
+}
+
 const render = createClient => {
   const client = createClient()
 
   const graphQLFetcher = async graphQLParams => {
-    graphQLParams.query = gql(graphQLParams.query)
-    const { data, error } = await client.query(graphQLParams)
+    const { data, error } = await execQuery(client, graphQLParams)
     return { data, error }
   }
 

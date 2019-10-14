@@ -166,7 +166,7 @@ const createMetacard = async (parent, args) => {
 }
 
 const saveMetacard = async (parent, args) => {
-  const { id, ...attrs } = args.attrs
+  const { id, attrs } = args
 
   const attributes = Object.keys(attrs).map(attribute => {
     const value = attrs[attribute]
