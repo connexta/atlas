@@ -1,0 +1,602 @@
+[
+  {
+    "id": "metadata",
+    "multivalued": false,
+    "type": "XML"
+  },
+  {
+    "id": "contact.publisher-address",
+    "multivalued": true,
+    "type": "STRING"
+  },
+  {
+    "id": "topic.vocabulary",
+    "multivalued": true,
+    "type": "STRING"
+  },
+  {
+    "id": "contact.contributor-name",
+    "multivalued": true,
+    "type": "STRING"
+  },
+  {
+    "id": "datetime.end",
+    "multivalued": true,
+    "type": "DATE"
+  },
+  {
+    "id": "language",
+    "multivalued": true,
+    "type": "STRING"
+  },
+  {
+    "id": "media.width-pixels",
+    "multivalued": false,
+    "type": "INTEGER"
+  },
+  {
+    "id": "datetime.name",
+    "multivalued": true,
+    "type": "STRING"
+  },
+  {
+    "id": "security.access-individuals-read",
+    "multivalued": true,
+    "type": "STRING"
+  },
+  {
+    "id": "failed-validators-errors",
+    "multivalued": true,
+    "type": "STRING"
+  },
+  {
+    "id": "ext.import-location",
+    "multivalued": false,
+    "type": "STRING"
+  },
+  {
+    "id": "modified",
+    "multivalued": false,
+    "type": "DATE"
+  },
+  {
+    "id": "media.scanning-mode",
+    "multivalued": false,
+    "type": "STRING"
+  },
+  {
+    "id": "media.bits-per-sample",
+    "multivalued": false,
+    "type": "INTEGER"
+  },
+  {
+    "id": "media.frame-rate",
+    "multivalued": false,
+    "type": "DOUBLE"
+  },
+  {
+    "id": "id",
+    "multivalued": false,
+    "type": "STRING"
+  },
+  {
+    "id": "contact.creator-address",
+    "multivalued": true,
+    "type": "STRING"
+  },
+  {
+    "id": "validation-warnings",
+    "multivalued": true,
+    "type": "STRING"
+  },
+  {
+    "id": "contact.point-of-contact-email",
+    "multivalued": true,
+    "type": "STRING"
+  },
+  {
+    "id": "thumbnail",
+    "multivalued": false,
+    "type": "BINARY"
+  },
+  {
+    "id": "media.compression",
+    "multivalued": false,
+    "type": "STRING"
+  },
+  {
+    "id": "created",
+    "multivalued": false,
+    "type": "DATE"
+  },
+  {
+    "id": "security.access-groups",
+    "multivalued": true,
+    "type": "STRING"
+  },
+  {
+    "id": "contact.contributor-email",
+    "multivalued": true,
+    "type": "STRING"
+  },
+  {
+    "id": "resource-uri",
+    "multivalued": false,
+    "type": "STRING"
+  },
+  {
+    "id": "metacard-tags",
+    "multivalued": true,
+    "type": "STRING"
+  },
+  {
+    "id": "checksum-algorithm",
+    "multivalued": false,
+    "type": "STRING"
+  },
+  {
+    "id": "ext.feature-code",
+    "multivalued": false,
+    "type": "STRING"
+  },
+  {
+    "id": "resource.derived-uri",
+    "multivalued": true,
+    "type": "STRING"
+  },
+  {
+    "id": "validation-errors",
+    "multivalued": true,
+    "type": "STRING"
+  },
+  {
+    "id": "location.altitude-meters",
+    "multivalued": true,
+    "type": "DOUBLE"
+  },
+  {
+    "id": "contact.point-of-contact-name",
+    "multivalued": true,
+    "type": "STRING"
+  },
+  {
+    "id": "datetime.start",
+    "multivalued": true,
+    "type": "DATE"
+  },
+  {
+    "id": "media.frame-center",
+    "multivalued": false,
+    "type": "GEOMETRY"
+  },
+  {
+    "id": "metacard.owner",
+    "multivalued": false,
+    "type": "STRING"
+  },
+  {
+    "id": "expiration",
+    "multivalued": false,
+    "type": "DATE"
+  },
+  {
+    "id": "contact.contributor-phone",
+    "multivalued": true,
+    "type": "STRING"
+  },
+  {
+    "id": "metacard.associations.related",
+    "multivalued": true,
+    "type": "STRING"
+  },
+  {
+    "id": "associations.external",
+    "multivalued": true,
+    "type": "STRING"
+  },
+  {
+    "id": "resource-size",
+    "multivalued": false,
+    "type": "STRING"
+  },
+  {
+    "id": "location.crs-code",
+    "multivalued": true,
+    "type": "STRING"
+  },
+  {
+    "id": "contact.publisher-name",
+    "multivalued": true,
+    "type": "STRING"
+  },
+  {
+    "id": "description",
+    "multivalued": false,
+    "type": "STRING"
+  },
+  {
+    "id": "media.format-version",
+    "multivalued": false,
+    "type": "STRING"
+  },
+  {
+    "id": "title",
+    "multivalued": false,
+    "type": "STRING"
+  },
+  {
+    "id": "resource-download-url",
+    "multivalued": false,
+    "type": "STRING"
+  },
+  {
+    "id": "resource.derived-download-url",
+    "multivalued": true,
+    "type": "STRING"
+  },
+  {
+    "id": "source-id",
+    "multivalued": false,
+    "type": "STRING"
+  },
+  {
+    "id": "effective",
+    "multivalued": false,
+    "type": "DATE"
+  },
+  {
+    "id": "contact.creator-email",
+    "multivalued": true,
+    "type": "STRING"
+  },
+  {
+    "id": "point-of-contact",
+    "multivalued": false,
+    "type": "STRING"
+  },
+  {
+    "id": "media.height-pixels",
+    "multivalued": false,
+    "type": "INTEGER"
+  },
+  {
+    "id": "datatype",
+    "multivalued": true,
+    "type": "STRING"
+  },
+  {
+    "id": "contact.creator-name",
+    "multivalued": true,
+    "type": "STRING"
+  },
+  {
+    "id": "topic.category",
+    "multivalued": true,
+    "type": "STRING"
+  },
+  {
+    "id": "security.access-administrators",
+    "multivalued": true,
+    "type": "STRING"
+  },
+  {
+    "id": "checksum",
+    "multivalued": false,
+    "type": "STRING"
+  },
+  {
+    "id": "failed-validators-warnings",
+    "multivalued": true,
+    "type": "STRING"
+  },
+  {
+    "id": "ext.population",
+    "multivalued": false,
+    "type": "LONG"
+  },
+  {
+    "id": "topic.keyword",
+    "multivalued": true,
+    "type": "STRING"
+  },
+  {
+    "id": "media.bit-rate",
+    "multivalued": false,
+    "type": "DOUBLE"
+  },
+  {
+    "id": "contact.point-of-contact-address",
+    "multivalued": true,
+    "type": "STRING"
+  },
+  {
+    "id": "ext.feature-class",
+    "multivalued": false,
+    "type": "STRING"
+  },
+  {
+    "id": "contact.contributor-address",
+    "multivalued": true,
+    "type": "STRING"
+  },
+  {
+    "id": "contact.publisher-email",
+    "multivalued": true,
+    "type": "STRING"
+  },
+  {
+    "id": "ext.gazetteer-sort-value",
+    "multivalued": false,
+    "type": "INTEGER"
+  },
+  {
+    "id": "contact.point-of-contact-phone",
+    "multivalued": true,
+    "type": "STRING"
+  },
+  {
+    "id": "media.duration",
+    "multivalued": false,
+    "type": "DOUBLE"
+  },
+  {
+    "id": "media.type",
+    "multivalued": false,
+    "type": "STRING"
+  },
+  {
+    "id": "contact.creator-phone",
+    "multivalued": true,
+    "type": "STRING"
+  },
+  {
+    "id": "media.encoding",
+    "multivalued": true,
+    "type": "STRING"
+  },
+  {
+    "id": "metacard.created",
+    "multivalued": false,
+    "type": "DATE"
+  },
+  {
+    "id": "security.access-groups-read",
+    "multivalued": true,
+    "type": "STRING"
+  },
+  {
+    "id": "media.number-of-bands",
+    "multivalued": false,
+    "type": "INTEGER"
+  },
+  {
+    "id": "location.country-code",
+    "multivalued": true,
+    "type": "STRING"
+  },
+  {
+    "id": "media.format",
+    "multivalued": false,
+    "type": "STRING"
+  },
+  {
+    "id": "metacard.associations.derived",
+    "multivalued": true,
+    "type": "STRING"
+  },
+  {
+    "id": "metacard.modified",
+    "multivalued": false,
+    "type": "DATE"
+  },
+  {
+    "id": "security.access-individuals",
+    "multivalued": true,
+    "type": "STRING"
+  },
+  {
+    "id": "location",
+    "multivalued": false,
+    "type": "GEOMETRY"
+  },
+  {
+    "id": "location.crs-name",
+    "multivalued": true,
+    "type": "STRING"
+  },
+  {
+    "id": "contact.publisher-phone",
+    "multivalued": true,
+    "type": "STRING"
+  },
+  {
+    "id": "metacard.sharing",
+    "multivalued": true,
+    "type": "XML"
+  },
+  {
+    "id": "lists",
+    "multivalued": true,
+    "type": "XML"
+  },
+  {
+    "id": "queries",
+    "multivalued": true,
+    "type": "STRING"
+  },
+  {
+    "id": "ext.extracted.text",
+    "multivalued": false,
+    "type": "STRING"
+  },
+  {
+    "id": "ext.mp4.audio-sample-rate",
+    "multivalued": false,
+    "type": "INTEGER"
+  },
+  {
+    "id": "metadata-content-type",
+    "multivalued": false,
+    "type": "STRING"
+  },
+  {
+    "id": "metadata-content-type-version",
+    "multivalued": false,
+    "type": "STRING"
+  },
+  {
+    "id": "metadata-target-namespace",
+    "multivalued": false,
+    "type": "STRING"
+  },
+  {
+    "id": "polling",
+    "multivalued": false,
+    "type": "INTEGER"
+  },
+  {
+    "id": "type",
+    "multivalued": false,
+    "type": "STRING"
+  },
+  {
+    "id": "facets",
+    "multivalued": true,
+    "type": "STRING"
+  },
+  {
+    "id": "sorts",
+    "multivalued": true,
+    "type": "STRING"
+  },
+  {
+    "id": "phonetics",
+    "multivalued": false,
+    "type": "BOOLEAN"
+  },
+  {
+    "id": "detail-level",
+    "multivalued": false,
+    "type": "STRING"
+  },
+  {
+    "id": "spellcheck",
+    "multivalued": false,
+    "type": "BOOLEAN"
+  },
+  {
+    "id": "cql",
+    "multivalued": false,
+    "type": "STRING"
+  },
+  {
+    "id": "sources",
+    "multivalued": true,
+    "type": "STRING"
+  },
+  {
+    "id": "enterprise",
+    "multivalued": false,
+    "type": "BOOLEAN"
+  },
+  {
+    "id": "schedules",
+    "multivalued": true,
+    "type": "XML"
+  },
+  {
+    "id": "filterTree",
+    "multivalued": false,
+    "type": "STRING"
+  },
+  {
+    "id": "federation",
+    "multivalued": false,
+    "type": "STRING"
+  },
+  {
+    "id": "ext.note.result-comment",
+    "multivalued": true,
+    "type": "STRING"
+  },
+  {
+    "id": "ui.template-filter",
+    "multivalued": false,
+    "type": "XML"
+  },
+  {
+    "id": "list.icon",
+    "multivalued": false,
+    "type": "STRING"
+  },
+  {
+    "id": "list.cql",
+    "multivalued": false,
+    "type": "STRING"
+  },
+  {
+    "id": "list.bookmarks",
+    "multivalued": true,
+    "type": "STRING"
+  },
+  {
+    "id": "metacard.version.action",
+    "multivalued": false,
+    "type": "STRING"
+  },
+  {
+    "id": "metacard.version.tags",
+    "multivalued": true,
+    "type": "STRING"
+  },
+  {
+    "id": "metacard.version.resource-uri",
+    "multivalued": false,
+    "type": "STRING"
+  },
+  {
+    "id": "metacard.version.versioned-on",
+    "multivalued": false,
+    "type": "DATE"
+  },
+  {
+    "id": "metacard.version.type",
+    "multivalued": false,
+    "type": "STRING"
+  },
+  {
+    "id": "ui.attribute-group",
+    "multivalued": true,
+    "type": "STRING"
+  },
+  {
+    "id": "metacard.version.edited-by",
+    "multivalued": false,
+    "type": "STRING"
+  },
+  {
+    "id": "metacard.version.id",
+    "multivalued": false,
+    "type": "STRING"
+  },
+  {
+    "id": "metacard.version.type-binary",
+    "multivalued": false,
+    "type": "BINARY"
+  },
+  {
+    "id": "metacard.deleted.id",
+    "multivalued": false,
+    "type": "STRING"
+  },
+  {
+    "id": "metacard.deleted.version",
+    "multivalued": false,
+    "type": "STRING"
+  },
+  {
+    "id": "metacard.deleted.deleted-by",
+    "multivalued": false,
+    "type": "STRING"
+  }
+]
