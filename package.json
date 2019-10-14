@@ -16,7 +16,7 @@
     "start": "yarn storybook",
     "watch": "ts-node -P ./tsconfig.json ./dev/index.tsx",
     "watch:ace": "cpx -w -v \"../ace/{,!(node_modules)/**/}*{.js,.tsx}\" ./node_modules/@connexta/ace/",
-    "graphql": "ace start --tsTranspileOnly true --port 8981 --main='./graphql' --contextPath='/search/catalog'"
+    "graphql": "ace start --tsTranspileOnly true --port 8082 --main='./graphql' --contextPath='/search/catalog'"
   },
   "sideEffects": false,
   "repository": {

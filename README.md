@@ -13,9 +13,10 @@ Check out the latest [Storybook](https://unpkg.com/@connexta/atlas@0.0.35/.story
 
 #### GraphQL Autocompletion
 
-1. Download [GraphQL for VS Code](https://marketplace.visualstudio.com/items?itemName=kumar-harsh.graphql-for-vscode)
-2. Download Watchman
-3. Add a `.graphqlconfig` file to the root of your project with the following contents:
+1. Run `logSchema()` from chrome dev tools and copy into a new file called `schema.graphql` that you save to the root project folder.
+2. Download [GraphQL for VS Code](https://marketplace.visualstudio.com/items?itemName=kumar-harsh.graphql-for-vscode)
+3. Download Watchman
+4. Add a `.graphqlconfig` file to the root of your project with the following contents:
 
 ```javascript
 {
