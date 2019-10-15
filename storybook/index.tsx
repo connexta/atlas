@@ -4,6 +4,6 @@ import { withTheme } from './theme-decorator'
 
 export const storiesOf = (name: string, m: NodeModule) => {
   const stories = of(name, m)
-  stories.addDecorator(withTheme)
+  stories.addDecorator(withTheme as any)
   return stories
 }
