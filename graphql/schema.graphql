@@ -25,6 +25,7 @@ input QuerySettingsInput {
   phonetics: Boolean
   sorts: [QuerySortInput]
   spellcheck: Boolean
+  count: Int
   type: String
 }
 
@@ -34,6 +35,7 @@ type QuerySettings {
   phonetics: Boolean
   sorts: [QuerySort]
   spellcheck: Boolean
+  count: Int
   type: String
 }
 
