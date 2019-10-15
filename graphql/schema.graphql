@@ -35,7 +35,6 @@ type QuerySettings {
   phonetics: Boolean
   sorts: [QuerySort]
   spellcheck: Boolean
-  count: Int
   type: String
 }
 
