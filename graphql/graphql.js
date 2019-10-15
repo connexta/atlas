@@ -194,7 +194,6 @@ const createMetacard = async (parent, args) => {
     properties: fromGraphqlMap(attrs),
   }
 
-  debugger
   const res = await fetch(`${ROOT}/catalog/`, {
     method: 'POST',
     headers: {
