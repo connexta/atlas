@@ -26,7 +26,7 @@
   "license": "LGPL-3.0",
   "devDependencies": {
     "@babel/core": "^7.3.3",
-    "@connexta/ace": "git://github.com/connexta/ace.git#7ca18518911204a3d4d22545454659d30ac2d392",
+    "@connexta/ace": "git://github.com/connexta/ace.git#20753c98a3540627ec6dd47568da94706bd1f5a8",
     "@types/backbone": "1.3.45",
     "@types/backbone.marionette": "3.3.7",
     "@types/d3": "5.7.1",
