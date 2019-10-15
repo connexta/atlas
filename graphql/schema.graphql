@@ -25,7 +25,12 @@ input QuerySettingsInput {
   phonetics: Boolean
   sorts: [QuerySortInput]
   spellcheck: Boolean
+
+  # Page size
   count: Int
+
+  # Start of paging. First element is 1, not 0.
+  start: Int
   type: String
 }
 
