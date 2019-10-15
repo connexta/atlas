@@ -7,6 +7,7 @@
   "scripts": {
     "copy:package": "cpx package.json dist",
     "format": "ace format",
+    "fmt": "ace format -w",
     "test": "yarn format",
     "prebuild": "rimraf dist && yarn copy:package && yarn storybook:build && cpx target/storybook dist",
     "build": "tsc",
