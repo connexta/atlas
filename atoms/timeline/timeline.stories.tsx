@@ -1,7 +1,7 @@
 import * as React from 'react'
 import { useState } from 'react'
 import { action } from '@connexta/ace/@storybook/addon-actions'
-import { select, number } from '@connexta/ace/@storybook/addon-knobs'
+import { select, number, date } from '@connexta/ace/@storybook/addon-knobs'
 import { storiesOf } from '../../storybook'
 import Timeline from './index'
 import styled from 'styled-components'
@@ -71,10 +71,15 @@ stories.add('Timeline with Data', () => {
     'YYYY-MM-DD[T]HH:mm:ss.SSSZ'
   )
 
+  const minKnob = date('Minimum Date', new Date('1980-01-01:00:00.000z'))
+  const maxKnob = date('Maximum Date', new Date())
+
   const [data, setData] = useState(testData)
 
   return (
     <Timeline
+      min={minKnob}
+      max={maxKnob}
       height={300}
       mode={mode}
       format={dateFormatKnob}
@@ -141,6 +146,10 @@ stories.add('Conditional Render', () => {
     },
     'YYYY-MM-DD[T]HH:mm:ss.SSSZ'
   )
+
+  const minKnob = date('Minimum Date', new Date('1980-01-01:00:00.000z'))
+  const maxKnob = date('Maximum Date', new Date())
+
   return (
     <div>
       Launch Time Picker: &nbsp;
@@ -157,6 +166,8 @@ stories.add('Conditional Render', () => {
       {renderDates(timePicked, dateFormatKnob, timezoneKnob)}
       {showTimeline && (
         <Timeline
+          min={minKnob}
+          max={maxKnob}
           height={300}
           mode={mode}
           timezone={timezoneKnob}
