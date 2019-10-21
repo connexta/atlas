@@ -8,286 +8,355 @@ import fetch from './fetch'
 
 const ROOT = '/search/catalog/internal'
 
-import genSchema, { toGraphqlName, fromGraphqlName } from './gen-schema'
+import attributes from './attributes'
 
-const getBuildInfo = () => {
-  /* eslint-disable */
-  const commitHash = __COMMIT_HASH__
-  const isDirty = __IS_DIRTY__
-  const commitDate = __COMMIT_DATE__
-  /* eslint-enable */
+import typeDefs from 'raw-loader!./schema.graphql'
 
-  return {
-    commitHash,
-    isDirty,
-    commitDate,
-    identifier: `${commitHash.trim()}${isDirty ? ' with Changes' : ''}`,
-    releaseDate: commitDate,
+// DDF types -> GraphQL types
+const typeMap = {
+  STRING: 'String',
+  DOUBLE: 'Float',
+  INTEGER: 'Int',
+  LONG: 'Int',
+  BOOLEAN: 'Boolean',
+  BINARY: 'Binary',
+  GEOMETRY: 'Geometry',
+  XML: 'XML',
+  DATE: 'Date',
+}
+
+export const toGraphqlName = name => name.replace(/-|\./g, '_')
+
+const idMap = attributes
+  .map(a => a.id)
+  .reduce((map, id) => {
+    map[toGraphqlName(id)] = id
+    return map
+  }, {})
+
+export const fromGraphqlName = name => idMap[name] || name
+
+const attrs = metacardAttributes =>
+  metacardAttributes
+    .map(attr => {
+      const { id, multivalued, type } = attr
+      const name = toGraphqlName(id)
+      let graphQLType = typeMap[type]
+
+      if (multivalued) {
+        graphQLType = `[${graphQLType}]`
+      }
+
+      return `  # metacard attribute: **\`${id}\`**\n  ${name}: ${graphQLType}`
+    })
+    .join('\n')
+
+const genSchema = metacardAttributes => {
+  return `
+  scalar Json
+  # Binary content embedded as a base64 String
+  scalar Binary
+  # WKT embedded as a String
+  scalar Geometry
+  # XML embedded as a String
+  scalar XML
+  # ISO 8601 Data Time embedded as a String
+  scalar Date
+
+  # Common and well known metacard attributes intended for progrmatic usage
+  type MetacardAttributes {
+  ${attrs(metacardAttributes)}
   }
-}
 
-const systemProperties = async () => {
-  const [configProperties, configUiProperties] = await Promise.all([
-    (await fetch(`${ROOT}/config`)).json(),
-    (await fetch(`${ROOT}/platform/config/ui`)).json(),
-  ])
-  return {
-    ...configProperties,
-    ...configUiProperties,
-    ...getBuildInfo(),
+  input MetacardAttributesInput {
+  ${attrs(metacardAttributes)}
   }
+
+  ${typeDefs}
+  `
 }
 
-const { send } = createTransport({
-  pathname: ROOT,
-})
-
-const renameKeys = (f, map) => {
-  return Object.keys(map).reduce((attrs, attr) => {
-    const name = f(attr)
-    attrs[name] = map[attr]
-    return attrs
-  }, {})
+window.logSchema = () => {
+  console.log(gen())
 }
 
-const toGraphqlMap = map => {
-  return Object.keys(map).reduce((attrs, attr) => {
-    const name = toGraphqlName(attr)
-    attrs[name] = map[attr]
-    return attrs
-  }, {})
-}
+export const createClient = metacardAttributes => {
+  const getBuildInfo = () => {
+    /* eslint-disable */
+    const commitHash = __COMMIT_HASH__
+    const isDirty = __IS_DIRTY__
+    const commitDate = __COMMIT_DATE__
+    /* eslint-enable */
 
-const fromGraphqlMap = map => {
-  return Object.keys(map).reduce((attrs, attr) => {
-    const name = fromGraphqlName(attr)
-    attrs[name] = map[attr]
-    return attrs
-  }, {})
-}
+    return {
+      commitHash,
+      isDirty,
+      commitDate,
+      identifier: `${commitHash.trim()}${isDirty ? ' with Changes' : ''}`,
+      releaseDate: commitDate,
+    }
+  }
 
-const metacards = async (ctx, args) => {
-  const q = { ...args.settings, filterTree: args.filterTree }
-  const req = send(q)
-  const json = await req.json()
+  const systemProperties = async () => {
+    const [configProperties, configUiProperties] = await Promise.all([
+      (await fetch(`${ROOT}/config`)).json(),
+      (await fetch(`${ROOT}/platform/config/ui`)).json(),
+    ])
+    return {
+      ...configProperties,
+      ...configUiProperties,
+      ...getBuildInfo(),
+    }
+  }
 
-  const attributes = json.results.map(result =>
-    toGraphqlMap(result.metacard.properties)
-  )
+  const { send } = createTransport({
+    pathname: ROOT,
+  })
 
-  return { attributes, ...json }
-}
+  const renameKeys = (f, map) => {
+    return Object.keys(map).reduce((attrs, attr) => {
+      const name = f(attr)
+      attrs[name] = map[attr]
+      return attrs
+    }, {})
+  }
 
-const queryTemplates = {
-  accessAdministrators: 'security_access_administrators',
-  accessGroups: 'security_access_groups',
-  accessGroupsRead: 'security_access_groups_read',
-  accessIndividuals: 'security_access_individuals',
-  accessIndividualsRead: 'security_access_individuals_read',
-  created: 'created',
-  filterTemplate: 'filter_template',
-  modified: 'modified',
-  owner: 'metacard_owner',
-  querySettings: 'query_settings',
-  id: 'id',
-  title: 'title',
-}
+  const toGraphqlMap = map => {
+    return Object.keys(map).reduce((attrs, attr) => {
+      const name = toGraphqlName(attr)
+      attrs[name] = map[attr]
+      return attrs
+    }, {})
+  }
 
-const fetchQueryTemplates = async () => {
-  const res = await fetch(`${ROOT}/forms/query`)
-  const json = await res.json()
-  const attributes = json
-    .map(attrs => renameKeys(k => queryTemplates[k], attrs))
-    .map(({ modified, created, ...rest }) => {
+  const fromGraphqlMap = map => {
+    return Object.keys(map).reduce((attrs, attr) => {
+      const name = fromGraphqlName(attr)
+      attrs[name] = map[attr]
+      return attrs
+    }, {})
+  }
+
+  const metacards = async (ctx, args) => {
+    const q = { ...args.settings, filterTree: args.filterTree }
+    const req = send(q)
+    const json = await req.json()
+
+    const attributes = json.results.map(result =>
+      toGraphqlMap(result.metacard.properties)
+    )
+
+    return { attributes, ...json }
+  }
+
+  const queryTemplates = {
+    accessAdministrators: 'security_access_administrators',
+    accessGroups: 'security_access_groups',
+    accessGroupsRead: 'security_access_groups_read',
+    accessIndividuals: 'security_access_individuals',
+    accessIndividualsRead: 'security_access_individuals_read',
+    created: 'created',
+    filterTemplate: 'filter_template',
+    modified: 'modified',
+    owner: 'metacard_owner',
+    querySettings: 'query_settings',
+    id: 'id',
+    title: 'title',
+  }
+
+  const fetchQueryTemplates = async () => {
+    const res = await fetch(`${ROOT}/forms/query`)
+    const json = await res.json()
+    const attributes = json
+      .map(attrs => renameKeys(k => queryTemplates[k], attrs))
+      .map(({ modified, created, ...rest }) => {
+        return {
+          ...rest,
+          created: new Date(created).toISOString(),
+          modified: new Date(modified).toISOString(),
+        }
+      })
+    const status = {
+      // count: Int
+      // elapsed: Int
+      // hits: Int
+      // id: ID
+      // successful: Boolean
+      count: attributes.length,
+      successful: true,
+      hits: attributes.length,
+    }
+    return { attributes, status }
+  }
+
+  const metacardsByTag = async (ctx, args) => {
+    if (args.tag === 'query-template') {
+      return fetchQueryTemplates()
+    }
+
+    return metacards(ctx, {
+      filterTree: {
+        type: '=',
+        property: 'metacard-tags',
+        value: args.tag,
+      },
+      settings: args.settings,
+    })
+  }
+
+  const metacardById = async (ctx, args) => {
+    return metacards(ctx, {
+      filterTree: {
+        type: 'AND',
+        filters: [
+          {
+            type: '=',
+            property: 'id',
+            value: args.id,
+          },
+          {
+            type: 'LIKE',
+            property: 'metacard-tags',
+            value: '%',
+          },
+        ],
+      },
+      settings: args.settings,
+    })
+  }
+
+  const user = async () => {
+    const res = await fetch(`${ROOT}/user`)
+    return res.json()
+  }
+
+  const sources = async () => {
+    const res = await fetch(`${ROOT}/catalog/sources`)
+    return res.json()
+  }
+
+  const metacardTypes = async () => {
+    const res = await fetch(`${ROOT}/metacardtype`)
+    const json = await res.json()
+
+    const types = Object.keys(json).reduce((types, group) => {
+      return Object.assign(types, json[group])
+    }, {})
+
+    return Object.keys(types).map(k => types[k])
+  }
+
+  const Query = {
+    user,
+    sources,
+    metacards,
+    metacardsByTag,
+    metacardById,
+    metacardTypes,
+    systemProperties,
+  }
+
+  const createMetacard = async (parent, args) => {
+    const { attrs } = args
+
+    const body = {
+      geometry: null,
+      type: 'Feature',
+      properties: fromGraphqlMap(attrs),
+    }
+
+    const res = await fetch(`${ROOT}/catalog/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(body),
+    })
+
+    if (!res.ok) {
+      throw new Error(res.statusText)
+    }
+
+    const id = res.headers.get('id')
+    const created = new Date().toISOString()
+    const modified = created
+
+    return toGraphqlMap({
+      ...attrs,
+      id,
+      'metacard.created': created,
+      'metacard.modified': modified,
+      'metacard.owner': 'You',
+    })
+  }
+
+  const saveMetacard = async (parent, args) => {
+    const { id, attrs } = args
+
+    const attributes = Object.keys(attrs).map(attribute => {
+      const value = attrs[attribute]
       return {
-        ...rest,
-        created: new Date(created).toISOString(),
-        modified: new Date(modified).toISOString(),
+        attribute: fromGraphqlName(attribute),
+        values: Array.isArray(value) ? value : [value],
       }
     })
-  const status = {
-    // count: Int
-    // elapsed: Int
-    // hits: Int
-    // id: ID
-    // successful: Boolean
-    count: attributes.length,
-    successful: true,
-    hits: attributes.length,
-  }
-  return { attributes, status }
-}
 
-const metacardsByTag = async (ctx, args) => {
-  if (args.tag === 'query-template') {
-    return fetchQueryTemplates()
-  }
+    const body = [
+      {
+        ids: [id],
+        attributes,
+      },
+    ]
 
-  return metacards(ctx, {
-    filterTree: {
-      type: '=',
-      property: 'metacard-tags',
-      value: args.tag,
-    },
-    settings: args.settings,
-  })
-}
+    const res = await fetch(`${ROOT}/metacards`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(body),
+    })
 
-const metacardById = async (ctx, args) => {
-  return metacards(ctx, {
-    filterTree: {
-      type: 'AND',
-      filters: [
-        {
-          type: '=',
-          property: 'id',
-          value: args.id,
-        },
-        {
-          type: 'LIKE',
-          property: 'metacard-tags',
-          value: '%',
-        },
-      ],
-    },
-    settings: args.settings,
-  })
-}
-
-const user = async () => {
-  const res = await fetch(`${ROOT}/user`)
-  return res.json()
-}
-
-const sources = async () => {
-  const res = await fetch(`${ROOT}/catalog/sources`)
-  return res.json()
-}
-
-const metacardTypes = async () => {
-  const res = await fetch(`${ROOT}/metacardtype`)
-  const json = await res.json()
-
-  const types = Object.keys(json).reduce((types, group) => {
-    return Object.assign(types, json[group])
-  }, {})
-
-  return Object.keys(types).map(k => types[k])
-}
-
-const Query = {
-  user,
-  sources,
-  metacards,
-  metacardsByTag,
-  metacardById,
-  metacardTypes,
-  systemProperties,
-}
-
-const createMetacard = async (parent, args) => {
-  const { attrs } = args
-
-  const body = {
-    geometry: null,
-    type: 'Feature',
-    properties: fromGraphqlMap(attrs),
-  }
-
-  const res = await fetch(`${ROOT}/catalog/`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(body),
-  })
-
-  if (!res.ok) {
-    throw new Error(res.statusText)
-  }
-
-  const id = res.headers.get('id')
-  const created = new Date().toISOString()
-  const modified = created
-
-  return toGraphqlMap({
-    ...attrs,
-    id,
-    'metacard.created': created,
-    'metacard.modified': modified,
-    'metacard.owner': 'You',
-  })
-}
-
-const saveMetacard = async (parent, args) => {
-  const { id, attrs } = args
-
-  const attributes = Object.keys(attrs).map(attribute => {
-    const value = attrs[attribute]
-    return {
-      attribute: fromGraphqlName(attribute),
-      values: Array.isArray(value) ? value : [value],
+    if (!res.ok) {
+      throw new Error(res.statusText)
     }
-  })
 
-  const body = [
-    {
-      ids: [id],
-      attributes,
-    },
-  ]
-
-  const res = await fetch(`${ROOT}/metacards`, {
-    method: 'PATCH',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(body),
-  })
-
-  if (!res.ok) {
-    throw new Error(res.statusText)
+    const modified = new Date().toISOString()
+    return toGraphqlMap({
+      id,
+      'metacard.modified': modified,
+      ...attrs,
+    })
   }
 
-  const modified = new Date().toISOString()
-  return toGraphqlMap({
-    id,
-    'metacard.modified': modified,
-    ...attrs,
-  })
-}
+  const deleteMetacard = async (parent, args) => {
+    const { id } = args
 
-const deleteMetacard = async (parent, args) => {
-  const { id } = args
+    const res = await fetch(`${ROOT}/catalog/${id}`, {
+      method: 'DELETE',
+    })
 
-  const res = await fetch(`${ROOT}/catalog/${id}`, {
-    method: 'DELETE',
-  })
-
-  if (res.ok) {
-    return id
+    if (res.ok) {
+      return id
+    }
   }
-}
 
-const Mutation = {
-  createMetacard,
-  saveMetacard,
-  deleteMetacard,
-  createMetacardFromJson: createMetacard,
-  saveMetacardFromJson: saveMetacard,
-}
+  const Mutation = {
+    createMetacard,
+    saveMetacard,
+    deleteMetacard,
+    createMetacardFromJson: createMetacard,
+    saveMetacardFromJson: saveMetacard,
+  }
 
-const resolvers = {
-  Query,
-  Mutation,
-}
+  const resolvers = {
+    Query,
+    Mutation,
+  }
 
-const executableSchema = makeExecutableSchema({
-  typeDefs: genSchema(),
-  resolvers,
-})
-
-export const createClient = () => {
+  const executableSchema = makeExecutableSchema({
+    typeDefs: genSchema(metacardAttributes),
+    resolvers,
+  })
   const cache = new InMemoryCache()
 
   return new ApolloClient({
