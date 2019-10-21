@@ -592,10 +592,6 @@ export const Timeline = (props: TimelineProps) => {
       const mostItemsInABucket = Math.max(...buckets.map(b => b.items.length))
       const heightPerItem = (height - (heightOffset + 75)) / mostItemsInABucket
 
-      // console.debug("Height: ", height)
-      // console.debug("Most Items in a bucket: ", mostItemsInABucket)
-      // console.debug("Height per Item: ", mostItemsInABucket)
-
       setDataBuckets(buckets)
 
       buckets.forEach((b, i) => {
