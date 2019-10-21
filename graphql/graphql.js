@@ -202,6 +202,10 @@ const createMetacard = async (parent, args) => {
     body: JSON.stringify(body),
   })
 
+  if (!res.ok) {
+    throw new Error(res.statusText)
+  }
+
   const id = res.headers.get('id')
   const created = new Date().toISOString()
   const modified = created
@@ -241,14 +245,16 @@ const saveMetacard = async (parent, args) => {
     body: JSON.stringify(body),
   })
 
-  if (res.ok) {
-    const modified = new Date().toISOString()
-    return toGraphqlMap({
-      id,
-      'metacard.modified': modified,
-      ...attrs,
-    })
+  if (!res.ok) {
+    throw new Error(res.statusText)
   }
+
+  const modified = new Date().toISOString()
+  return toGraphqlMap({
+    id,
+    'metacard.modified': modified,
+    ...attrs,
+  })
 }
 
 const deleteMetacard = async (parent, args) => {
@@ -267,6 +273,8 @@ const Mutation = {
   createMetacard,
   saveMetacard,
   deleteMetacard,
+  createMetacardFromJson: createMetacard,
+  saveMetacardFromJson: saveMetacard,
 }
 
 const resolvers = {
