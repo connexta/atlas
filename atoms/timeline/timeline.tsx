@@ -287,9 +287,15 @@ export interface TimelineProps {
    */
   onCopy?: (copiedValue: string) => void
 
-  min: number
+  /**
+   * Minimum date bounds to render items between.
+   */
+  min: Date
 
-  max: number
+  /**
+   * Maximum date bounds to render items between.
+   */
+  max: Date
 }
 
 /*
@@ -526,10 +532,10 @@ export const Timeline = (props: TimelineProps) => {
       const formattedDate = formatDate(hoverDate, props.format, props.timezone)
 
       const maxX = width - 150
-      const yPos = markerHeight - 200 + heightOffset
       let xPos = coord[0] - 10
       if (xPos < 150) xPos = 150
       if (xPos > maxX) xPos = maxX
+      const yPos = 20
 
       d3.select(hoverLineTextRef.current)
         .attr('transform', `translate(${xPos}, ${yPos})`)
@@ -585,6 +591,10 @@ export const Timeline = (props: TimelineProps) => {
 
       const mostItemsInABucket = Math.max(...buckets.map(b => b.items.length))
       const heightPerItem = (height - (heightOffset + 75)) / mostItemsInABucket
+
+      // console.debug("Height: ", height)
+      // console.debug("Most Items in a bucket: ", mostItemsInABucket)
+      // console.debug("Height per Item: ", mostItemsInABucket)
 
       setDataBuckets(buckets)
 
