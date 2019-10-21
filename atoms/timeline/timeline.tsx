@@ -30,9 +30,9 @@ const ContextRow = styled.div`
 `
 
 const HoverLineText = styled.text`
-  stroke: ${({ theme }) => readableColor(theme.backgroundContent)};
   fill: ${({ theme }) => readableColor(theme.backgroundContent)};
   font-family: 'Open Sans', sans-serif;
+  pointer-events: none;
 `
 
 const HoverLine = styled.line`
@@ -526,14 +526,10 @@ export const Timeline = (props: TimelineProps) => {
       const formattedDate = formatDate(hoverDate, props.format, props.timezone)
 
       const maxX = width - 150
-      const yPos = markerHeight - 200
+      const yPos = markerHeight - 200 + heightOffset
       let xPos = coord[0] - 10
       if (xPos < 150) xPos = 150
       if (xPos > maxX) xPos = maxX
-
-      console.log('X Pos: ', xPos)
-      console.log('Left Range: ', xScale.range()[0])
-      console.log('Width: ', width)
 
       d3.select(hoverLineTextRef.current)
         .attr('transform', `translate(${xPos}, ${yPos})`)
@@ -587,10 +583,14 @@ export const Timeline = (props: TimelineProps) => {
         }
       })
 
+      const mostItemsInABucket = Math.max(...buckets.map(b => b.items.length))
+      const heightPerItem = (height - (heightOffset + 75)) / mostItemsInABucket
+
       setDataBuckets(buckets)
 
       buckets.forEach((b, i) => {
-        const rectangleHeight = b.items.length * 10
+        const rectangleHeight = b.items.length * heightPerItem
+
         const x = (b.x1 + b.x2) / 2 - 15
 
         const y =

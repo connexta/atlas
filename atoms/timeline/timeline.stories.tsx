@@ -34,7 +34,7 @@ const renderDates = (dates: Date[], format: string, timezone: string) => {
 }
 
 stories.add('Timeline with Data', () => {
-  const numDataPoints = number('Number of spaced data points to render', 100)
+  const numDataPoints = number('Number of spaced data points to render', 2000)
   const testData = createTestData(numDataPoints)
 
   const modeKnob = select(
@@ -109,6 +109,9 @@ stories.add('Timeline with Data', () => {
 })
 
 stories.add('Conditional Render', () => {
+  const numDataPoints = number('Number of spaced data points to render', 2000)
+  const testData = createTestData(numDataPoints)
+
   const modeKnob = select(
     'Initial Mode',
     {
@@ -168,6 +171,7 @@ stories.add('Conditional Render', () => {
         <Timeline
           min={minKnob}
           max={maxKnob}
+          data={testData}
           height={300}
           mode={mode}
           timezone={timezoneKnob}
