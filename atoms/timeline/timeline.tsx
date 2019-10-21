@@ -531,9 +531,10 @@ export const Timeline = (props: TimelineProps) => {
 
       const formattedDate = formatDate(hoverDate, props.format, props.timezone)
 
-      const maxX = width - 150
-      let xPos = coord[0] - 10
-      if (xPos < 150) xPos = 150
+      const widthBuffer = 150
+      const maxX = width - widthBuffer
+      let xPos = coord[0]
+      if (xPos < widthBuffer) xPos = widthBuffer
       if (xPos > maxX) xPos = maxX
       const yPos = 20
 
