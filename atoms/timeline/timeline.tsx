@@ -194,8 +194,8 @@ const showElement = (element: d3.Selection<null, unknown, null, undefined>) =>
  */
 const getTimescaleFromWidth = (
   width: number,
-  min: number,
-  max: number
+  min: Date,
+  max: Date
 ): Timescale => {
   const timeScale = d3
     .scaleUtc()

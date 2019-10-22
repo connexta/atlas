@@ -78,8 +78,8 @@ stories.add('Timeline with Data', () => {
 
   return (
     <Timeline
-      min={minKnob}
-      max={maxKnob}
+      min={new Date(minKnob)}
+      max={new Date(maxKnob)}
       height={300}
       mode={mode}
       format={dateFormatKnob}
@@ -169,8 +169,8 @@ stories.add('Conditional Render', () => {
       {renderDates(timePicked, dateFormatKnob, timezoneKnob)}
       {showTimeline && (
         <Timeline
-          min={minKnob}
-          max={maxKnob}
+          min={new Date(minKnob)}
+          max={new Date(maxKnob)}
           data={testData}
           height={300}
           mode={mode}
