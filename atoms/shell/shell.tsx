@@ -152,6 +152,7 @@ export const Shell = ({
           style={{ height: '100%', width: '100%' }}
         >
           <AppBar
+            component="div" // usually it's header, but we have styling that clashes, eventually we can remove this
             position="absolute"
             className={clsx(classes.appBar, {
               [classes.appBarShift]: open,
@@ -166,6 +167,7 @@ export const Shell = ({
                 className={clsx(classes.menuButton, {
                   [classes.hide]: open,
                 })}
+                style={{ height: 'auto' }}
               >
                 <MenuIcon />
               </IconButton>
@@ -213,7 +215,10 @@ export const Shell = ({
 
               <Divider />
               <div style={{ marginTop: 'auto', padding: '10px' }}>
-                <a href="../">
+                <a
+                  href="../"
+                  style={{ padding: '0px', background: 'transparent' }}
+                >
                   <img
                     className={classes.branding}
                     style={{
