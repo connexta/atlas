@@ -29,6 +29,12 @@ const ContextRow = styled.div`
   margin-top: 10px;
 `
 
+const HoverLineText = styled.text`
+  fill: ${({ theme }) => readableColor(theme.backgroundContent)};
+  font-family: 'Open Sans', sans-serif;
+  pointer-events: none;
+`
+
 const HoverLine = styled.line`
   stroke: ${({ theme }) => theme.primaryColor};
   stroke-width: 3;
@@ -186,10 +192,11 @@ const showElement = (element: d3.Selection<null, unknown, null, undefined>) =>
 /**
  * Domain is the minimum and maximum values that the scale contains.
  */
-const getTimescaleFromWidth = (width: number): Timescale => {
-  const min = new Date('1980-01-01:00:00.000z')
-  // const max = new Date("1980-01-02:00:00.000z"); // Uncomment to easily test timezones
-  const max = new Date()
+const getTimescaleFromWidth = (
+  width: number,
+  min: Date,
+  max: Date
+): Timescale => {
   const timeScale = d3
     .scaleUtc()
     .domain([min, max])
@@ -279,6 +286,16 @@ export interface TimelineProps {
    * Called when a date is copied to the clipboard.
    */
   onCopy?: (copiedValue: string) => void
+
+  /**
+   * Minimum date bounds to render items between.
+   */
+  min: Date
+
+  /**
+   * Maximum date bounds to render items between.
+   */
+  max: Date
 }
 
 /*
@@ -298,9 +315,12 @@ export const Timeline = (props: TimelineProps) => {
   const rootRef = useRef(null)
   const d3ContainerRef = useRef(null)
   const hoverLineRef = useRef(null)
+  const hoverLineTextRef = useRef(null)
   const leftMarkerRef = useRef(null)
   const rightMarkerRef = useRef(null)
   const brushBarRef = useRef(null)
+
+  const { min, max } = props
 
   const [width, setWidth] = useState(0)
   const height = props.height
@@ -309,7 +329,9 @@ export const Timeline = (props: TimelineProps) => {
 
   const possibleDateAttributes = getPossibleDateAttributes(props.data || [])
 
-  const [xScale, setXScale] = useState(() => getTimescaleFromWidth(width))
+  const [xScale, setXScale] = useState(() =>
+    getTimescaleFromWidth(width, min, max)
+  )
   const [xAxis, setXAxis] = useState(() =>
     d3.axisBottom(xScale).tickSize(AXIS_HEIGHT)
   )
@@ -331,15 +353,15 @@ export const Timeline = (props: TimelineProps) => {
 
   const [selectionRange, setSelectionRange] = useSelectionRange(
     [],
-    getTimescaleFromWidth(width)
+    getTimescaleFromWidth(width, min, max)
   )
 
   useEffect(() => {
     if (width != 0) {
       console.debug(`Width updated to ${width}`)
-      setXScale(() => getTimescaleFromWidth(width))
+      setXScale(() => getTimescaleFromWidth(width, min, max))
     }
-  }, [width])
+  }, [width, min, max])
 
   useEffect(() => {
     console.debug(`xScale updated to ${xScale.range()}`)
@@ -402,7 +424,9 @@ export const Timeline = (props: TimelineProps) => {
     const transform = d3.event.transform
 
     if (width != 0) {
-      const newXScale = transform.rescaleX(getTimescaleFromWidth(width))
+      const newXScale = transform.rescaleX(
+        getTimescaleFromWidth(width, min, max)
+      )
       setXScale(() => newXScale)
 
       const newXAxis = xAxis.scale(newXScale)
@@ -498,11 +522,33 @@ export const Timeline = (props: TimelineProps) => {
       d3.select(hoverLineRef.current)
         .attr('transform', `translate(${coord[0]}, ${markerHeight})`)
         .attr('style', 'display: block')
+
+      const hoverDate = convertDateToTimezoneDate(
+        xScale.invert(coord[0]),
+        props.format,
+        props.timezone
+      )
+
+      const formattedDate = formatDate(hoverDate, props.format, props.timezone)
+
+      const widthBuffer = 150
+      const maxX = width - widthBuffer
+      let xPos = coord[0]
+      if (xPos < widthBuffer) xPos = widthBuffer
+      if (xPos > maxX) xPos = maxX
+      const yPos = 20
+
+      d3.select(hoverLineTextRef.current)
+        .attr('transform', `translate(${xPos}, ${yPos})`)
+        .attr('style', 'display: block')
+        .attr('text-anchor', 'middle')
+        .text(formattedDate)
     })
 
     // When the d3Container mouseleave event triggers, set the hoverValue to null and hide the hoverLine line
     d3.select(d3ContainerRef.current).on('mouseleave', function() {
       hideElement(d3.select(hoverLineRef.current))
+      hideElement(d3.select(hoverLineTextRef.current))
     })
   }, [xScale, props.timezone, props.height])
 
@@ -544,10 +590,14 @@ export const Timeline = (props: TimelineProps) => {
         }
       })
 
+      const mostItemsInABucket = Math.max(...buckets.map(b => b.items.length))
+      const heightPerItem = (height - (heightOffset + 75)) / mostItemsInABucket
+
       setDataBuckets(buckets)
 
       buckets.forEach((b, i) => {
-        const rectangleHeight = b.items.length * 10
+        const rectangleHeight = b.items.length * heightPerItem
+
         const x = (b.x1 + b.x2) / 2 - 15
 
         const y =
@@ -647,6 +697,7 @@ export const Timeline = (props: TimelineProps) => {
           } else {
             setIsDragging(true)
             hideElement(d3.select(hoverLineRef.current))
+            hideElement(d3.select(hoverLineTextRef.current))
             setSelectionRange([newLeftDate])
           }
         })
@@ -713,6 +764,7 @@ export const Timeline = (props: TimelineProps) => {
         .drag()
         .on('start', () => {
           hideElement(d3.select(hoverLineRef.current))
+          hideElement(d3.select(hoverLineTextRef.current))
           setIsDragging(true)
         })
         .on('end', () => setIsDragging(false))
@@ -755,6 +807,7 @@ export const Timeline = (props: TimelineProps) => {
         .on('start', () => {
           setIsDragging(true)
           hideElement(d3.select(hoverLineRef.current))
+          hideElement(d3.select(hoverLineTextRef.current))
         })
         .on('end', () => setIsDragging(false))
         .on('drag', () => {
@@ -934,6 +987,13 @@ export const Timeline = (props: TimelineProps) => {
         <g ref={hoverLineRef} style={{ display: 'none' }}>
           <HoverLine x1="0" y1="0" x2="0" y2="50" />
         </g>
+
+        <HoverLineText
+          x="0"
+          y="0"
+          style={{ display: 'none' }}
+          ref={hoverLineTextRef}
+        />
 
         <MarkerHover ref={leftMarkerRef}>
           <MarkerLine x1="0" y1="0" x2="0" y2="50" />
