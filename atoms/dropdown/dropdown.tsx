@@ -53,11 +53,7 @@ export const Dropdown = ({
     >
       {children({ handleClick })}
       <Popper open={open} anchorEl={anchorEl} {...popperProps}>
-        <ClickAwayListener onClickAway={close}>
-          <Paper elevation={24} {...paperProps}>
-            <DropdownContext.Consumer>{content}</DropdownContext.Consumer>
-          </Paper>
-        </ClickAwayListener>
+        <DropdownContext.Consumer>{content}</DropdownContext.Consumer>
       </Popper>
     </DropdownContext.Provider>
   )
