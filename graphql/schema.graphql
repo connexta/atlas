@@ -25,6 +25,12 @@ input QuerySettingsInput {
   phonetics: Boolean
   sorts: [QuerySortInput]
   spellcheck: Boolean
+
+  # Page size
+  count: Int
+
+  # Start of paging. First element is 1, not 0.
+  start: Int
   type: String
 }
 
@@ -291,9 +297,9 @@ type Mutation {
   createMetacard(attrs: MetacardAttributesInput!): MetacardAttributes
   saveMetacard(id: ID!, attrs: MetacardAttributesInput!): MetacardAttributes
 
-  # TBD: Should only be used when...
-  # createMetacardFromJson(attrs: Json!): MetacardAttributes
-  # saveMetacardFromJson(id: ID!, attrs: Json!): MetacardAttributes
+  createMetacardFromJson(attrs: Json!): Json
+
+  saveMetacardFromJson(id: ID!, attrs: Json!): Json
 
   deleteMetacard(id: ID!): ID
 }

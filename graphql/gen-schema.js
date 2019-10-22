@@ -33,7 +33,7 @@ const attrs = attributes
     let graphQLType = typeMap[type]
 
     if (multivalued) {
-      graphQLType = `${[graphQLType]}`
+      graphQLType = `[${graphQLType}]`
     }
 
     return `  # metacard attribute: **\`${id}\`**\n  ${name}: ${graphQLType}`
