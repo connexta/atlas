@@ -45,6 +45,9 @@ const GlobalStyles = createGlobalStyle<ThemeInterface>`
       .lm_header {
         z-index: 0 !important;
       }
+      [role="tooltip"] {
+        z-index: 101 !important;
+      }
     `
 
 export const Provider = ({ children }: { children: any }) => {
