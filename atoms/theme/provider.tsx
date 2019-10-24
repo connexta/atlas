@@ -45,9 +45,6 @@ const GlobalStyles = createGlobalStyle<ThemeInterface>`
       .lm_header {
         z-index: 0 !important;
       }
-      [role="tooltip"] {
-        z-index: 1200 !important;
-      }
     `
 
 export const Provider = ({ children }: { children: any }) => {
@@ -82,6 +79,14 @@ export const Provider = ({ children }: { children: any }) => {
           fontSize: '1rem',
         },
       }),
+    },
+    zIndex: {
+      mobileStepper: 101,
+      appBar: 101,
+      drawer: 101,
+      modal: 101,
+      snackbar: 101,
+      tooltip: 101,
     },
   })
   return (
