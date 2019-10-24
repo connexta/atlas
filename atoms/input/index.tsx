@@ -19,4 +19,5 @@ export { WrappedCheckbox as Checkbox } from './checkbox'
 export {
   WrappedCreatableSelect as CreatableSelect,
   WrappedAsyncCreatableSelect as AsyncCreatableSelect,
+  WrappedAsyncSelect as AsyncSelect,
 } from './autocomplete'
