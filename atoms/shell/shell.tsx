@@ -206,7 +206,10 @@ export const Shell = ({
                   </Grid>
                 </Grid>
 
-                <IconButton onClick={handleDrawerClose}>
+                <IconButton
+                  onClick={handleDrawerClose}
+                  disabled={open === false}
+                >
                   <ChevronLeftIcon />
                 </IconButton>
               </div>
