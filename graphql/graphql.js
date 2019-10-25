@@ -210,13 +210,18 @@ const createMetacard = async (parent, args) => {
   const created = new Date().toISOString()
   const modified = created
 
-  return toGraphqlMap({
+  const mapToReturn = toGraphqlMap({
     ...attrs,
     id,
+    created: created,
     'metacard.created': created,
+    modified: modified,
     'metacard.modified': modified,
-    'metacard.owner': 'You',
+    'metacard.owner': body.properties['metacard.owner'] || 'You',
   })
+
+  console.log('Returning ', mapToReturn)
+  return mapToReturn
 }
 
 const saveMetacard = async (parent, args) => {
