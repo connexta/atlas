@@ -256,6 +256,7 @@ const saveMetacard = async (parent, args) => {
 
   const modified = new Date().toISOString()
   return toGraphqlMap({
+    __typename: 'MetacardAttributes',
     id,
     'metacard.modified': modified,
     ...attrs,
