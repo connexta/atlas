@@ -293,9 +293,9 @@ const executableSchema = makeExecutableSchema({
   resolvers,
 })
 
-export const createClient = () => {
-  const cache = new InMemoryCache()
+const cache = new InMemoryCache()
 
+export const createClient = () => {
   return new ApolloClient({
     link: new SchemaLink({ schema: executableSchema }),
     cache,
