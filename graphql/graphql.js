@@ -199,13 +199,18 @@ const createMetacard = async (parent, args, context) => {
   const modified = created
 
   const mapToReturn = context.toGraphqlMap({
+    'security.access-administrators': [],
+    'security.access-groups-read': [],
+    'security.access-individuals-read': [],
+    'security.access-individuals': [],
+    'security.access-groups': [],
+    'metacard.owner': body.properties['metacard.owner'] || 'You',
     ...attrs,
     id,
     created: created,
     'metacard.created': created,
     modified: modified,
     'metacard.modified': modified,
-    'metacard.owner': body.properties['metacard.owner'] || 'You',
   })
 
   return mapToReturn
