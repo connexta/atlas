@@ -117,29 +117,32 @@ export const metacardsByTag = async (parent, args, context) => {
   )
 }
 
-const metacardById = async (ctx, args) => {
-  return metacards(ctx, {
-    filterTree: {
-      type: 'AND',
-      filters: [
-        {
-          type: '=',
-          property: 'id',
-          value: args.id,
-        },
-        {
-          type: 'LIKE',
-          property: 'metacard-tags',
-          value: '%',
-        },
-      ],
+const metacardById = async (parent, args, context) => {
+  return metacards(
+    parent,
+    {
+      filterTree: {
+        type: 'AND',
+        filters: [
+          {
+            type: '=',
+            property: 'id',
+            value: args.id,
+          },
+          {
+            type: 'LIKE',
+            property: 'metacard-tags',
+            value: '%',
+          },
+        ],
+      },
+      settings: args.settings,
     },
-    settings: args.settings,
-  })
+    context
+  )
 }
 
-const user = async (parent, args, context) => {
-  console.log('Context: ', context)
+const user = async (parent, args) => {
   const res = await fetch(`${ROOT}/user`)
   return res.json()
 }
