@@ -30,17 +30,17 @@ const execQuery = (client, graphQLParams) => {
 }
 
 const render = createClient => {
-  const client = createClient()
+  createClient().then(client => {
+    const graphQLFetcher = async graphQLParams => {
+      const { data, error } = await execQuery(client, graphQLParams)
+      return { data, error }
+    }
 
-  const graphQLFetcher = async graphQLParams => {
-    const { data, error } = await execQuery(client, graphQLParams)
-    return { data, error }
-  }
-
-  ReactDOM.render(
-    <GraphiQL fetcher={graphQLFetcher} />,
-    document.getElementById('root')
-  )
+    ReactDOM.render(
+      <GraphiQL fetcher={graphQLFetcher} />,
+      document.getElementById('root')
+    )
+  })
 }
 
 module.hot.accept('./graphql', () => {
