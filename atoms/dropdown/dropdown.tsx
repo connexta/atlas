@@ -7,11 +7,13 @@ import { DropdownContext, DropdownContextType } from './dropdown.context'
 import { Subtract } from '../../typescript'
 
 type DropdownProps = {
-  children: ({
-    handleClick,
-  }: {
-    handleClick: (event: React.MouseEvent<any, MouseEvent>) => void
-  }) => React.ReactElement
+  children: (
+    {
+      handleClick,
+    }: {
+      handleClick: (event: React.MouseEvent<any, MouseEvent>) => void
+    }
+  ) => React.ReactElement
   content: (dropdownContext: DropdownContextType) => React.ReactElement
   paperProps?: PaperProps
   popperProps?: Subtract<

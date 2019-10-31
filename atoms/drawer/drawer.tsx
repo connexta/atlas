@@ -13,11 +13,13 @@ type setType<T> = React.Dispatch<React.SetStateAction<T>>
 
 type Props = {
   children: ({ setOpen }: { setOpen: setType<boolean> }) => React.ReactElement
-  drawerChildren: ({
-    setOpen,
-  }: {
-    setOpen: setType<boolean>
-  }) => React.ReactElement
+  drawerChildren: (
+    {
+      setOpen,
+    }: {
+      setOpen: setType<boolean>
+    }
+  ) => React.ReactElement
   drawerProps: DrawerProps
 }
 

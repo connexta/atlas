@@ -30,12 +30,10 @@ const getBaseSchema = () => {
 const generateSchemaFromMetacardTypes = (extendedSchema, metacardTypes) => {
   const toGraphqlName = name => name.replace(/-|\./g, '_')
   const attrs = metacardTypes
-  const idMap = attrs
-    .map(a => a.id)
-    .reduce((map, id) => {
-      map[toGraphqlName(id)] = id
-      return map
-    }, {})
+  const idMap = attrs.map(a => a.id).reduce((map, id) => {
+    map[toGraphqlName(id)] = id
+    return map
+  }, {})
 
   const fromGraphqlName = name => idMap[name] || name
 

@@ -56,20 +56,24 @@ const [
 }>()
 
 type ControlledDialogProps = {
-  children: ({
-    setProps,
-    props,
-  }: {
-    setProps: setType<Partial<DialogProps>>
-    props: DialogProps
-  }) => DialogProps['children']
-  content: ({
-    setProps,
-    props,
-  }: {
-    setProps: setType<Partial<DialogProps>>
-    props: DialogProps
-  }) => DialogProps['children']
+  children: (
+    {
+      setProps,
+      props,
+    }: {
+      setProps: setType<Partial<DialogProps>>
+      props: DialogProps
+    }
+  ) => DialogProps['children']
+  content: (
+    {
+      setProps,
+      props,
+    }: {
+      setProps: setType<Partial<DialogProps>>
+      props: DialogProps
+    }
+  ) => DialogProps['children']
 } & Omit<Partial<DialogProps>, 'children'>
 
 export const ControlledDialog = ({

@@ -242,8 +242,9 @@ const cqlToUserql = {
 }
 
 const translateCqlToUserql = str =>
-  str.replace(/([^%_])?([%_])/g, (_, a = '', b) =>
-    a === '\\' ? b : a + cqlToUserql[b]
+  str.replace(
+    /([^%_])?([%_])/g,
+    (_, a = '', b) => (a === '\\' ? b : a + cqlToUserql[b])
   )
 
 function buildAst(tokens) {
