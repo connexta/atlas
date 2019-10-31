@@ -208,7 +208,6 @@ const createMetacard = async (parent, args, context) => {
     'metacard.owner': body.properties['metacard.owner'] || 'You',
   })
 
-  console.log('Returning ', mapToReturn)
   return mapToReturn
 }
 
@@ -279,9 +278,11 @@ const baseResolvers = {
 const cache = new InMemoryCache()
 
 export const createClient = (schema, resolvers) => {
+  const { fromGraphqlName, toGraphqlName } = schema
+
   const toGraphqlMap = map => {
     return Object.keys(map).reduce((attrs, attr) => {
-      const name = schema.toGraphqlName(attr)
+      const name = toGraphqlName(attr)
       attrs[name] = map[attr]
       return attrs
     }, {})
@@ -289,7 +290,7 @@ export const createClient = (schema, resolvers) => {
 
   const fromGraphqlMap = map => {
     return Object.keys(map).reduce((attrs, attr) => {
-      const name = schema.fromGraphqlName(attr)
+      const name = fromGraphqlName(attr)
       attrs[name] = map[attr]
       return attrs
     }, {})
@@ -298,7 +299,9 @@ export const createClient = (schema, resolvers) => {
   // TODO: How to get around having to pass this in to each function invocation
   const context = {
     fromGraphqlMap,
+    fromGraphqlName,
     toGraphqlMap,
+    toGraphqlName,
   }
 
   const executableSchema = makeExecutableSchema({
