@@ -47,6 +47,7 @@ const GlobalStyles = createGlobalStyle<ThemeInterface>`
       }
       [role="tooltip"] {
         z-index: 101 !important;
+        pointer-events: all !important;
       }
     `
 

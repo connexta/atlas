@@ -2,13 +2,11 @@ import * as React from 'react'
 
 import { createStyles, makeStyles, Theme } from '@material-ui/core/styles'
 import { IconProps } from '@material-ui/core/Icon'
-import {
-  List,
-  ListItem,
-  ListItemIcon,
-  Typography,
-  ListItemText,
-} from '@material-ui/core'
+import ListItemIcon from '@material-ui/core/ListItemIcon'
+import ListItemText from '@material-ui/core/ListItemText'
+import ListItem from '@material-ui/core/ListItem'
+import Typography from '@material-ui/core/Typography'
+import List from '@material-ui/core/List'
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({

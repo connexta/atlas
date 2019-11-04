@@ -2,16 +2,14 @@ import * as React from 'react'
 import clsx from 'clsx'
 import { createStyles, makeStyles, Theme } from '@material-ui/core/styles'
 
-import {
-  Grid,
-  AppBar,
-  Toolbar,
-  IconButton,
-  Drawer,
-  Typography,
-  Divider,
-} from '@material-ui/core'
 import { MenuIcon, ChevronLeftIcon } from '../icons'
+import Grid from '@material-ui/core/Grid'
+import AppBar from '@material-ui/core/AppBar'
+import Toolbar from '@material-ui/core/Toolbar'
+import IconButton from '@material-ui/core/IconButton'
+import Drawer from '@material-ui/core/Drawer'
+import Typography from '@material-ui/core/Typography'
+import Divider from '@material-ui/core/Divider'
 
 const drawerWidth = 240
 
