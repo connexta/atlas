@@ -1,14 +1,12 @@
 import { ApolloClient } from 'apollo-client'
 import { SchemaLink } from 'apollo-link-schema'
-import { InMemoryCache } from 'apollo-cache-inmemory'
+import { InMemoryCache, defaultDataIdFromObject } from 'apollo-cache-inmemory'
 import { makeExecutableSchema } from 'graphql-tools'
 import { createTransport } from './transport'
 
 import fetch from './fetch'
 
 const ROOT = '/search/catalog/internal'
-
-import { generateSchemaFromMetacardTypes } from './gen-schema'
 
 const getBuildInfo = () => {
   /* eslint-disable */
@@ -182,7 +180,7 @@ const createMetacard = async (parent, args, context) => {
     properties: context.fromGraphqlMap(attrs),
   }
 
-  const res = await fetch(`${ROOT}/catalog/`, {
+  let res = await fetch(`${ROOT}/catalog/`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -195,25 +193,10 @@ const createMetacard = async (parent, args, context) => {
   }
 
   const id = res.headers.get('id')
-  const created = new Date().toISOString()
-  const modified = created
 
-  const mapToReturn = context.toGraphqlMap({
-    'security.access-administrators': [],
-    'security.access-groups-read': [],
-    'security.access-individuals-read': [],
-    'security.access-individuals': [],
-    'security.access-groups': [],
-    'metacard.owner': body.properties['metacard.owner'] || 'You',
-    ...attrs,
-    id,
-    created: created,
-    'metacard.created': created,
-    modified: modified,
-    'metacard.modified': modified,
-  })
+  res = await metacardById(parent, { id }, context)
 
-  return mapToReturn
+  return context.toGraphqlMap(res.attributes[0])
 }
 
 const saveMetacard = async (parent, args, context) => {
@@ -234,7 +217,7 @@ const saveMetacard = async (parent, args, context) => {
     },
   ]
 
-  const res = await fetch(`${ROOT}/metacards`, {
+  res = await fetch(`${ROOT}/metacards`, {
     method: 'PATCH',
     headers: {
       'Content-Type': 'application/json',
@@ -280,7 +263,35 @@ const baseResolvers = {
   Mutation,
 }
 
-const cache = new InMemoryCache()
+/**
+ * When explicitly writing to the Apollo cache, any attributes that you are querying for must always exist
+ * on each record in the cache. They can be null, they just have to be present. Not setting them to null
+ * would introduce issues with keys being undefined when someone tries to read from the cache.
+ *
+ * @param metacard Metacard to set properties on
+ * @param properties Properties to set to null if they do not exist on the response.
+ */
+const defaultAttributesToNull = (metacard, properties) => {
+  properties.forEach(property => {
+    if (metacard[property] === undefined) {
+      metacard[property] = null
+    }
+  })
+}
+
+const cache = new InMemoryCache({
+  dataIdFromObject: object => {
+    switch (object.__typename) {
+      case 'User':
+        return `User:${object.userid}`
+      case 'MetacardAttributes':
+        // If you are seeing weird cache issues when doing manual updates, remove this.
+        return `MetacardAttributes:${object.metacard_type}:${object.id}`
+      default:
+        return defaultDataIdFromObject(object)
+    }
+  },
+})
 
 export const createClient = (schema, resolvers) => {
   const { fromGraphqlName, toGraphqlName } = schema
@@ -301,12 +312,12 @@ export const createClient = (schema, resolvers) => {
     }, {})
   }
 
-  // TODO: How to get around having to pass this in to each function invocation
   const context = {
     fromGraphqlMap,
     fromGraphqlName,
     toGraphqlMap,
     toGraphqlName,
+    defaultAttributesToNull,
   }
 
   const executableSchema = makeExecutableSchema({
