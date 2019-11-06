@@ -217,7 +217,7 @@ const saveMetacard = async (parent, args, context) => {
     },
   ]
 
-  res = await fetch(`${ROOT}/metacards`, {
+  const res = await fetch(`${ROOT}/metacards`, {
     method: 'PATCH',
     headers: {
       'Content-Type': 'application/json',
