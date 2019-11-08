@@ -306,14 +306,24 @@ export const WrappedAsyncSelect = (props: AsyncSelectProps) => {
       },
     }),
   }
-  const { label, styles, debounce, loadOptions, ...baseProps } = props
+  const {
+    label,
+    styles,
+    debounce,
+    loadOptions,
+    components: customComponents,
+    ...baseProps
+  } = props
 
   const debouncedLoadOptions = _.debounce(loadOptions, debounce)
 
   return (
     <AsyncSelect
       loadOptions={debouncedLoadOptions}
-      components={components}
+      components={{
+        ...components,
+        ...customComponents,
+      }}
       classes={classes}
       styles={{
         ...selectStyles,

@@ -66,7 +66,7 @@ export const Provider = ({ children }: { children: any }) => {
     },
     typography: {
       h6: {
-        fontSize: '1.2rem'
+        fontSize: '1.2rem',
       },
       fontSize: 16,
     },

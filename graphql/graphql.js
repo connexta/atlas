@@ -265,7 +265,7 @@ const baseResolvers = {
 
 /**
  * When explicitly writing to the Apollo cache, any attributes that you are querying for must always exist
- * on each record in the cache. They can be null, they just have to be present. Not setting them to null
+ * on each record in the cache. They can be null, but they must be present. Not setting them to null
  * would introduce issues with keys being undefined when someone tries to read from the cache.
  *
  * @param metacard Metacard to set properties on
