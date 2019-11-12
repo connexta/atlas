@@ -42,6 +42,8 @@ const createHttpTransport = opts => {
     const controller = new AbortController()
 
     const response = fetch(url, {
+      credentials: 'same-origin',
+      cache: 'no-cache',
       headers: opts.headers,
       method: 'POST',
       signal: controller.signal,
@@ -122,12 +124,9 @@ exports.createTransport = (opts = {}) => {
   const options = { ...defaultOptions, ...window.location, ...opts }
   const { type = 'http', hostname } = options
 
-  const auth = Buffer.from('admin:admin').toString('base64')
-
   const headers = {
     'User-Agent': 'ace',
     'X-Requested-With': 'XMLHttpRequest',
-    Authorization: `Basic ${auth}`,
     'Content-Type': 'application/json',
     Referer: `https://${hostname}:8993`,
   }
