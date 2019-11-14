@@ -1,4 +1,7 @@
-export { WrappedTextField as TextField } from './text'
+export {
+  WrappedTextField as TextField,
+  WrappedChipInput as ChipInput,
+} from './text'
 export {
   WrappedSelect as Select,
   WrappedMenuItem as MenuItem,
