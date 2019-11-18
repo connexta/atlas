@@ -194,8 +194,8 @@ const showElement = (element: d3.Selection<null, unknown, null, undefined>) =>
  */
 const getTimescaleFromWidth = (
   width: number,
-  min: Date,
-  max: Date
+  min: Date = new Date('1980-01-01:00:00.000z'),
+  max: Date = new Date()
 ): Timescale => {
   const timeScale = d3
     .scaleUtc()
@@ -290,12 +290,12 @@ export interface TimelineProps {
   /**
    * Minimum date bounds to render items between.
    */
-  min: Date
+  min?: Date
 
   /**
    * Maximum date bounds to render items between.
    */
-  max: Date
+  max?: Date
 }
 
 /*
@@ -329,9 +329,10 @@ export const Timeline = (props: TimelineProps) => {
 
   const possibleDateAttributes = getPossibleDateAttributes(props.data || [])
 
-  const [xScale, setXScale] = useState(() =>
-    getTimescaleFromWidth(width, min, max)
-  )
+  const timescale = getTimescaleFromWidth(width, min, max)
+
+  const [xScale, setXScale] = useState(() => timescale)
+
   const [xAxis, setXAxis] = useState(() =>
     d3.axisBottom(xScale).tickSize(AXIS_HEIGHT)
   )
@@ -354,19 +355,16 @@ export const Timeline = (props: TimelineProps) => {
 
   const [isDragging, setIsDragging] = useState(false)
 
-  const [selectionRange, setSelectionRange] = useSelectionRange(
-    [],
-    getTimescaleFromWidth(width, min, max)
-  )
+  const [selectionRange, setSelectionRange] = useSelectionRange([], timescale)
 
   useEffect(
     () => {
       if (width != 0) {
         console.debug(`Width updated to ${width}`)
-        setXScale(() => getTimescaleFromWidth(width, min, max))
+        setXScale(() => timescale)
       }
     },
-    [width, min, max]
+    [width]
   )
 
   useEffect(
@@ -442,9 +440,7 @@ export const Timeline = (props: TimelineProps) => {
     const transform = d3.event.transform
 
     if (width != 0) {
-      const newXScale = transform.rescaleX(
-        getTimescaleFromWidth(width, min, max)
-      )
+      const newXScale = transform.rescaleX(timescale)
       setXScale(() => newXScale)
 
       const newXAxis = xAxis.scale(newXScale)
@@ -457,7 +453,7 @@ export const Timeline = (props: TimelineProps) => {
 
   const zoomBehavior = d3
     .zoom()
-    .scaleExtent([1, 60 * 60 * 24]) // Allows selections down to the minute at full zoom
+    .scaleExtent([1, 24 * 60 * 60]) // Allows selections down to the minute at full zoom
     .translateExtent([[0, 0], [width, height]])
     .extent([[0, 0], [width, height]])
     .filter(() => {
