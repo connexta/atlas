@@ -2,11 +2,44 @@ import { ApolloClient } from 'apollo-client'
 import { SchemaLink } from 'apollo-link-schema'
 import { InMemoryCache, defaultDataIdFromObject } from 'apollo-cache-inmemory'
 import { makeExecutableSchema } from 'graphql-tools'
-import { createTransport } from './transport'
-
 import fetch from './fetch'
 
+const createRpcClient = require('./rpc')
+
+const request = createRpcClient()
+
 const ROOT = '/search/catalog/internal'
+
+const methods = {
+  create: 'ddf.catalog/create',
+  query: 'ddf.catalog/query',
+  update: 'ddf.catalog/update',
+  delete: 'ddf.catalog/delete',
+  getSourceIds: 'ddf.catalog/getSourceIds',
+  getSourceInfo: 'ddf.catalog/getSourceInfo',
+}
+
+const catalog = Object.keys(methods).reduce((catalog, method) => {
+  catalog[method] = params => request(methods[method], params)
+  return catalog
+}, {})
+
+const { write } = require('./cql')
+const getCql = ({ filterTree, cql }) => {
+  if (filterTree !== undefined) {
+    return '(' + write(filterTree) + ')'
+  }
+  return cql
+}
+
+const processQuery = ({ filterTree, cql, ...query }) => {
+  const cqlString = getCql({ filterTree, cql })
+  return { cql: cqlString, ...query }
+}
+
+const send = async query => {
+  return await catalog.query(processQuery(query))
+}
 
 const getBuildInfo = () => {
   /* eslint-disable */
@@ -36,10 +69,6 @@ export const systemProperties = async () => {
   }
 }
 
-export const { send } = createTransport({
-  pathname: ROOT,
-})
-
 const renameKeys = (f, map) => {
   return Object.keys(map).reduce((attrs, attr) => {
     const name = f(attr)
@@ -48,15 +77,15 @@ const renameKeys = (f, map) => {
   }, {})
 }
 
-export const metacards = async (parent, args, context) => {
+const metacards = async (parent, args, context) => {
   const q = { ...args.settings, filterTree: args.filterTree }
-  const req = send(q)
-  const json = await req.json()
+  const json = await send(q)
 
-  const attributes = json.results.map(result => {
-    return context.toGraphqlMap(result.metacard.properties)
-  })
+  const attributes = json.results.map(result =>
+    context.toGraphqlMap(result.metacard.properties)
+  )
 
+  json.status['elapsed'] = json.request_duration_millis
   return { attributes, ...json }
 }
 
@@ -174,32 +203,22 @@ export const Query = {
 const createMetacard = async (parent, args, context) => {
   const { attrs } = args
 
-  const body = {
-    geometry: null,
-    type: 'Feature',
-    properties: context.fromGraphqlMap(attrs),
+  const metacard = context.fromGraphqlMap(attrs)
+
+  const metacardsToCreate = {
+    metacards: [
+      {
+        'metacard-type': metacard['metacard-type'],
+        attributes: metacard,
+      },
+    ],
   }
 
-  let res = await fetch(`${ROOT}/catalog/`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(body),
-  })
-
-  if (!res.ok) {
-    throw new Error(res.statusText)
-  }
-
-  const id = res.headers.get('id')
-
-  res = await metacardById(parent, { id }, context)
-
-  return context.toGraphqlMap(res.attributes[0])
+  const res = await catalog.create(metacardsToCreate)
+  return context.toGraphqlMap(res.created_metacards[0].attributes)
 }
 
-const saveMetacard = async (parent, args, context) => {
+const updateMetacard = async (parent, args, context) => {
   const { id, attrs } = args
 
   const attributes = Object.keys(attrs).map(attribute => {
@@ -229,36 +248,27 @@ const saveMetacard = async (parent, args, context) => {
     throw new Error(res.statusText)
   }
 
-  const modified = new Date().toISOString()
   return context.toGraphqlMap({
-    __typename: 'MetacardAttributes',
     id,
-    'metacard.modified': modified,
     ...attrs,
   })
 }
 
-const deleteMetacard = async (parent, args) => {
+const deleteMetacard = async (parent, args, context) => {
   const { id } = args
-
-  const res = await fetch(`${ROOT}/catalog/${id}`, {
-    method: 'DELETE',
-  })
-
-  if (res.ok) {
-    return id
-  }
+  await catalog.delete({ ids: [id] })
+  return id
 }
 
 export const Mutation = {
   createMetacard,
-  saveMetacard,
+  updateMetacard,
   createMetacardFromJson: createMetacard,
-  saveMetacardFromJson: saveMetacard,
+  updateMetacardFromJson: updateMetacard,
   deleteMetacard,
 }
 
-const baseResolvers = {
+export const baseResolvers = {
   Query,
   Mutation,
 }

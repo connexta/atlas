@@ -15,13 +15,13 @@
 
 const url = require('url')
 const qs = require('querystring')
+const fetch = require('isomorphic-fetch')
 
 type Options = {
   headers?: object
   [key: string]: unknown
 }
 
-const fetch = window.fetch
 
 const cacheBust = (urlString: string) => {
   const { query, ...rest } = url.parse(urlString)

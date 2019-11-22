@@ -295,11 +295,11 @@ type MutationResponse {
 
 type Mutation {
   createMetacard(attrs: MetacardAttributesInput!): MetacardAttributes
-  saveMetacard(id: ID!, attrs: MetacardAttributesInput!): MetacardAttributes
+  updateMetacard(id: ID!, attrs: MetacardAttributesInput!): MetacardAttributes
 
   createMetacardFromJson(attrs: Json!): Json
 
-  saveMetacardFromJson(id: ID!, attrs: Json!): Json
+  updateMetacardFromJson(id: ID!, attrs: Json!): Json
 
   deleteMetacard(id: ID!): ID
 }

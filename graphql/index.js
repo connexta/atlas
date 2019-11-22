@@ -4,6 +4,11 @@ import GraphiQL from 'graphiql'
 import gql from 'graphql-tag'
 import { createClient } from './graphql'
 import 'graphiql/graphiql.css'
+import { generateSchemaFromMetacardTypes } from './gen-schema'
+
+const types = require('./attributes.json')
+const schema = generateSchemaFromMetacardTypes(null, types)
+import { baseResolvers as resolvers } from './graphql'
 
 const execQuery = (client, graphQLParams) => {
   const query = gql(graphQLParams.query)
@@ -30,17 +35,17 @@ const execQuery = (client, graphQLParams) => {
 }
 
 const render = createClient => {
-  createClient().then(client => {
-    const graphQLFetcher = async graphQLParams => {
-      const { data, error } = await execQuery(client, graphQLParams)
-      return { data, error }
-    }
+  const client = createClient(schema, resolvers)
 
-    ReactDOM.render(
-      <GraphiQL fetcher={graphQLFetcher} />,
-      document.getElementById('root')
-    )
-  })
+  const graphQLFetcher = async graphQLParams => {
+    const { data, error } = await execQuery(client, graphQLParams)
+    return { data, error }
+  }
+
+  ReactDOM.render(
+    <GraphiQL fetcher={graphQLFetcher} />,
+    document.getElementById('root')
+  )
 }
 
 module.hot.accept('./graphql', () => {
