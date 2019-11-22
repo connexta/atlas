@@ -22,7 +22,6 @@ type Options = {
   [key: string]: unknown
 }
 
-
 const cacheBust = (urlString: string) => {
   const { query, ...rest } = url.parse(urlString)
   return url.format({
