@@ -9,12 +9,21 @@ import CardActionArea, {
 import Typography, { TypographyProps } from '@material-ui/core/Typography'
 import styled from 'styled-components'
 import CreateIcon from '@material-ui/icons/AddBox'
+import { ZeroWidthSpace } from '../zero-width-space/zero-width-space'
 
-export const WrappedHeader = styled(
-  React.forwardRef((props: CardHeaderProps, ref: React.Ref<any>) => {
-    return <CardHeader {...props} ref={ref} />
-  })
-)<CardHeaderProps>`` as React.ComponentType<CardHeaderProps>
+export const WrappedHeader = ({ title, ...otherProps }: CardHeaderProps) => {
+  return (
+    <CardHeader
+      title={
+        <>
+          {title}
+          <ZeroWidthSpace />
+        </>
+      }
+      {...otherProps}
+    />
+  )
+}
 
 export const WrappedCard = styled(
   React.forwardRef((props: CardProps, ref: React.Ref<any>) => {
@@ -34,21 +43,21 @@ export const WrappedCardContent = styled(
   })
 )<CardContentProps>`` as React.ComponentType<CardContentProps>
 
-export const WrappedCardContentLabel = styled(
-  React.forwardRef((props: TypographyProps, ref: React.Ref<any>) => {
-    return <Typography {...props} ref={ref} noWrap />
-  })
-)<TypographyProps>`
-  && {
-    opacity: 0.6;
-  }
-`
+export const WrappedCardContentLabel = (props: TypographyProps) => {
+  return <Typography {...props} noWrap style={{ opacity: 0.6 }} />
+}
 
-export const WrappedCardContentValue = styled(
-  React.forwardRef((props: TypographyProps, ref: React.Ref<any>) => {
-    return <Typography {...props} ref={ref} noWrap />
-  })
-)<TypographyProps>``
+export const WrappedCardContentValue = ({
+  children,
+  ...otherProps
+}: TypographyProps) => {
+  return (
+    <Typography {...otherProps} noWrap>
+      {children}
+      <ZeroWidthSpace />
+    </Typography>
+  )
+}
 
 export const WrappedCardActionArea = styled(
   React.forwardRef((props: CardActionAreaProps, ref: React.Ref<any>) => {

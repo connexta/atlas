@@ -2,6 +2,7 @@ import * as React from 'react'
 import clsx from 'clsx'
 import CreateableSelect from 'react-select/creatable'
 import AsyncCreateableSelect from 'react-select/async-creatable'
+import AsyncSelect from 'react-select/async'
 import { emphasize, makeStyles, useTheme } from '@material-ui/core/styles'
 import Typography from '@material-ui/core/Typography'
 import TextField from '@material-ui/core/TextField'
@@ -11,7 +12,7 @@ import MenuItem from '@material-ui/core/MenuItem'
 import CancelIcon from '@material-ui/icons/Cancel'
 import { Props as CreatableProps } from 'react-select/src/Creatable'
 import { AsyncProps } from 'react-select/src/Async'
-const _debounce = require('lodash.debounce')
+import { Props as SelectProps } from 'react-select/src/Select'
 const _ = require('lodash')
 
 export type Option = {
@@ -277,6 +278,60 @@ export const WrappedAsyncCreatableSelect = (props: AsyncCreateableProps) => {
         label,
         InputLabelProps: {
           htmlFor: 'react-select-multiple',
+          shrink: true,
+        },
+      }}
+      {...baseProps}
+    />
+  )
+}
+
+type AsyncSelectProps = {
+  /**
+   * Time in ms to debounce load options call.
+   */
+  debounce?: number
+} & SelectProps &
+  AsyncProps<any>
+
+export const WrappedAsyncSelect = (props: AsyncSelectProps) => {
+  const classes = useStyles()
+  const theme = useTheme()
+  const selectStyles = {
+    input: (base: any) => ({
+      ...base,
+      color: theme.palette.text.primary,
+      '& input': {
+        font: 'inherit',
+      },
+    }),
+  }
+  const {
+    label,
+    styles,
+    debounce,
+    loadOptions,
+    components: customComponents,
+    ...baseProps
+  } = props
+
+  const debouncedLoadOptions = _.debounce(loadOptions, debounce)
+
+  return (
+    <AsyncSelect
+      loadOptions={debouncedLoadOptions}
+      components={{
+        ...components,
+        ...customComponents,
+      }}
+      classes={classes}
+      styles={{
+        ...selectStyles,
+      }}
+      TextFieldProps={{
+        label,
+        InputLabelProps: {
+          htmlFor: 'react-select',
           shrink: true,
         },
       }}

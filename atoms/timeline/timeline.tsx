@@ -194,8 +194,8 @@ const showElement = (element: d3.Selection<null, unknown, null, undefined>) =>
  */
 const getTimescaleFromWidth = (
   width: number,
-  min: Date,
-  max: Date
+  min: Date = new Date('1980-01-01:00:00.000z'),
+  max: Date = new Date()
 ): Timescale => {
   const timeScale = d3
     .scaleUtc()
@@ -290,12 +290,12 @@ export interface TimelineProps {
   /**
    * Minimum date bounds to render items between.
    */
-  min: Date
+  min?: Date
 
   /**
    * Maximum date bounds to render items between.
    */
-  max: Date
+  max?: Date
 }
 
 /*
@@ -329,9 +329,10 @@ export const Timeline = (props: TimelineProps) => {
 
   const possibleDateAttributes = getPossibleDateAttributes(props.data || [])
 
-  const [xScale, setXScale] = useState(() =>
-    getTimescaleFromWidth(width, min, max)
-  )
+  const timescale = getTimescaleFromWidth(width, min, max)
+
+  const [xScale, setXScale] = useState(() => timescale)
+
   const [xAxis, setXAxis] = useState(() =>
     d3.axisBottom(xScale).tickSize(AXIS_HEIGHT)
   )
@@ -343,74 +344,89 @@ export const Timeline = (props: TimelineProps) => {
     string | undefined
   >(possibleDateAttributes[0] || undefined)
 
-  useEffect(() => {
-    if (selectedDateAttribute === undefined) {
-      setSelectedDateAttribute(possibleDateAttributes[0])
-    }
-  }, [possibleDateAttributes])
+  useEffect(
+    () => {
+      if (selectedDateAttribute === undefined) {
+        setSelectedDateAttribute(possibleDateAttributes[0])
+      }
+    },
+    [possibleDateAttributes]
+  )
 
   const [isDragging, setIsDragging] = useState(false)
 
-  const [selectionRange, setSelectionRange] = useSelectionRange(
-    [],
-    getTimescaleFromWidth(width, min, max)
+  const [selectionRange, setSelectionRange] = useSelectionRange([], timescale)
+
+  useEffect(
+    () => {
+      if (width != 0) {
+        console.debug(`Width updated to ${width}`)
+        setXScale(() => timescale)
+      }
+    },
+    [width]
   )
 
-  useEffect(() => {
-    if (width != 0) {
-      console.debug(`Width updated to ${width}`)
-      setXScale(() => getTimescaleFromWidth(width, min, max))
-    }
-  }, [width, min, max])
+  useEffect(
+    () => {
+      console.debug(`xScale updated to ${xScale.range()}`)
+      const [left, right] = xScale.range()
 
-  useEffect(() => {
-    console.debug(`xScale updated to ${xScale.range()}`)
-    const [left, right] = xScale.range()
+      if (left < right) {
+        const newXAxis = xAxis.scale(xScale)
 
-    if (left < right) {
-      const newXAxis = xAxis.scale(xScale)
+        setXAxis(() => newXAxis)
+        d3.select('.axis--x').call(newXAxis)
+      }
+    },
+    [xScale]
+  )
 
-      setXAxis(() => newXAxis)
-      d3.select('.axis--x').call(newXAxis)
-    }
-  }, [xScale])
-
-  useEffect(() => {
-    if (rootRef.current) {
-      // @ts-ignore
-      const rect = rootRef.current.getBoundingClientRect()
-      setWidth(rect.width)
-    }
-  }, [rootRef])
+  useEffect(
+    () => {
+      if (rootRef.current) {
+        // @ts-ignore
+        const rect = rootRef.current.getBoundingClientRect()
+        setWidth(rect.width)
+      }
+    },
+    [rootRef]
+  )
 
   /**
    * Every 100 ms, poll to see the new parent rect width.
    * If the new parent rect width is different than current width, update the width.
    */
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      if (rootRef.current) {
-        //@ts-ignore
-        const rect = rootRef.current.getBoundingClientRect()
-        if (rect.width !== width) {
-          setWidth(rect.width)
-          clearInterval(interval)
+  useEffect(
+    () => {
+      const interval = setInterval(() => {
+        if (rootRef.current) {
+          //@ts-ignore
+          const rect = rootRef.current.getBoundingClientRect()
+          if (rect.width !== width) {
+            setWidth(rect.width)
+            clearInterval(interval)
+          }
         }
-      }
-    }, 100)
-  }, [rootRef, width])
+      }, 100)
+    },
+    [rootRef, width]
+  )
 
-  useEffect(() => {
-    zoomBehavior.scaleTo(
-      // @ts-ignore
-      d3
-        .select(d3ContainerRef.current)
-        .transition()
-        .duration(0),
-      1
-    )
-  }, [width])
+  useEffect(
+    () => {
+      zoomBehavior.scaleTo(
+        // @ts-ignore
+        d3
+          .select(d3ContainerRef.current)
+          .transition()
+          .duration(0),
+        1
+      )
+    },
+    [width]
+  )
 
   const markerHeight = height - 70 - AXIS_HEIGHT - heightOffset
   /**
@@ -424,9 +440,7 @@ export const Timeline = (props: TimelineProps) => {
     const transform = d3.event.transform
 
     if (width != 0) {
-      const newXScale = transform.rescaleX(
-        getTimescaleFromWidth(width, min, max)
-      )
+      const newXScale = transform.rescaleX(timescale)
       setXScale(() => newXScale)
 
       const newXAxis = xAxis.scale(newXScale)
@@ -439,7 +453,7 @@ export const Timeline = (props: TimelineProps) => {
 
   const zoomBehavior = d3
     .zoom()
-    .scaleExtent([1, 60 * 60 * 24]) // Allows selections down to the minute at full zoom
+    .scaleExtent([1, 24 * 60 * 60]) // Allows selections down to the minute at full zoom
     .translateExtent([[0, 0], [width, height]])
     .extent([[0, 0], [width, height]])
     .filter(() => {
@@ -483,402 +497,443 @@ export const Timeline = (props: TimelineProps) => {
     )
   }
 
-  useEffect(() => {
-    /**
-     * Range is the range of possible output values used in display.
-     * Domain maps to Range
-     * i.e. Dates map to Pixels
-     */
-    const renderInitialXAxis = () => {
-      const svg = d3
-        .select(d3ContainerRef.current)
-        .attr('width', width)
-        .attr('height', height)
+  useEffect(
+    () => {
+      /**
+       * Range is the range of possible output values used in display.
+       * Domain maps to Range
+       * i.e. Dates map to Pixels
+       */
+      const renderInitialXAxis = () => {
+        const svg = d3
+          .select(d3ContainerRef.current)
+          .attr('width', width)
+          .attr('height', height)
 
-      svg
-        .select('.axis--x')
-        .attr(
-          'transform',
-          `translate(0 ${height - (AXIS_MARGIN + AXIS_HEIGHT + heightOffset)})`
-        )
-        .call(xAxis)
-    }
+        svg
+          .select('.axis--x')
+          .attr(
+            'transform',
+            `translate(0 ${height -
+              (AXIS_MARGIN + AXIS_HEIGHT + heightOffset)})`
+          )
+          .call(xAxis)
+      }
 
-    if (d3ContainerRef.current) {
-      renderInitialXAxis()
+      if (d3ContainerRef.current) {
+        renderInitialXAxis()
 
-      const container = d3.select(d3ContainerRef.current)
+        const container = d3.select(d3ContainerRef.current)
 
-      //@ts-ignore
-      container.call(zoomBehavior)
-    }
-  }, [height, width])
+        //@ts-ignore
+        container.call(zoomBehavior)
+      }
+    },
+    [height, width]
+  )
 
   // Add mouse handlers to listen to d3 mouse events
-  useEffect(() => {
-    // When the d3Container mousemove event triggers, show the hover line
-    d3.select(d3ContainerRef.current).on('mousemove', function() {
-      const coord = d3.mouse(this as any)
-      d3.select(hoverLineRef.current)
-        .attr('transform', `translate(${coord[0]}, ${markerHeight})`)
-        .attr('style', 'display: block')
+  useEffect(
+    () => {
+      // When the d3Container mousemove event triggers, show the hover line
+      d3.select(d3ContainerRef.current).on('mousemove', function() {
+        const coord = d3.mouse(this as any)
+        d3.select(hoverLineRef.current)
+          .attr('transform', `translate(${coord[0]}, ${markerHeight})`)
+          .attr('style', 'display: block')
 
-      const hoverDate = convertDateToTimezoneDate(
-        xScale.invert(coord[0]),
-        props.format,
-        props.timezone
-      )
+        const hoverDate = convertDateToTimezoneDate(
+          xScale.invert(coord[0]),
+          props.format,
+          props.timezone
+        )
 
-      const formattedDate = formatDate(hoverDate, props.format, props.timezone)
+        const formattedDate = formatDate(
+          hoverDate,
+          props.format,
+          props.timezone
+        )
 
-      const widthBuffer = 150
-      const maxX = width - widthBuffer
-      let xPos = coord[0]
-      if (xPos < widthBuffer) xPos = widthBuffer
-      if (xPos > maxX) xPos = maxX
-      const yPos = 20
+        const widthBuffer = 150
+        const maxX = width - widthBuffer
+        let xPos = coord[0]
+        if (xPos < widthBuffer) xPos = widthBuffer
+        if (xPos > maxX) xPos = maxX
+        const yPos = 20
 
-      d3.select(hoverLineTextRef.current)
-        .attr('transform', `translate(${xPos}, ${yPos})`)
-        .attr('style', 'display: block')
-        .attr('text-anchor', 'middle')
-        .text(formattedDate)
-    })
+        d3.select(hoverLineTextRef.current)
+          .attr('transform', `translate(${xPos}, ${yPos})`)
+          .attr('style', 'display: block')
+          .attr('text-anchor', 'middle')
+          .text(formattedDate)
+      })
 
-    // When the d3Container mouseleave event triggers, set the hoverValue to null and hide the hoverLine line
-    d3.select(d3ContainerRef.current).on('mouseleave', function() {
-      hideElement(d3.select(hoverLineRef.current))
-      hideElement(d3.select(hoverLineTextRef.current))
-    })
-  }, [xScale, props.timezone, props.height])
+      // When the d3Container mouseleave event triggers, set the hoverValue to null and hide the hoverLine line
+      d3.select(d3ContainerRef.current).on('mouseleave', function() {
+        hideElement(d3.select(hoverLineRef.current))
+        hideElement(d3.select(hoverLineTextRef.current))
+      })
+    },
+    [xScale, props.timezone, props.height]
+  )
 
   // Render rectangles
-  useEffect(() => {
-    const min = xScale.range()[0]
-    const max = xScale.range()[1]
+  useEffect(
+    () => {
+      const min = xScale.range()[0]
+      const max = xScale.range()[1]
 
-    const NUM_BUCKETS = Math.round(width / 30) // 30 is just a constant that I found to look good.
+      const NUM_BUCKETS = Math.round(width / 30) // 30 is just a constant that I found to look good.
 
-    const bucketWidth = (max - min) / NUM_BUCKETS
-    const buckets: Bucket[] = range(NUM_BUCKETS).map(i => ({
-      x1: min + bucketWidth * i,
-      x2: min + bucketWidth * (i + 1),
-      items: [],
-      selected: false,
-    }))
+      const bucketWidth = (max - min) / NUM_BUCKETS
+      const buckets: Bucket[] = range(NUM_BUCKETS).map(i => ({
+        x1: min + bucketWidth * i,
+        x2: min + bucketWidth * (i + 1),
+        items: [],
+        selected: false,
+      }))
 
-    if (props.data && selectedDateAttribute !== undefined) {
-      d3.selectAll('.data').remove()
+      if (props.data && selectedDateAttribute !== undefined) {
+        d3.selectAll('.data').remove()
 
-      props.data.forEach(d => {
-        const date = d.attributes[selectedDateAttribute!]
-        if (date == null) {
-          return
-        }
-
-        const scaledDate = xScale(date)
-
-        for (let i = 0; i < buckets.length; i++) {
-          const b = buckets[i]
-          if (b.x1 < scaledDate && scaledDate < b.x2) {
-            b.items.push(d)
-            if (d.selected) {
-              b.selected = true
-            }
-            break
+        props.data.forEach(d => {
+          const date = d.attributes[selectedDateAttribute!]
+          if (date == null) {
+            return
           }
-        }
-      })
 
-      const mostItemsInABucket = Math.max(...buckets.map(b => b.items.length))
-      const heightPerItem = (height - (heightOffset + 75)) / mostItemsInABucket
+          const scaledDate = xScale(date)
 
-      setDataBuckets(buckets)
-
-      buckets.forEach((b, i) => {
-        const rectangleHeight = b.items.length * heightPerItem
-
-        const x = (b.x1 + b.x2) / 2 - 15
-
-        const y =
-          height - rectangleHeight - (AXIS_MARGIN + AXIS_HEIGHT + heightOffset)
-
-        d3.select('.data-holder')
-          .append('rect')
-          .attr('class', `data ${b.selected ? 'selected' : ''}`)
-          .attr('width', bucketWidth - 5)
-          .attr('height', rectangleHeight)
-          .attr('id', i)
-          .attr('transform', `translate(${x}, ${y})`)
-          .append('rect')
-      })
-    }
-  }, [props.data, xScale, selectedDateAttribute, width, height])
-
-  useEffect(() => {
-    d3.select('.data-holder')
-      .selectAll('.data')
-      .on('mouseleave', function() {
-        setTooltip(null)
-      })
-      .on('mousemove', function() {
-        // @ts-ignore
-        const id = d3.select(this).node().id
-        const x = d3.event.layerX
-        const y = d3.event.layerY
-        const tooltipInBounds = x <= width * 0.75
-        setTooltip({
-          // If the tooltip will overflow off the timeline, set x to left of the cursor instead of right.
-          x: tooltipInBounds ? x + 25 : x - width * 0.25,
-          y: y - 20,
-          message: props.renderTooltip
-            ? props.renderTooltip(dataBuckets[id].items)
-            : generateTooltipMessage(dataBuckets[id].items.map(d => d.id)),
+          for (let i = 0; i < buckets.length; i++) {
+            const b = buckets[i]
+            if (b.x1 < scaledDate && scaledDate < b.x2) {
+              b.items.push(d)
+              if (d.selected) {
+                b.selected = true
+              }
+              break
+            }
+          }
         })
-      })
-  }, [dataBuckets])
+
+        const mostItemsInABucket = Math.max(...buckets.map(b => b.items.length))
+        const heightPerItem =
+          (height - (heightOffset + 75)) / mostItemsInABucket
+
+        setDataBuckets(buckets)
+
+        buckets.forEach((b, i) => {
+          const rectangleHeight = b.items.length * heightPerItem
+
+          const x = (b.x1 + b.x2) / 2 - 15
+
+          const y =
+            height -
+            rectangleHeight -
+            (AXIS_MARGIN + AXIS_HEIGHT + heightOffset)
+
+          d3.select('.data-holder')
+            .append('rect')
+            .attr('class', `data ${b.selected ? 'selected' : ''}`)
+            .attr('width', bucketWidth - 5)
+            .attr('height', rectangleHeight)
+            .attr('id', i)
+            .attr('transform', `translate(${x}, ${y})`)
+            .append('rect')
+        })
+      }
+    },
+    [props.data, xScale, selectedDateAttribute, width, height]
+  )
+
+  useEffect(
+    () => {
+      d3.select('.data-holder')
+        .selectAll('.data')
+        .on('mouseleave', function() {
+          setTooltip(null)
+        })
+        .on('mousemove', function() {
+          // @ts-ignore
+          const id = d3.select(this).node().id
+          const x = d3.event.layerX
+          const y = d3.event.layerY
+          const tooltipInBounds = x <= width * 0.75
+          setTooltip({
+            // If the tooltip will overflow off the timeline, set x to left of the cursor instead of right.
+            x: tooltipInBounds ? x + 25 : x - width * 0.25,
+            y: y - 20,
+            message: props.renderTooltip
+              ? props.renderTooltip(dataBuckets[id].items)
+              : generateTooltipMessage(dataBuckets[id].items.map(d => d.id)),
+          })
+        })
+    },
+    [dataBuckets]
+  )
 
   // If dragging is finished, update selected results.
-  useEffect(() => {
-    if (
-      !isDragging &&
-      props.data &&
-      selectedDateAttribute !== undefined &&
-      !props.mode
-    ) {
-      if (selectionRange.length == 2) {
-        const x1 = xScale(selectionRange[0])
-        const x2 = xScale(selectionRange[1])
+  useEffect(
+    () => {
+      if (
+        !isDragging &&
+        props.data &&
+        selectedDateAttribute !== undefined &&
+        !props.mode
+      ) {
+        if (selectionRange.length == 2) {
+          const x1 = xScale(selectionRange[0])
+          const x2 = xScale(selectionRange[1])
 
-        // Prefilter to only buckets we care about
-        const bucketsContainingRelevantData = dataBuckets.filter(
-          b =>
-            (x1 < b.x1 && b.x2 < x2) ||
-            (b.x1 < x1 && x1 < b.x2) ||
-            (b.x1 < x2 && x2 < b.x2)
-        )
-
-        // Get the data inside those buckets that falls within the selection
-        const dataToSelect = _.flatMap(
-          bucketsContainingRelevantData,
-          b => b.items
-        ).filter(d =>
-          dateWithinRange(d.attributes[selectedDateAttribute!], selectionRange)
-        )
-
-        props.onSelect && props.onSelect(dataToSelect)
-      }
-    }
-  }, [isDragging])
-
-  useEffect(() => {
-    /**
-     *
-     * Selection Drag does two things:
-     * 1. When the user drags across the timeline, a range selection will be created.
-     * 2. If the drag event is only 5 pixels or less from start to finish AND ends on a rect object,
-     * assume that the user meant to click instead of drag, and properly trigger a click action on the rect.
-     */
-    const getSelectionDrag = () => {
-      let clickStart: number
-
-      return d3
-        .drag()
-        .on('start', () => {
-          clickStart = d3.event.x
-          const newLeftDate = convertDateToTimezoneDate(
-            xScale.invert(clickStart),
-            props.format,
-            props.timezone
+          // Prefilter to only buckets we care about
+          const bucketsContainingRelevantData = dataBuckets.filter(
+            b =>
+              (x1 < b.x1 && b.x2 < x2) ||
+              (b.x1 < x1 && x1 < b.x2) ||
+              (b.x1 < x2 && x2 < b.x2)
           )
 
-          if (props.mode === 'single') {
-            setSelectionRange([newLeftDate])
-          } else {
-            setIsDragging(true)
-            hideElement(d3.select(hoverLineRef.current))
-            hideElement(d3.select(hoverLineTextRef.current))
-            setSelectionRange([newLeftDate])
-          }
-        })
+          // Get the data inside those buckets that falls within the selection
+          const dataToSelect = _.flatMap(
+            bucketsContainingRelevantData,
+            b => b.items
+          ).filter(d =>
+            dateWithinRange(
+              d.attributes[selectedDateAttribute!],
+              selectionRange
+            )
+          )
 
-        // Set isDragging to false to trigger a selection update, additionally check if user meant to click.
-        .on('end', () => {
-          if (!props.mode) {
-            showElement(d3.select(hoverLineRef.current))
-            setIsDragging(false)
-            const clickDistance = clickStart - d3.event.x
-            const sourceEvent = d3.event.sourceEvent
-            if (Math.abs(clickDistance) < 5) {
-              const nodeName = sourceEvent.srcElement.nodeName
-              setSelectionRange([])
-              if (nodeName === 'rect' || nodeName === 'line') {
-                const x = d3.event.x
-                const bucket = dataBuckets.find(b => b.x1 < x && x <= b.x2)
-                bucket && props.onSelect && props.onSelect(bucket.items)
-              }
-            }
-          }
-        })
-        .on('drag', () => {
-          if (props.mode !== 'single') {
-            const diff = d3.event.x - d3.event.subject.x
+          props.onSelect && props.onSelect(dataToSelect)
+        }
+      }
+    },
+    [isDragging]
+  )
 
-            const initialDate = convertDateToTimezoneDate(
+  useEffect(
+    () => {
+      /**
+       *
+       * Selection Drag does two things:
+       * 1. When the user drags across the timeline, a range selection will be created.
+       * 2. If the drag event is only 5 pixels or less from start to finish AND ends on a rect object,
+       * assume that the user meant to click instead of drag, and properly trigger a click action on the rect.
+       */
+      const getSelectionDrag = () => {
+        let clickStart: number
+
+        return d3
+          .drag()
+          .on('start', () => {
+            clickStart = d3.event.x
+            const newLeftDate = convertDateToTimezoneDate(
               xScale.invert(clickStart),
               props.format,
               props.timezone
             )
 
-            let dragCurrent = clickStart + diff
-            const dragDate = convertDateToTimezoneDate(
-              xScale.invert(dragCurrent),
+            if (props.mode === 'single') {
+              setSelectionRange([newLeftDate])
+            } else {
+              setIsDragging(true)
+              hideElement(d3.select(hoverLineRef.current))
+              hideElement(d3.select(hoverLineTextRef.current))
+              setSelectionRange([newLeftDate])
+            }
+          })
+
+          // Set isDragging to false to trigger a selection update, additionally check if user meant to click.
+          .on('end', () => {
+            if (!props.mode) {
+              showElement(d3.select(hoverLineRef.current))
+              setIsDragging(false)
+              const clickDistance = clickStart - d3.event.x
+              const sourceEvent = d3.event.sourceEvent
+              if (Math.abs(clickDistance) < 5) {
+                const nodeName = sourceEvent.srcElement.nodeName
+                setSelectionRange([])
+                if (nodeName === 'rect' || nodeName === 'line') {
+                  const x = d3.event.x
+                  const bucket = dataBuckets.find(b => b.x1 < x && x <= b.x2)
+                  bucket && props.onSelect && props.onSelect(bucket.items)
+                }
+              }
+            }
+          })
+          .on('drag', () => {
+            if (props.mode !== 'single') {
+              const diff = d3.event.x - d3.event.subject.x
+
+              const initialDate = convertDateToTimezoneDate(
+                xScale.invert(clickStart),
+                props.format,
+                props.timezone
+              )
+
+              let dragCurrent = clickStart + diff
+              const dragDate = convertDateToTimezoneDate(
+                xScale.invert(dragCurrent),
+                props.format,
+                props.timezone
+              )
+
+              if (diff > 0) {
+                setSelectionRange([initialDate, dragDate])
+              } else {
+                setSelectionRange([dragDate, initialDate])
+              }
+            }
+          }) as any
+      }
+
+      d3.select(d3ContainerRef.current).call(getSelectionDrag())
+    },
+    [dataBuckets, selectionRange, xScale, props.timezone]
+  )
+
+  useEffect(
+    () => {
+      /**
+       * Creates the drag behavior used when selecting the left or right slider.
+       *
+       * Validation for sliders:
+       * - Left slider cannot be within 10 pixels of the right slider.
+       * - Right slider cannot be within 10 pixels of the left slider.
+       *
+       * @param slider - Which slider the drag behavior should affect.
+       */
+      const getEdgeDrag = (slider: 'LEFT' | 'RIGHT') =>
+        d3
+          .drag()
+          .on('start', () => {
+            hideElement(d3.select(hoverLineRef.current))
+            hideElement(d3.select(hoverLineTextRef.current))
+            setIsDragging(true)
+          })
+          .on('end', () => setIsDragging(false))
+          .on('drag', () => {
+            const dragValue = xScale.invert(d3.event.x)
+
+            const dateWithTimezone = convertDateToTimezoneDate(
+              dragValue,
+              props.format,
+              props.timezone
+            )
+            const BUFFER = 10 // Buffer in pixels to keep sliders from overlapping/crossing
+
+            if (slider === 'LEFT') {
+              const maximumX = xScale(selectionRange[1]) - BUFFER
+              if (d3.event.x <= maximumX) {
+                setSelectionRange([dateWithTimezone, selectionRange[1]])
+              }
+            } else if (slider === 'RIGHT') {
+              const minimumX = xScale(selectionRange[0]) + BUFFER
+              if (d3.event.x >= minimumX) {
+                setSelectionRange([selectionRange[0], dateWithTimezone])
+              }
+            }
+          }) as any
+
+      d3.select(leftMarkerRef.current).call(getEdgeDrag('LEFT'))
+      d3.select(rightMarkerRef.current).call(getEdgeDrag('RIGHT'))
+    },
+    [xScale, selectionRange, props.timezone]
+  )
+
+  useEffect(
+    () => {
+      /**
+       * Create the drag behavior used when selecting the middle area between a range.
+       *
+       * NOTE: This will not be used if .brushBar class has 'pointer-events: none' set, as the events will never be hit.
+       */
+      const getBrushDrag = () =>
+        d3
+          .drag()
+          .on('start', () => {
+            setIsDragging(true)
+            hideElement(d3.select(hoverLineRef.current))
+            hideElement(d3.select(hoverLineTextRef.current))
+          })
+          .on('end', () => setIsDragging(false))
+          .on('drag', () => {
+            const value = d3.event.x - d3.event.subject.x
+
+            const currentLeft = xScale(selectionRange[0])
+            const currentRight = xScale(selectionRange[1])
+
+            const newLeft = currentLeft + value
+            const newRight = currentRight + value
+
+            const newLeftDate = convertDateToTimezoneDate(
+              xScale.invert(newLeft),
               props.format,
               props.timezone
             )
 
-            if (diff > 0) {
-              setSelectionRange([initialDate, dragDate])
-            } else {
-              setSelectionRange([dragDate, initialDate])
-            }
-          }
-        }) as any
-    }
+            const newRightDate = convertDateToTimezoneDate(
+              xScale.invert(newRight),
+              props.format,
+              props.timezone
+            )
 
-    d3.select(d3ContainerRef.current).call(getSelectionDrag())
-  }, [dataBuckets, selectionRange, xScale, props.timezone])
+            setSelectionRange([newLeftDate, newRightDate])
+          }) as any
 
-  useEffect(() => {
-    /**
-     * Creates the drag behavior used when selecting the left or right slider.
-     *
-     * Validation for sliders:
-     * - Left slider cannot be within 10 pixels of the right slider.
-     * - Right slider cannot be within 10 pixels of the left slider.
-     *
-     * @param slider - Which slider the drag behavior should affect.
-     */
-    const getEdgeDrag = (slider: 'LEFT' | 'RIGHT') =>
-      d3
-        .drag()
-        .on('start', () => {
-          hideElement(d3.select(hoverLineRef.current))
-          hideElement(d3.select(hoverLineTextRef.current))
-          setIsDragging(true)
-        })
-        .on('end', () => setIsDragging(false))
-        .on('drag', () => {
-          const dragValue = xScale.invert(d3.event.x)
-
-          const dateWithTimezone = convertDateToTimezoneDate(
-            dragValue,
-            props.format,
-            props.timezone
-          )
-          const BUFFER = 10 // Buffer in pixels to keep sliders from overlapping/crossing
-
-          if (slider === 'LEFT') {
-            const maximumX = xScale(selectionRange[1]) - BUFFER
-            if (d3.event.x <= maximumX) {
-              setSelectionRange([dateWithTimezone, selectionRange[1]])
-            }
-          } else if (slider === 'RIGHT') {
-            const minimumX = xScale(selectionRange[0]) + BUFFER
-            if (d3.event.x >= minimumX) {
-              setSelectionRange([selectionRange[0], dateWithTimezone])
-            }
-          }
-        }) as any
-
-    d3.select(leftMarkerRef.current).call(getEdgeDrag('LEFT'))
-    d3.select(rightMarkerRef.current).call(getEdgeDrag('RIGHT'))
-  }, [xScale, selectionRange, props.timezone])
-
-  useEffect(() => {
-    /**
-     * Create the drag behavior used when selecting the middle area between a range.
-     *
-     * NOTE: This will not be used if .brushBar class has 'pointer-events: none' set, as the events will never be hit.
-     */
-    const getBrushDrag = () =>
-      d3
-        .drag()
-        .on('start', () => {
-          setIsDragging(true)
-          hideElement(d3.select(hoverLineRef.current))
-          hideElement(d3.select(hoverLineTextRef.current))
-        })
-        .on('end', () => setIsDragging(false))
-        .on('drag', () => {
-          const value = d3.event.x - d3.event.subject.x
-
-          const currentLeft = xScale(selectionRange[0])
-          const currentRight = xScale(selectionRange[1])
-
-          const newLeft = currentLeft + value
-          const newRight = currentRight + value
-
-          const newLeftDate = convertDateToTimezoneDate(
-            xScale.invert(newLeft),
-            props.format,
-            props.timezone
-          )
-
-          const newRightDate = convertDateToTimezoneDate(
-            xScale.invert(newRight),
-            props.format,
-            props.timezone
-          )
-
-          setSelectionRange([newLeftDate, newRightDate])
-        }) as any
-
-    d3.select(brushBarRef.current).call(getBrushDrag())
-  }, [xScale, selectionRange, props.timezone])
+      d3.select(brushBarRef.current).call(getBrushDrag())
+    },
+    [xScale, selectionRange, props.timezone]
+  )
 
   // When the selection range is changed or the scale changes update the left, right, and brush markers
-  useEffect(() => {
-    if (
-      leftMarkerRef.current &&
-      rightMarkerRef.current &&
-      brushBarRef.current
-    ) {
-      const leftMarker = d3.select(leftMarkerRef.current)
-      const rightMarker = d3.select(rightMarkerRef.current)
-      const brushBar = d3.select(brushBarRef.current)
-
-      if (props.mode === 'single' && selectionRange.length === 1) {
+  useEffect(
+    () => {
+      if (
+        leftMarkerRef.current &&
+        rightMarkerRef.current &&
+        brushBarRef.current
+      ) {
         const leftMarker = d3.select(leftMarkerRef.current)
-        const leftUtc = toUtc(selectionRange[0], props.format, props.timezone)
-        leftMarker
-          .attr('transform', `translate(${xScale(leftUtc)}, ${markerHeight})`)
-          .attr('style', 'display: block')
-      } else if (props.mode !== 'single' && selectionRange.length == 2) {
-        const [leftValue, rightValue] = selectionRange
-        const leftUtc = toUtc(leftValue, props.format, props.timezone)
-        const rightUtc = toUtc(rightValue, props.format, props.timezone)
+        const rightMarker = d3.select(rightMarkerRef.current)
+        const brushBar = d3.select(brushBarRef.current)
 
-        leftMarker
-          .attr('transform', `translate(${xScale(leftUtc)}, ${markerHeight})`)
-          .attr('style', 'display: block')
+        if (props.mode === 'single' && selectionRange.length === 1) {
+          const leftMarker = d3.select(leftMarkerRef.current)
+          const leftUtc = toUtc(selectionRange[0], props.format, props.timezone)
+          leftMarker
+            .attr('transform', `translate(${xScale(leftUtc)}, ${markerHeight})`)
+            .attr('style', 'display: block')
+        } else if (props.mode !== 'single' && selectionRange.length == 2) {
+          const [leftValue, rightValue] = selectionRange
+          const leftUtc = toUtc(leftValue, props.format, props.timezone)
+          const rightUtc = toUtc(rightValue, props.format, props.timezone)
 
-        rightMarker
-          .attr('transform', `translate(${xScale(rightUtc)}, ${markerHeight})`)
-          .attr('style', 'display: block')
+          leftMarker
+            .attr('transform', `translate(${xScale(leftUtc)}, ${markerHeight})`)
+            .attr('style', 'display: block')
 
-        brushBar
-          .attr('transform', `translate(${xScale(leftUtc)},${markerHeight})`)
-          .attr('width', xScale(rightUtc) - xScale(leftUtc))
-          .attr('height', '50')
-          .attr('style', 'display: block')
-      } else {
-        hideElement(leftMarker)
-        hideElement(rightMarker)
-        hideElement(brushBar)
+          rightMarker
+            .attr(
+              'transform',
+              `translate(${xScale(rightUtc)}, ${markerHeight})`
+            )
+            .attr('style', 'display: block')
+
+          brushBar
+            .attr('transform', `translate(${xScale(leftUtc)},${markerHeight})`)
+            .attr('width', xScale(rightUtc) - xScale(leftUtc))
+            .attr('height', '50')
+            .attr('style', 'display: block')
+        } else {
+          hideElement(leftMarker)
+          hideElement(rightMarker)
+          hideElement(brushBar)
+        }
       }
-    }
-  }, [xScale, selectionRange, props.mode, props.height, props.timezone])
+    },
+    [xScale, selectionRange, props.mode, props.height, props.timezone]
+  )
 
   const renderCopyableDate = (date: Date) => {
     const formattedDate = formatDate(date, props.format, props.timezone)
@@ -1022,18 +1077,19 @@ export const Timeline = (props: TimelineProps) => {
           <TimelineButton variant="contained" onClick={() => zoomIn()} icon>
             +
           </TimelineButton>
-          {props.onDone && props.mode && (
-            <TimelineButton
-              color="primary"
-              variant="contained"
-              onClick={() => {
-                props.onDone && props.onDone(selectionRange)
-                setSelectionRange([])
-              }}
-            >
-              Done
-            </TimelineButton>
-          )}
+          {props.onDone &&
+            props.mode && (
+              <TimelineButton
+                color="primary"
+                variant="contained"
+                onClick={() => {
+                  props.onDone && props.onDone(selectionRange)
+                  setSelectionRange([])
+                }}
+              >
+                Done
+              </TimelineButton>
+            )}
         </ButtonArea>
       </ContextRow>
     </Root>

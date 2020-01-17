@@ -1,43 +1,115 @@
 import * as React from 'react'
 import Dialog, { DialogProps } from '@material-ui/core/Dialog'
-import DialogActions, {
-  DialogActionsProps,
-} from '@material-ui/core/DialogActions'
-import DialogContent, {
-  DialogContentProps,
-} from '@material-ui/core/DialogContent'
-import DialogContentText, {
-  DialogContentTextProps,
-} from '@material-ui/core/DialogContentText'
-import DialogTitle, { DialogTitleProps } from '@material-ui/core/DialogTitle'
-import styled from 'styled-components'
+import { createCtx } from './../../typescript/context'
+import { setType } from '../../typescript'
+import { Omit } from 'utility-types'
 
-export const WrappedDialog = styled(
-  React.forwardRef((props: DialogProps, ref: React.Ref<any>) => {
-    return <Dialog {...props} ref={ref} />
-  })
-)<DialogProps>`` as React.ComponentType<DialogProps>
+const [useDialogContext, DialogContextProvider] = createCtx<{
+  setProps: setType<Partial<DialogProps>>
+}>()
 
-export const WrappedDialogActions = styled(
-  React.forwardRef((props: DialogActionsProps, ref: React.Ref<any>) => {
-    return <DialogActions {...props} ref={ref} />
-  })
-)<DialogActionsProps>`` as React.ComponentType<DialogActionsProps>
+type DialogProviderProps = {
+  children?: React.ReactNode
+  initialDialogProps?: DialogProps
+}
 
-export const WrappedDialogContent = styled(
-  React.forwardRef((props: DialogContentProps, ref: React.Ref<any>) => {
-    return <DialogContent {...props} ref={ref} />
-  })
-)<DialogContentProps>`` as React.ComponentType<DialogContentProps>
+export const useDialog = useDialogContext
 
-export const WrappedDialogContentText = styled(
-  React.forwardRef((props: DialogContentTextProps, ref: React.Ref<any>) => {
-    return <DialogContentText {...props} ref={ref} />
-  })
-)<DialogContentTextProps>`` as React.ComponentType<DialogContentTextProps>
+export const DialogProvider = (props: DialogProviderProps) => {
+  const [dialogProps, setDialogProps] = React.useState({
+    children: <></>,
+    open: false,
+    onClose: () => {
+      setDialogProps({
+        ...dialogProps,
+        open: false,
+      })
+    },
+    ...props.initialDialogProps,
+  } as DialogProps)
 
-export const WrappedDialogTitle = styled(
-  React.forwardRef((props: DialogTitleProps, ref: React.Ref<any>) => {
-    return <DialogTitle {...props} ref={ref} />
-  })
-)<DialogTitleProps>`` as React.ComponentType<DialogTitleProps>
+  const setProps = (newProps: DialogProps) => {
+    setDialogProps({
+      ...dialogProps,
+      ...newProps,
+    })
+  }
+
+  return (
+    <DialogContextProvider
+      value={{
+        setProps,
+      }}
+    >
+      {props.children}
+      <Dialog {...dialogProps} />
+    </DialogContextProvider>
+  )
+}
+
+const [
+  useControlledDialogContext,
+  ControlledDialogContextProvider,
+] = createCtx<{
+  props: DialogProps
+  setProps: setType<Partial<DialogProps>>
+}>()
+
+type ControlledDialogProps = {
+  children: (
+    {
+      setProps,
+      props,
+    }: {
+      setProps: setType<Partial<DialogProps>>
+      props: DialogProps
+    }
+  ) => DialogProps['children']
+  content: (
+    {
+      setProps,
+      props,
+    }: {
+      setProps: setType<Partial<DialogProps>>
+      props: DialogProps
+    }
+  ) => DialogProps['children']
+} & Omit<Partial<DialogProps>, 'children'>
+
+export const ControlledDialog = ({
+  content,
+  children,
+  ...initialDialogProps
+}: ControlledDialogProps) => {
+  const [dialogProps, setDialogProps] = React.useState({
+    open: false,
+    onClose: () => {
+      setDialogProps({
+        ...dialogProps,
+        open: false,
+      })
+    },
+    ...initialDialogProps,
+  } as DialogProps)
+
+  const setProps = (props: Partial<DialogProps>) => {
+    setDialogProps({
+      ...dialogProps,
+      ...props,
+    })
+  }
+
+  return (
+    <ControlledDialogContextProvider
+      value={{
+        setProps,
+        props: dialogProps,
+      }}
+    >
+      {children({ setProps, props: dialogProps })}
+      <Dialog {...dialogProps}>
+        {content({ setProps, props: dialogProps })}
+      </Dialog>
+    </ControlledDialogContextProvider>
+  )
+}

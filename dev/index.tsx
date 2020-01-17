@@ -41,3 +41,6 @@ chokidar.watch('./styled/**/*').on('change', () => {
 chokidar.watch('./typescript/**/*').on('change', () => {
   recompileTypescript()
 })
+chokidar.watch('./graphql/**/*').on('change', () => {
+  recompileTypescript()
+})

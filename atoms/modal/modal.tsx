@@ -87,11 +87,13 @@ type Props = {
    */
   width?: string
   children: ({ setOpen }: { setOpen: setType<boolean> }) => React.ReactElement
-  modalChildren: ({
-    setOpen,
-  }: {
-    setOpen: setType<boolean>
-  }) => React.ReactElement
+  modalChildren: (
+    {
+      setOpen,
+    }: {
+      setOpen: setType<boolean>
+    }
+  ) => React.ReactElement
   defaultOpen?: boolean
   modalProps?: Subtract<
     ModalProps,

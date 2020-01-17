@@ -20,8 +20,20 @@ type CardGridProps = {
   children?: React.ReactNode
 }
 
+export const WrappedCardGridItem = ({
+  children,
+  gridItemProps,
+}: CardGridProps) => {
+  return (
+    // @ts-ignore
+    <GridItem {...gridItemProps} item xs={12} sm={6} md={4} lg={3} xl={2}>
+      {children}
+    </GridItem>
+  )
+}
+
 export const WrappedCardGrid = styled(
-  ({ gridProps, gridItemProps, children }: CardGridProps) => {
+  ({ gridProps, children }: CardGridProps) => {
     return (
       // @ts-ignore
       <WrappedGrid
@@ -29,26 +41,10 @@ export const WrappedCardGrid = styled(
         spacing={3}
         direction="row"
         justify="flex-start"
+        wrap="wrap"
         {...gridProps}
       >
-        {React.Children.map(children, child => {
-          return (
-            // @ts-ignore
-            <GridItem
-              item
-              xs={12}
-              sm={6}
-              md={4}
-              lg={3}
-              xl={2}
-              {...gridItemProps}
-              // @ts-ignore
-              key={child.key}
-            >
-              {child}
-            </GridItem>
-          )
-        })}
+        {children}
       </WrappedGrid>
     )
   }
