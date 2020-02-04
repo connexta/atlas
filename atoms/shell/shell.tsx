@@ -87,6 +87,10 @@ type ShellProps = {
   productImage: string
   productName: string
   branding: string
+  lowerLeftBackground?: string
+  lowerLeftLogo?: string
+  upperLeftLogo?: string
+  menuIcon?: string
   Links: React.ComponentType<{ open: boolean }>
   BannerHeader?: React.ReactNode
   BannerFooter?: React.ReactNode
@@ -94,10 +98,21 @@ type ShellProps = {
   Header: React.ReactNode
 }
 
+export const handleBase64EncodedImages = (url: string) => {
+  if (url.startsWith('data:')) {
+    return url
+  }
+  return `data:image/png;base64,${url}`
+}
+
 export const Shell = ({
   productImage,
   branding,
   productName,
+  lowerLeftBackground,
+  lowerLeftLogo,
+  upperLeftLogo,
+  menuIcon,
   Links,
   BannerFooter,
   BannerHeader,
@@ -165,9 +180,18 @@ export const Shell = ({
                 className={clsx(classes.menuButton, {
                   [classes.hide]: open,
                 })}
-                style={{ height: 'auto' }}
+                style={{ height: 'auto', padding: menuIcon ? '0px' : '12px' }}
               >
-                <MenuIcon />
+                {menuIcon ? (
+                  <>
+                    <img
+                      src={handleBase64EncodedImages(menuIcon)}
+                      style={{ width: '51.42px' }}
+                    />
+                  </>
+                ) : (
+                  <MenuIcon />
+                )}
               </IconButton>
               {Header}
             </Toolbar>
@@ -195,14 +219,28 @@ export const Shell = ({
               open={open}
             >
               <div className={classes.toolbar}>
-                <Grid container direction="column">
-                  <Grid item>
-                    <Typography>{branding}</Typography>
+                {upperLeftLogo ? (
+                  <>
+                    <img
+                      className={classes.branding}
+                      style={{
+                        maxWidth: '100%',
+                        maxHeight: '100%',
+                        padding: '5px',
+                      }}
+                      src={handleBase64EncodedImages(upperLeftLogo)}
+                    />
+                  </>
+                ) : (
+                  <Grid container direction="column">
+                    <Grid item>
+                      <Typography>{branding}</Typography>
+                    </Grid>
+                    <Grid item>
+                      <Typography>{productName}</Typography>
+                    </Grid>
                   </Grid>
-                  <Grid item>
-                    <Typography>{productName}</Typography>
-                  </Grid>
-                </Grid>
+                )}
 
                 <IconButton
                   onClick={handleDrawerClose}
@@ -215,20 +253,51 @@ export const Shell = ({
               <Links open={open} />
 
               <Divider />
-              <div style={{ marginTop: 'auto', padding: '10px' }}>
-                <a
-                  href="../"
-                  style={{ padding: '0px', background: 'transparent' }}
+              <>
+                <div
+                  style={{
+                    overflow: 'hidden',
+                    position: 'relative',
+                    height: '100%',
+                  }}
                 >
-                  <img
-                    className={classes.branding}
+                  {lowerLeftBackground ? (
+                    <img
+                      className={classes.branding}
+                      style={{
+                        height: '100%',
+                        opacity: 0.4,
+                        transform: 'scale(2)',
+                        position: 'absolute',
+                        zIndex: -1,
+                      }}
+                      src={handleBase64EncodedImages(lowerLeftBackground)}
+                    />
+                  ) : null}
+                  <a
+                    href="../"
                     style={{
-                      width: open ? `${drawerWidth - 20}px` : '52px',
+                      padding: '0px',
+                      background: 'transparent',
+                      position: 'absolute',
+                      bottom: 0,
+                      left: '50%',
+                      transform: 'translateX(-50%)',
                     }}
-                    src={`data:image/png;base64,${productImage}`}
-                  />
-                </a>
-              </div>
+                  >
+                    <img
+                      className={classes.branding}
+                      style={{
+                        width: open ? `${drawerWidth - 20}px` : '52px',
+                        padding: open ? `20px` : '5px',
+                      }}
+                      src={handleBase64EncodedImages(
+                        lowerLeftLogo || productImage
+                      )}
+                    />
+                  </a>
+                </div>
+              </>
             </Drawer>
           </Grid>
           <Grid
