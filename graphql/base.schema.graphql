@@ -24,12 +24,12 @@ input QuerySettingsInput {
   federation: String
   phonetics: Boolean
   sorts: [QuerySortInput]
+  sortPolicy: QuerySortInput
   spellcheck: Boolean
-
-  # Page size
-  count: Int
+  pageSize: Int
 
   # Start of paging. First element is 1, not 0.
+  startIndex: Int
   start: Int
   type: String
 }
