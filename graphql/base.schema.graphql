@@ -10,13 +10,13 @@ enum Direction {
 }
 
 input QuerySortInput {
-  attribute: String
-  direction: Direction
+  propertyName: String
+  sortOrder: Direction
 }
 
 type QuerySort {
-  propertyName: String
-  sortOrder: Direction
+  attribute: String
+  direction: Direction
 }
 
 input QuerySettingsInput {
