@@ -30,7 +30,6 @@ input QuerySettingsInput {
 
   # Start of paging. First element is 1, not 0.
   startIndex: Int
-  start: Int
   type: String
 }
 
