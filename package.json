@@ -2,7 +2,7 @@
   "name": "@connexta/atlas",
   "description": "Atlas",
   "author": "Connexta LLC",
-  "version": "0.0.53",
+  "version": "0.0.54",
   "private": false,
   "scripts": {
     "copy:package": "cpx package.json dist && cpx \"graphql/**/!(*.tsx)\" \"dist/graphql\"",
