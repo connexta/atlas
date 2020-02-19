@@ -10,8 +10,8 @@ enum Direction {
 }
 
 input QuerySortInput {
-  propertyName: String
-  sortOrder: Direction
+  attribute: String
+  direction: Direction
 }
 
 type QuerySort {
@@ -24,12 +24,13 @@ input QuerySettingsInput {
   federation: String
   phonetics: Boolean
   sorts: [QuerySortInput]
-  sortPolicy: QuerySortInput
   spellcheck: Boolean
-  pageSize: Int
+
+  # Page size
+  count: Int
 
   # Start of paging. First element is 1, not 0.
-  startIndex: Int
+  start: Int
   type: String
 }
 
