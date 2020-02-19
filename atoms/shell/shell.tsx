@@ -64,7 +64,7 @@ const useStyles = makeStyles((theme: Theme) =>
       alignItems: 'center',
       justifyContent: 'space-between',
       padding: theme.spacing(0, 1),
-      marginLeft: '16px',
+      marginLeft: '8px',
       [theme.breakpoints.down('sm')]: {
         marginLeft: '8px',
       },
@@ -219,35 +219,60 @@ export const Shell = ({
               open={open}
             >
               <div className={classes.toolbar}>
-                {upperLeftLogo ? (
-                  <>
-                    <img
-                      className={classes.branding}
-                      style={{
-                        maxWidth: '100%',
-                        maxHeight: '100%',
-                        padding: '5px',
-                      }}
-                      src={handleBase64EncodedImages(upperLeftLogo)}
-                    />
-                  </>
-                ) : (
-                  <Grid container direction="column">
-                    <Grid item>
-                      <Typography>{branding}</Typography>
-                    </Grid>
-                    <Grid item>
-                      <Typography>{productName}</Typography>
-                    </Grid>
-                  </Grid>
-                )}
-
-                <IconButton
-                  onClick={handleDrawerClose}
-                  disabled={open === false}
+                <Grid
+                  container
+                  wrap="nowrap"
+                  alignItems="center"
+                  style={{
+                    height: '100%',
+                    width: '100%',
+                    overflow: 'hidden',
+                    maxHeight: '64px',
+                  }}
                 >
-                  <ChevronLeftIcon />
-                </IconButton>
+                  <Grid
+                    item
+                    style={{
+                      position: 'relative',
+                      height: upperLeftLogo ? '100%' : 'auto',
+                      width: '100%',
+                    }}
+                  >
+                    {upperLeftLogo ? (
+                      <img
+                        className={classes.branding}
+                        style={{
+                          maxWidth: '100%',
+                          maxHeight: '100%',
+                          padding: '5px 0px',
+                          transform: 'translateY(-50%)',
+                          position: 'absolute',
+                          left: '0%',
+                          top: '50%',
+                        }}
+                        src={handleBase64EncodedImages(upperLeftLogo)}
+                      />
+                    ) : (
+                      <Grid container direction="column">
+                        <Grid item>
+                          <Typography>{branding}</Typography>
+                        </Grid>
+                        <Grid item>
+                          <Typography>{productName}</Typography>
+                        </Grid>
+                      </Grid>
+                    )}
+                  </Grid>
+                  <Grid item style={{ marginLeft: 'auto' }}>
+                    <IconButton
+                      onClick={handleDrawerClose}
+                      disabled={open === false}
+                      style={{ height: 'auto' }}
+                    >
+                      <ChevronLeftIcon />
+                    </IconButton>
+                  </Grid>
+                </Grid>
               </div>
               <Divider />
               <Links open={open} />
