@@ -289,7 +289,13 @@ const defaultAttributesToNull = (metacard, properties) => {
   })
 }
 
-const cache = new InMemoryCache({
+
+export const CACHE_DEFAULTS = {
+  getDefaultCache: () => {
+    return new InMemoryCache({
+      dataIdFromObject: this.dataIdFromObject
+    })
+  },
   dataIdFromObject: object => {
     switch (object.__typename) {
       case 'User':
@@ -300,10 +306,9 @@ const cache = new InMemoryCache({
       default:
         return defaultDataIdFromObject(object)
     }
-  },
-})
+}
 
-export const createClient = (schema, resolvers) => {
+export const createClient = (schema, resolvers, cache) => {
   const { fromGraphqlName, toGraphqlName } = schema
 
   const toGraphqlMap = map => {
@@ -337,6 +342,6 @@ export const createClient = (schema, resolvers) => {
 
   return new ApolloClient({
     link: new SchemaLink({ schema: executableSchema, context }),
-    cache,
+    cache: cache ? cache : CACHE_DEFAULTS.getDefaultCache(),
   })
 }
