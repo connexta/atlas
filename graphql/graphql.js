@@ -289,11 +289,10 @@ const defaultAttributesToNull = (metacard, properties) => {
   })
 }
 
-
 export const CACHE_DEFAULTS = {
   getDefaultCache: () => {
     return new InMemoryCache({
-      dataIdFromObject: this.dataIdFromObject
+      dataIdFromObject: this.dataIdFromObject,
     })
   },
   dataIdFromObject: object => {
@@ -306,6 +305,7 @@ export const CACHE_DEFAULTS = {
       default:
         return defaultDataIdFromObject(object)
     }
+  },
 }
 
 export const createClient = (schema, resolvers, cache) => {
