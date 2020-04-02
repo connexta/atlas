@@ -213,7 +213,7 @@ type ThemePreferences {
 }
 
 type UserPreferences {
-  alertExpiration: Int
+  alertExpiration: Float
   alertPersistence: Boolean
   alerts: [String]
   animation: Boolean
