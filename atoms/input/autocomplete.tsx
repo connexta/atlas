@@ -36,7 +36,12 @@ const useStyles = makeStyles(theme => ({
     flexWrap: 'wrap',
     flex: 1,
     alignItems: 'center',
-    overflow: 'hidden',
+    overflowX: 'scroll',
+    overflowY: 'hidden',
+    '&::-webkit-scrollbar': {
+      display: 'none',
+    },
+    scrollbarWidth: 'none',
   },
   chip: {
     margin: theme.spacing(0.5, 0.25),
@@ -219,6 +224,7 @@ export const WrappedCreatableSelect = (props: CreatableProps<any>) => {
       '& input': {
         font: 'inherit',
       },
+      overflowX: 'scroll',
     }),
   }
   const { label, styles, ...baseProps } = props
@@ -227,9 +233,7 @@ export const WrappedCreatableSelect = (props: CreatableProps<any>) => {
     <CreateableSelect
       components={components}
       classes={classes}
-      styles={{
-        ...selectStyles,
-      }}
+      styles={selectStyles}
       TextFieldProps={{
         label,
         InputLabelProps: {
