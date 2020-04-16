@@ -20,7 +20,7 @@ type QuerySort {
 }
 
 input QuerySettingsInput {
-  src: String
+  sourceIds: [String]
   federation: String
   phonetics: Boolean
   sorts: [QuerySortInput]
