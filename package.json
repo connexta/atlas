@@ -26,7 +26,7 @@
   "license": "LGPL-3.0",
   "devDependencies": {
     "@babel/core": "^7.3.3",
-    "@connexta/ace": "git://github.com/connexta/ace.git#9a45db6d7ce2b8fdba44b9df3415e1f9c2d06b13",
+    "@connexta/ace": "git://github.com/connexta/ace.git#11b2b09ed9845f070c4dc14800fc8bcabd00184b",
     "@material-ui/core": "4.5.0",
     "@material-ui/icons": "4.4.3",
     "@material-ui/lab": "4.0.0-alpha.28",
