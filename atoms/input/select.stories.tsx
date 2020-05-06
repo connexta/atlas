@@ -26,7 +26,7 @@ stories.add('OutlinedSelect', () => {
     >
       <OutlinedSelect
         value={value}
-        onChange={e => setValue(e.target.value)}
+        onChange={e => setValue(e.target.value as any)}
         label="Select"
       >
         <MenuItem value={''}>Reset</MenuItem>

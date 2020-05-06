@@ -13,7 +13,7 @@ import CancelIcon from '@material-ui/icons/Cancel'
 import { Props as CreatableProps } from 'react-select/src/Creatable'
 import { AsyncProps } from 'react-select/src/Async'
 import { Props as SelectProps } from 'react-select/src/Select'
-const _ = require('lodash')
+import _debounce from 'lodash.debounce'
 
 export type Option = {
   label: string
@@ -268,7 +268,7 @@ export const WrappedAsyncCreatableSelect = (props: AsyncCreateableProps) => {
   }
   const { label, styles, loadOptions, debounce = 0, ...baseProps } = props
 
-  const debouncedLoadOptions = _.debounce(loadOptions, debounce)
+  const debouncedLoadOptions = _debounce(loadOptions, debounce)
 
   return (
     <AsyncCreateableSelect
@@ -319,7 +319,7 @@ export const WrappedAsyncSelect = (props: AsyncSelectProps) => {
     ...baseProps
   } = props
 
-  const debouncedLoadOptions = _.debounce(loadOptions, debounce)
+  const debouncedLoadOptions = _debounce(loadOptions, debounce)
 
   return (
     <AsyncSelect
