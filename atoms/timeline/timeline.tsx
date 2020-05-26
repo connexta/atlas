@@ -340,13 +340,11 @@ export const Timeline = (props: TimelineProps) => {
   const [dataBuckets, setDataBuckets] = useState<Bucket[]>([])
   const [tooltip, setTooltip] = useState<TooltipProps | null>()
 
-  const [selectedDateAttribute, setSelectedDateAttribute] = useState<
-    string | undefined
-  >(possibleDateAttributes[0] || undefined)
+  const [selectedDateAttribute, setSelectedDateAttribute] = useState('')
 
   useEffect(
     () => {
-      if (selectedDateAttribute === undefined) {
+      if (selectedDateAttribute === '' && possibleDateAttributes.length > 0) {
         setSelectedDateAttribute(possibleDateAttributes[0])
       }
     },
