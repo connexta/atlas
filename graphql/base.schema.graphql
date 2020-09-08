@@ -74,7 +74,6 @@ type QueryResponseResult {
   # 2. Attribute aliasing that require raw attribute names.
   # 3. Getting all the possible attributes.
   metacard: Properties
-  jsonAttributes: Json
 }
 
 type QueryResponse {

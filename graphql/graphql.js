@@ -85,13 +85,6 @@ const metacards = async (parent, args, context) => {
     context.toGraphqlMap(result.metacard.properties)
   )
 
-  json.results.map(result => {
-    result['jsonAttributes'] = result.metacard.properties
-    result.metacard.properties = context.toGraphqlMap(
-      result.metacard.properties
-    )
-  })
-
   json.status['elapsed'] = json.request_duration_millis
   return { attributes, ...json }
 }
@@ -227,7 +220,6 @@ const createMetacard = async (parent, args, context) => {
 
 const updateMetacard = async (parent, args, context) => {
   const { id, attrs } = args
-  console.log(id)
   const metacard_type = attrs['metacard_type']
   delete attrs['metacard_type']
 

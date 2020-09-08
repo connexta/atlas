@@ -1,8 +1,7 @@
 import * as React from 'react'
 import { Popper } from '../popper'
 import { PopperProps } from '@material-ui/core/Popper'
-import ClickAwayListener from '@material-ui/core/ClickAwayListener'
-import Paper, { PaperProps } from '@material-ui/core/Paper'
+import { PaperProps } from '@material-ui/core/Paper'
 import { DropdownContext, DropdownContextType } from './dropdown.context'
 import { Subtract } from '../../typescript'
 
