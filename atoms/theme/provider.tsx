@@ -2,10 +2,8 @@ import * as React from 'react'
 import {
   createMuiTheme,
   MuiThemeProvider as ThemeProvider,
-  darken,
   Theme as ThemeInterface,
   createStyles,
-  lighten,
 } from '@material-ui/core/styles'
 import { ThemeContext } from 'styled-components'
 import { createGlobalStyle } from 'styled-components'
