@@ -81,9 +81,12 @@ const metacards = async (parent, args, context) => {
   const q = { ...args.settings, filterTree: args.filterTree }
   const json = await send(q)
 
-  const attributes = json.results.map(result =>
-    context.toGraphqlMap(result.metacard.properties)
-  )
+  const attributes = json.results.map(result => {
+    result.metacard.properties = context.toGraphqlMap(
+      result.metacard.properties
+    )
+    return result.metacard.properties
+  })
 
   json.status['elapsed'] = json.request_duration_millis
   return { attributes, ...json }
