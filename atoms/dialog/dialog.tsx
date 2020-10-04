@@ -48,6 +48,7 @@ export const DialogProvider = (props: DialogProviderProps) => {
 }
 
 const [
+  // ts-ignore declared but never used
   useControlledDialogContext,
   ControlledDialogContextProvider,
 ] = createCtx<{
