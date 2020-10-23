@@ -25,12 +25,7 @@ type DropdownProps = {
   >
 }
 
-export const Dropdown = ({
-  children,
-  content,
-  paperProps,
-  popperProps,
-}: DropdownProps) => {
+export const Dropdown = ({ children, content, popperProps }: DropdownProps) => {
   const dropdownContext = React.useContext(DropdownContext)
   const [anchorEl, setAnchorEl] = React.useState(null)
 

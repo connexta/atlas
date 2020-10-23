@@ -1,7 +1,10 @@
 import * as React from 'react'
 import clsx from 'clsx'
+// @ts-ignore TS7016: Could not find a declaration file for module
 import CreateableSelect from 'react-select/creatable'
+// @ts-ignore TS7016: Could not find a declaration file for module
 import AsyncCreateableSelect from 'react-select/async-creatable'
+// @ts-ignore TS7016: Could not find a declaration file for module
 import AsyncSelect from 'react-select/async'
 import { emphasize, makeStyles, useTheme } from '@material-ui/core/styles'
 import Typography from '@material-ui/core/Typography'
@@ -10,8 +13,11 @@ import Paper from '@material-ui/core/Paper'
 import Chip from '@material-ui/core/Chip'
 import MenuItem from '@material-ui/core/MenuItem'
 import CancelIcon from '@material-ui/icons/Cancel'
+// @ts-ignore TS7016: Could not find a declaration file for module
 import { Props as CreatableProps } from 'react-select/src/Creatable'
+// @ts-ignore TS7016: Could not find a declaration file for module
 import { AsyncProps } from 'react-select/src/Async'
+// @ts-ignore TS7016: Could not find a declaration file for module
 import { Props as SelectProps } from 'react-select/src/Select'
 import _debounce from 'lodash.debounce'
 
@@ -25,7 +31,7 @@ export type GroupOptions = {
   options: Option[]
 }
 
-const useStyles = makeStyles(theme => ({
+const useStyles = makeStyles((theme: any) => ({
   input: {
     display: 'flex',
     padding: 0,
